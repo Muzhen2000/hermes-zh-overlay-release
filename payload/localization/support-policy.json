@@ -1,6 +1,6 @@
 {
   "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
-  "supported_commit": "036dacf6592dac36a57a3d26187039fb3b1a37a0",
+  "supported_commit": "31e7276474976cd752d73de7701229eefd1b37ad",
   "maintenance_interval_seconds": 21600,
   "tolerated_unexpected_files": [
     "web/package-lock.json"
