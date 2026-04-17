@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import importlib.util
 from pathlib import Path
 
@@ -149,3 +150,271 @@ def test_payload_manager_recovers_accidental_update_with_overlay_present(tmp_pat
     assert ("apply_patch", False) in calls
     assert ("reinstall", None) in calls
     assert patch_file.read_text(encoding="utf-8") == "NEW PATCH\n"
+
+
+def test_payload_manager_syncs_published_release_truth_into_active_files(tmp_path, monkeypatch):
+    manager = _load_manager_module()
+    release_repo = tmp_path / "hermes-zh-overlay-release"
+    release_policy = release_repo / "payload" / "localization" / "support-policy.json"
+    release_manager = release_repo / "payload" / "scripts" / "hermes_zh_overlay_manager.py"
+    active_policy = tmp_path / "localization" / "support-policy.json"
+    active_manager = tmp_path / "scripts" / "hermes_zh_overlay_manager.py"
+
+    release_policy.parent.mkdir(parents=True, exist_ok=True)
+    release_manager.parent.mkdir(parents=True, exist_ok=True)
+    active_policy.parent.mkdir(parents=True, exist_ok=True)
+    active_manager.parent.mkdir(parents=True, exist_ok=True)
+
+    release_policy.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "6ea7386a6f010320c8744cee6a1ac7835bc37ffc",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    release_manager.write_text("# release manager\n", encoding="utf-8")
+    active_policy.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "01906e99dd225b7946c770479fcd9cc2949e7104",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    active_manager.write_text("# stale manager\n", encoding="utf-8")
+
+    monkeypatch.setattr(manager, "RELEASE_REPO_DIR", release_repo, raising=False)
+    monkeypatch.setattr(manager, "SUPPORT_POLICY_FILE", active_policy, raising=False)
+    monkeypatch.setattr(manager, "LOCAL_MANAGER_FILE", active_manager, raising=False)
+
+    calls = []
+
+    class _Completed:
+        def __init__(self, stdout=""):
+            self.stdout = stdout
+            self.stderr = ""
+            self.returncode = 0
+
+    def _fake_run(cmd, *, cwd=None, ok_codes=(0,)):
+        calls.append((tuple(cmd), Path(cwd) if cwd is not None else None))
+        if cmd == ["git", "show", "origin/main:payload/localization/support-policy.json"]:
+            return _Completed(
+                json.dumps(
+                    {
+                        "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                        "supported_commit": "6ea7386a6f010320c8744cee6a1ac7835bc37ffc",
+                        "maintenance_interval_seconds": 21600,
+                        "tolerated_unexpected_files": ["web/package-lock.json"],
+                    }
+                )
+                + "\n"
+            )
+        if cmd == ["git", "status", "--porcelain", "--untracked-files=all"]:
+            return _Completed("")
+        if cmd == ["git", "rev-list", "HEAD..origin/main", "--count"]:
+            return _Completed("1\n")
+        return _Completed("")
+
+    monkeypatch.setattr(manager, "_run", _fake_run, raising=False)
+
+    result = manager._sync_published_release_truth()
+
+    assert result == {
+        "release_repo_used": True,
+        "release_repo_updated": True,
+        "support_policy_updated": True,
+        "manager_script_updated": True,
+    }
+    assert json.loads(active_policy.read_text(encoding="utf-8"))["supported_commit"] == (
+        "6ea7386a6f010320c8744cee6a1ac7835bc37ffc"
+    )
+    assert active_manager.read_text(encoding="utf-8") == "# release manager\n"
+    assert ((("git", "fetch", "origin"), release_repo)) in calls
+    assert ((("git", "merge", "--ff-only", "origin/main"), release_repo)) in calls
+
+
+def test_payload_manager_syncs_remote_support_policy_even_when_release_repo_is_dirty(tmp_path, monkeypatch):
+    manager = _load_manager_module()
+    release_repo = tmp_path / "hermes-zh-overlay-release"
+    release_policy = release_repo / "payload" / "localization" / "support-policy.json"
+    release_manager = release_repo / "payload" / "scripts" / "hermes_zh_overlay_manager.py"
+    active_policy = tmp_path / "localization" / "support-policy.json"
+    active_manager = tmp_path / "scripts" / "hermes_zh_overlay_manager.py"
+
+    release_policy.parent.mkdir(parents=True, exist_ok=True)
+    release_manager.parent.mkdir(parents=True, exist_ok=True)
+    active_policy.parent.mkdir(parents=True, exist_ok=True)
+    active_manager.parent.mkdir(parents=True, exist_ok=True)
+
+    release_policy.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "01906e99dd225b7946c770479fcd9cc2949e7104",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    release_manager.write_text("# local working-tree manager\n", encoding="utf-8")
+    active_policy.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "01906e99dd225b7946c770479fcd9cc2949e7104",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    active_manager.write_text("# stale manager\n", encoding="utf-8")
+
+    monkeypatch.setattr(manager, "RELEASE_REPO_DIR", release_repo, raising=False)
+    monkeypatch.setattr(manager, "SUPPORT_POLICY_FILE", active_policy, raising=False)
+    monkeypatch.setattr(manager, "LOCAL_MANAGER_FILE", active_manager, raising=False)
+
+    calls = []
+
+    class _Completed:
+        def __init__(self, stdout=""):
+            self.stdout = stdout
+            self.stderr = ""
+            self.returncode = 0
+
+    def _fake_run(cmd, *, cwd=None, ok_codes=(0,)):
+        calls.append((tuple(cmd), Path(cwd) if cwd is not None else None))
+        if cmd == ["git", "show", "origin/main:payload/localization/support-policy.json"]:
+            return _Completed(
+                json.dumps(
+                    {
+                        "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                        "supported_commit": "6ea7386a6f010320c8744cee6a1ac7835bc37ffc",
+                        "maintenance_interval_seconds": 21600,
+                        "tolerated_unexpected_files": ["web/package-lock.json"],
+                    }
+                )
+                + "\n"
+            )
+        if cmd == ["git", "status", "--porcelain", "--untracked-files=all"]:
+            return _Completed(" M payload/scripts/hermes_zh_overlay_manager.py\n")
+        if cmd == ["git", "rev-list", "HEAD..origin/main", "--count"]:
+            return _Completed("1\n")
+        return _Completed("")
+
+    monkeypatch.setattr(manager, "_run", _fake_run, raising=False)
+
+    result = manager._sync_published_release_truth()
+
+    assert result == {
+        "release_repo_used": True,
+        "release_repo_updated": False,
+        "support_policy_updated": True,
+        "manager_script_updated": True,
+    }
+    assert json.loads(active_policy.read_text(encoding="utf-8"))["supported_commit"] == (
+        "6ea7386a6f010320c8744cee6a1ac7835bc37ffc"
+    )
+    assert active_manager.read_text(encoding="utf-8") == "# local working-tree manager\n"
+    assert ((("git", "fetch", "origin"), release_repo)) in calls
+    assert ((("git", "merge", "--ff-only", "origin/main"), release_repo)) not in calls
+
+
+def test_payload_manager_uses_cached_origin_support_policy_when_fetch_fails(tmp_path, monkeypatch):
+    manager = _load_manager_module()
+    release_repo = tmp_path / "hermes-zh-overlay-release"
+    release_policy = release_repo / "payload" / "localization" / "support-policy.json"
+    release_manager = release_repo / "payload" / "scripts" / "hermes_zh_overlay_manager.py"
+    active_policy = tmp_path / "localization" / "support-policy.json"
+    active_manager = tmp_path / "scripts" / "hermes_zh_overlay_manager.py"
+
+    release_policy.parent.mkdir(parents=True, exist_ok=True)
+    release_manager.parent.mkdir(parents=True, exist_ok=True)
+    active_policy.parent.mkdir(parents=True, exist_ok=True)
+    active_manager.parent.mkdir(parents=True, exist_ok=True)
+
+    release_policy.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "01906e99dd225b7946c770479fcd9cc2949e7104",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    release_manager.write_text("# local working-tree manager\n", encoding="utf-8")
+    active_policy.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "01906e99dd225b7946c770479fcd9cc2949e7104",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    active_manager.write_text("# stale manager\n", encoding="utf-8")
+
+    monkeypatch.setattr(manager, "RELEASE_REPO_DIR", release_repo, raising=False)
+    monkeypatch.setattr(manager, "SUPPORT_POLICY_FILE", active_policy, raising=False)
+    monkeypatch.setattr(manager, "LOCAL_MANAGER_FILE", active_manager, raising=False)
+
+    calls = []
+
+    class _Completed:
+        def __init__(self, stdout=""):
+            self.stdout = stdout
+            self.stderr = ""
+            self.returncode = 0
+
+    def _fake_run(cmd, *, cwd=None, ok_codes=(0,)):
+        calls.append((tuple(cmd), Path(cwd) if cwd is not None else None))
+        if cmd == ["git", "fetch", "origin"]:
+            raise manager.OverlayError("git fetch origin failed: network")
+        if cmd == ["git", "show", "origin/main:payload/localization/support-policy.json"]:
+            return _Completed(
+                json.dumps(
+                    {
+                        "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                        "supported_commit": "6ea7386a6f010320c8744cee6a1ac7835bc37ffc",
+                        "maintenance_interval_seconds": 21600,
+                        "tolerated_unexpected_files": ["web/package-lock.json"],
+                    }
+                )
+                + "\n"
+            )
+        raise AssertionError(f"unexpected command: {cmd}")
+
+    monkeypatch.setattr(manager, "_run", _fake_run, raising=False)
+
+    result = manager._sync_published_release_truth()
+
+    assert result == {
+        "release_repo_used": True,
+        "release_repo_updated": False,
+        "support_policy_updated": True,
+        "manager_script_updated": True,
+    }
+    assert json.loads(active_policy.read_text(encoding="utf-8"))["supported_commit"] == (
+        "6ea7386a6f010320c8744cee6a1ac7835bc37ffc"
+    )
+    assert active_manager.read_text(encoding="utf-8") == "# local working-tree manager\n"
+    assert ((("git", "fetch", "origin"), release_repo)) in calls
+    assert ((("git", "show", "origin/main:payload/localization/support-policy.json"), release_repo)) in calls

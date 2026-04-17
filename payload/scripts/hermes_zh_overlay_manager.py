@@ -17,6 +17,8 @@ HERMES_HOME = Path.home() / ".hermes"
 REPO_DIR = HERMES_HOME / "hermes-agent"
 PATCH_FILE = HERMES_HOME / "localization" / "patches" / "hermes-zh-overlay.patch"
 SUPPORT_POLICY_FILE = HERMES_HOME / "localization" / "support-policy.json"
+LOCAL_MANAGER_FILE = HERMES_HOME / "scripts" / "hermes_zh_overlay_manager.py"
+RELEASE_REPO_DIR = HERMES_HOME / "hermes-zh-overlay-release"
 SCAN_SCRIPT = HERMES_HOME / "scripts" / "scan_hermes_localization.py"
 LATEST_SCAN_FILE = HERMES_HOME / "localization" / "reports" / "hermes-zh-scan-latest.json"
 BASELINE_SCAN_FILE = HERMES_HOME / "localization" / "reports" / "hermes-zh-baseline.json"
@@ -25,6 +27,12 @@ LAUNCHD_LABEL = "com.muzhen.hermes-zh-overlay-maintain"
 LAUNCHD_PLIST_PATH = Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
 
 STATUS_IGNORE = {".DS_Store"}
+RELEASE_STATUS_IGNORE_PREFIXES = (
+    ".pytest_cache/",
+    "payload/scripts/__pycache__/",
+    "scripts/__pycache__/",
+    "tests/__pycache__/",
+)
 MANAGED_REPO_FILES = (
     "agent/display.py",
     "agent/manual_compression_feedback.py",
@@ -102,6 +110,91 @@ def _load_support_policy() -> dict:
     return payload
 
 
+def _release_repo_dirty_paths(status_map: dict[str, str]) -> list[str]:
+    return sorted(
+        path
+        for path in _dirty_paths(status_map)
+        if not any(path.startswith(prefix) for prefix in RELEASE_STATUS_IGNORE_PREFIXES)
+    )
+
+
+def _copy_if_changed(source: Path, destination: Path) -> bool:
+    data = source.read_bytes()
+    return _write_bytes_if_changed(data, destination)
+
+
+def _write_bytes_if_changed(data: bytes, destination: Path) -> bool:
+    if destination.exists() and destination.read_bytes() == data:
+        return False
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = destination.with_name(destination.name + ".tmp")
+    temp_path.write_bytes(data)
+    temp_path.replace(destination)
+    return True
+
+
+def _sync_published_release_truth() -> dict[str, bool]:
+    result = {
+        "release_repo_used": False,
+        "release_repo_updated": False,
+        "support_policy_updated": False,
+        "manager_script_updated": False,
+    }
+    if not RELEASE_REPO_DIR.exists():
+        return result
+    release_support_policy_file = RELEASE_REPO_DIR / "payload" / "localization" / "support-policy.json"
+    release_manager_file = RELEASE_REPO_DIR / "payload" / "scripts" / "hermes_zh_overlay_manager.py"
+    if not release_support_policy_file.exists() and not release_manager_file.exists():
+        return result
+
+    result["release_repo_used"] = True
+
+    published_support_policy: bytes | None = None
+    fetched_release_repo = False
+    try:
+        _run(["git", "fetch", "origin"], cwd=RELEASE_REPO_DIR)
+        fetched_release_repo = True
+    except OverlayError:
+        pass
+
+    try:
+        published_support_policy = _run(
+            ["git", "show", "origin/main:payload/localization/support-policy.json"],
+            cwd=RELEASE_REPO_DIR,
+        ).stdout.encode("utf-8")
+    except OverlayError:
+        pass
+
+    if fetched_release_repo:
+        try:
+            release_status = _git_status_for(RELEASE_REPO_DIR)
+            if not _release_repo_dirty_paths(release_status):
+                pending = _run(
+                    ["git", "rev-list", "HEAD..origin/main", "--count"],
+                    cwd=RELEASE_REPO_DIR,
+                ).stdout.strip()
+                if int(pending or "0"):
+                    _run(["git", "merge", "--ff-only", "origin/main"], cwd=RELEASE_REPO_DIR)
+                    result["release_repo_updated"] = True
+        except OverlayError:
+            pass
+
+    if published_support_policy is None and release_support_policy_file.exists():
+        published_support_policy = release_support_policy_file.read_bytes()
+    if published_support_policy is not None:
+        result["support_policy_updated"] = _write_bytes_if_changed(
+            published_support_policy,
+            SUPPORT_POLICY_FILE,
+        )
+    if release_manager_file.exists():
+        result["manager_script_updated"] = _copy_if_changed(
+            release_manager_file,
+            LOCAL_MANAGER_FILE,
+        )
+    return result
+
+
 def _run(
     cmd: list[str],
     *,
@@ -123,7 +216,11 @@ def _run(
 
 
 def _git_status() -> dict[str, str]:
-    result = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    return _git_status_for(REPO_DIR)
+
+
+def _git_status_for(repo_dir: Path) -> dict[str, str]:
+    result = _run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=repo_dir)
     items: dict[str, str] = {}
     for raw_line in result.stdout.splitlines():
         line = raw_line.rstrip()
@@ -561,6 +658,7 @@ def _preflight_patch_on_ref(ref: str) -> None:
 
 
 def cmd_status(_: argparse.Namespace) -> int:
+    _sync_published_release_truth()
     policy = _load_support_policy()
     status_map = _git_status()
     dirty = _managed_dirty_paths(status_map)
@@ -599,6 +697,7 @@ def cmd_refresh_baseline(_: argparse.Namespace) -> int:
 
 
 def cmd_maintain(args: argparse.Namespace) -> int:
+    _sync_published_release_truth()
     _ensure_dirs()
     policy = _load_support_policy()
     _assert_supported_origin(policy)
