@@ -14,6 +14,8 @@
 - 发布流程：[`docs/release.md`](./docs/release.md)
 - 失败包格式：[`docs/failure-package.md`](./docs/failure-package.md)
 - 变更记录：[`CHANGELOG.md`](./CHANGELOG.md)
+- 贡献规范：[`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- 许可证：[`LICENSE`](./LICENSE)
 
 ## 仓库内容
 
