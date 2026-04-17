@@ -123,6 +123,10 @@ def _copy_if_changed(source: Path, destination: Path) -> bool:
     return _write_bytes_if_changed(data, destination)
 
 
+def _write_text_if_changed(text: str, destination: Path) -> bool:
+    return _write_bytes_if_changed(text.encode("utf-8"), destination)
+
+
 def _write_bytes_if_changed(data: bytes, destination: Path) -> bool:
     if destination.exists() and destination.read_bytes() == data:
         return False
@@ -132,6 +136,42 @@ def _write_bytes_if_changed(data: bytes, destination: Path) -> bool:
     temp_path.write_bytes(data)
     temp_path.replace(destination)
     return True
+
+
+def _validated_json_object_bytes(data: bytes | None) -> bytes | None:
+    if data is None:
+        return None
+    if not data.strip():
+        return None
+    try:
+        payload = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    return data
+
+
+def _validated_text_bytes(data: bytes | None) -> bytes | None:
+    if data is None:
+        return None
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    if not text.strip():
+        return None
+    return data
+
+
+def _read_origin_main_file(relative_path: str) -> bytes | None:
+    try:
+        return _run(
+            ["git", "show", f"origin/main:{relative_path}"],
+            cwd=RELEASE_REPO_DIR,
+        ).stdout.encode("utf-8")
+    except OverlayError:
+        return None
 
 
 def _sync_published_release_truth() -> dict[str, bool]:
@@ -151,6 +191,7 @@ def _sync_published_release_truth() -> dict[str, bool]:
     result["release_repo_used"] = True
 
     published_support_policy: bytes | None = None
+    published_manager_script: bytes | None = None
     fetched_release_repo = False
     try:
         _run(["git", "fetch", "origin"], cwd=RELEASE_REPO_DIR)
@@ -158,13 +199,12 @@ def _sync_published_release_truth() -> dict[str, bool]:
     except OverlayError:
         pass
 
-    try:
-        published_support_policy = _run(
-            ["git", "show", "origin/main:payload/localization/support-policy.json"],
-            cwd=RELEASE_REPO_DIR,
-        ).stdout.encode("utf-8")
-    except OverlayError:
-        pass
+    published_support_policy = _validated_json_object_bytes(
+        _read_origin_main_file("payload/localization/support-policy.json")
+    )
+    published_manager_script = _validated_text_bytes(
+        _read_origin_main_file("payload/scripts/hermes_zh_overlay_manager.py")
+    )
 
     if fetched_release_repo:
         try:
@@ -180,16 +220,14 @@ def _sync_published_release_truth() -> dict[str, bool]:
         except OverlayError:
             pass
 
-    if published_support_policy is None and release_support_policy_file.exists():
-        published_support_policy = release_support_policy_file.read_bytes()
     if published_support_policy is not None:
         result["support_policy_updated"] = _write_bytes_if_changed(
             published_support_policy,
             SUPPORT_POLICY_FILE,
         )
-    if release_manager_file.exists():
-        result["manager_script_updated"] = _copy_if_changed(
-            release_manager_file,
+    if published_manager_script is not None:
+        result["manager_script_updated"] = _write_bytes_if_changed(
+            published_manager_script,
             LOCAL_MANAGER_FILE,
         )
     return result
@@ -559,7 +597,7 @@ def _generate_patch_text_for_ref(ref: str) -> str:
 def _write_patch() -> int:
     _ensure_dirs()
     patch_text = _generate_patch_text()
-    PATCH_FILE.write_text(patch_text, encoding="utf-8")
+    _write_text_if_changed(patch_text, PATCH_FILE)
     status_map = _git_status()
     return len(_managed_dirty_paths(status_map))
 
@@ -613,7 +651,8 @@ def _sync_launchd_schedule_from_policy() -> bool:
     policy = _load_support_policy()
     desired_interval = int(policy.get("maintenance_interval_seconds", 21600) or 21600)
     try:
-        payload = plistlib.loads(LAUNCHD_PLIST_PATH.read_bytes())
+        original_bytes = LAUNCHD_PLIST_PATH.read_bytes()
+        payload = plistlib.loads(original_bytes)
     except Exception as exc:
         raise OverlayError(f"invalid launchd plist {LAUNCHD_PLIST_PATH}: {exc}") from exc
 
@@ -622,10 +661,19 @@ def _sync_launchd_schedule_from_policy() -> bool:
         return False
 
     payload["StartInterval"] = desired_interval
-    LAUNCHD_PLIST_PATH.write_bytes(plistlib.dumps(payload))
+    updated_bytes = plistlib.dumps(payload)
+    _write_bytes_if_changed(updated_bytes, LAUNCHD_PLIST_PATH)
     target = f"{_launchd_domain()}/{LAUNCHD_LABEL}"
     _run(["launchctl", "bootout", target], cwd=HERMES_HOME, ok_codes=(0, 3, 36, 113))
-    _run(["launchctl", "bootstrap", _launchd_domain(), str(LAUNCHD_PLIST_PATH)], cwd=HERMES_HOME)
+    try:
+        _run(["launchctl", "bootstrap", _launchd_domain(), str(LAUNCHD_PLIST_PATH)], cwd=HERMES_HOME)
+    except OverlayError:
+        _write_bytes_if_changed(original_bytes, LAUNCHD_PLIST_PATH)
+        try:
+            _run(["launchctl", "bootstrap", _launchd_domain(), str(LAUNCHD_PLIST_PATH)], cwd=HERMES_HOME)
+        except OverlayError:
+            pass
+        raise
     return True
 
 
@@ -725,7 +773,7 @@ def cmd_maintain(args: argparse.Namespace) -> int:
         if overlay_present:
             target_patch_text = _generate_patch_text_for_ref(target_ref)
             _hard_reset_to_ref(target_ref)
-            PATCH_FILE.write_text(target_patch_text, encoding="utf-8")
+            _write_text_if_changed(target_patch_text, PATCH_FILE)
             if target_patch_text.strip():
                 _apply_patch()
             _reinstall()
@@ -748,7 +796,7 @@ def cmd_maintain(args: argparse.Namespace) -> int:
         recovered_to_supported = True
 
     if overlay_present and not _patch_has_payload():
-        PATCH_FILE.write_text(_generate_patch_text(), encoding="utf-8")
+        _write_text_if_changed(_generate_patch_text(), PATCH_FILE)
 
     if pending == 0:
         if overlay_present:
@@ -787,7 +835,7 @@ def cmd_maintain(args: argparse.Namespace) -> int:
     target_patch_text = _generate_patch_text_for_ref(target_ref)
 
     _hard_reset_to_ref(target_ref)
-    PATCH_FILE.write_text(target_patch_text, encoding="utf-8")
+    _write_text_if_changed(target_patch_text, PATCH_FILE)
     if target_patch_text.strip():
         _apply_patch()
     _reinstall()

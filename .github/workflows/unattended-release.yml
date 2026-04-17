@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: unattended-release
+  cancel-in-progress: false
+
 jobs:
   candidate:
     runs-on: macos-latest

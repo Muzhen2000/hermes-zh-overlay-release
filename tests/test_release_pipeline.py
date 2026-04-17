@@ -197,6 +197,10 @@ def test_workflow_routes_failed_candidate_to_failure_bundle():
     on_block = workflow.get("on", workflow.get(True))
     assert workflow["name"] == "unattended-release"
     assert workflow["permissions"] == {"contents": "write"}
+    assert workflow["concurrency"] == {
+        "group": "unattended-release",
+        "cancel-in-progress": False,
+    }
     assert on_block["schedule"][0]["cron"] == "0 * * * *"
     assert "workflow_dispatch" in on_block
 
