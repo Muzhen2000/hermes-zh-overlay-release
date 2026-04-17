@@ -13,6 +13,7 @@ def test_public_docs_exist_and_are_linked():
     license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
 
     assert "Hermes 中文化无人值守发布" in readme
+    assert "适用对象" in readme
     assert "docs/install.md" in readme
     assert "docs/release.md" in readme
     assert "CHANGELOG.md" in readme

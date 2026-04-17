@@ -2,6 +2,12 @@
 
 公开 release 仓库，负责 Hermes 中文化 overlay 的发布、验证和失败接手。
 
+## 适用对象
+
+- 维护者：更新支持版本、修正 release 流程、发布新版本
+- 失败接手者：根据 failure bundle 定位问题并做最小修复
+- 普通用户：只需要跟随 release 仓库发布的结果，不直接改这里
+
 ## 状态
 
 - 官方基线：[`release.json`](./release.json)
