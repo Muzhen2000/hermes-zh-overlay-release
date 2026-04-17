@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "files_touched"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["fixed", "blocked"]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "files_touched": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

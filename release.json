@@ -1,0 +1,9 @@
+{
+  "official_repo": "https://github.com/NousResearch/hermes-agent.git",
+  "supported_commit": "5b4773fc20e844e784d1b710adaa0cfcc5e14d87",
+  "release_version": "0.1.0",
+  "failure_bundle": {
+    "desktop_path": "~/Desktop/Hermes-ZH-Failures/latest",
+    "artifact_name": "hermes-zh-failure-bundle"
+  }
+}
