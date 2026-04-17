@@ -21,6 +21,7 @@
 - `codex/`：失败时交给 `codex exec` 的提示和输出 schema
 - `tests/`：release 流水线、失败包和 remediation 契约测试
 - `docs/`：安装、发布和失败包说明
+- `CHANGELOG.md`：仓库发布记录
 
 ## 如何使用
 
@@ -36,10 +37,10 @@
 - 安装与本地检查：见 [`docs/install.md`](./docs/install.md)
 - 发布流程：见 [`docs/release.md`](./docs/release.md)
 - 失败包格式：见 [`docs/failure-package.md`](./docs/failure-package.md)
+- 变更记录：见 [`CHANGELOG.md`](./CHANGELOG.md)
 
 ## 设计边界
 
 - 不维护 Web UI 的汉化，Web UI 使用 Hermes 官方自带的中/英切换
 - 不直接追官方 `main`，只追 `release.json` / `support-policy.json` 声明的受支持版本
 - 失败时先收集失败包，再允许 remediation
-
