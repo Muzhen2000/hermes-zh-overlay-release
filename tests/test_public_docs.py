@@ -14,6 +14,9 @@ def test_public_docs_exist_and_are_linked():
 
     assert "Hermes 中文化无人值守发布" in readme
     assert "适用对象" in readme
+    assert "用户体验视角" in readme
+    assert "默认中文的 Hermes" in readme
+    assert "正常运行 `hermes update`" in readme
     assert "docs/install.md" in readme
     assert "docs/release.md" in readme
     assert "CHANGELOG.md" in readme
