@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 
 from scripts.build_candidate import build_candidate
 from scripts.check_upstream import check_upstream
+from scripts.promote_release import promote_release
 from scripts.validate_candidate import validate_candidate
 from payload.scripts.hermes_zh_overlay_manager import (
     decide_local_target,
@@ -67,6 +68,88 @@ def test_build_candidate_materializes_candidate_dir(tmp_path):
     }
 
 
+def test_promote_release_updates_supported_commit_when_needed(tmp_path):
+    release_path = tmp_path / "release.json"
+    support_policy_path = tmp_path / "support-policy.json"
+    release_path.write_text(
+        json.dumps(
+            {
+                "official_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "old",
+                "release_version": "0.1.0",
+                "failure_bundle": {
+                    "desktop_path": "~/Desktop/Hermes-ZH-Failures/latest",
+                    "artifact_name": "hermes-zh-failure-bundle",
+                },
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    support_policy_path.write_text(
+        json.dumps(
+            {
+                "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+                "supported_commit": "old",
+                "maintenance_interval_seconds": 21600,
+                "tolerated_unexpected_files": ["web/package-lock.json"],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = promote_release(
+        {"official_latest": "new", "needs_release": True},
+        release_path,
+        support_policy_path,
+    )
+
+    promoted_release = json.loads(release_path.read_text(encoding="utf-8"))
+    promoted_policy = json.loads(support_policy_path.read_text(encoding="utf-8"))
+
+    assert result == {"promoted": True, "from_commit": "old", "to_commit": "new"}
+    assert promoted_release["supported_commit"] == "new"
+    assert promoted_policy["supported_commit"] == "new"
+
+
+def test_promote_release_is_noop_when_not_needed(tmp_path):
+    release_path = tmp_path / "release.json"
+    support_policy_path = tmp_path / "support-policy.json"
+    release_payload = {
+        "official_repo": "https://github.com/NousResearch/hermes-agent.git",
+        "supported_commit": "same",
+        "release_version": "0.1.0",
+        "failure_bundle": {
+            "desktop_path": "~/Desktop/Hermes-ZH-Failures/latest",
+            "artifact_name": "hermes-zh-failure-bundle",
+        },
+    }
+    support_policy_payload = {
+        "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+        "supported_commit": "same",
+        "maintenance_interval_seconds": 21600,
+        "tolerated_unexpected_files": ["web/package-lock.json"],
+    }
+    release_path.write_text(json.dumps(release_payload, indent=2) + "\n", encoding="utf-8")
+    support_policy_path.write_text(
+        json.dumps(support_policy_payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    result = promote_release(
+        {"official_latest": "same", "needs_release": False},
+        release_path,
+        support_policy_path,
+    )
+
+    assert result == {"promoted": False, "from_commit": "same", "to_commit": "same"}
+    assert json.loads(release_path.read_text(encoding="utf-8")) == release_payload
+    assert json.loads(support_policy_path.read_text(encoding="utf-8")) == support_policy_payload
+
+
 def test_validate_candidate_requires_zero_missing_and_zero_control():
     result = validate_candidate(
         scan_summary={"missing": 0, "control": 0},
@@ -113,6 +196,7 @@ def test_workflow_routes_failed_candidate_to_failure_bundle():
 
     on_block = workflow.get("on", workflow.get(True))
     assert workflow["name"] == "unattended-release"
+    assert workflow["permissions"] == {"contents": "write"}
     assert on_block["schedule"][0]["cron"] == "0 * * * *"
     assert "workflow_dispatch" in on_block
 
@@ -123,6 +207,8 @@ def test_workflow_routes_failed_candidate_to_failure_bundle():
     assert steps[0]["uses"] == "actions/checkout@v4"
 
     step_names = [step.get("name") for step in steps if "name" in step]
+    assert step_names.index("Validate candidate") < step_names.index("Promote release")
+    assert step_names.index("Promote release") < step_names.index("Commit promoted release")
     assert step_names.index("Collect failure bundle") < step_names.index("Codex exec remediation")
     assert step_names.index("Collect failure bundle") < step_names.index("Upload failure bundle artifact")
 
@@ -134,6 +220,10 @@ def test_workflow_routes_failed_candidate_to_failure_bundle():
         steps_by_name["Validate candidate"]["run"]
         == "python3 scripts/validate_candidate.py --overlay-ok --tests-ok --scan-missing 0 --scan-control 0"
     )
+    assert steps_by_name["Promote release"]["run"] == "python3 scripts/promote_release.py"
+    assert "git config user.name \"github-actions[bot]\"" in steps_by_name["Commit promoted release"]["run"]
+    assert "git commit -m \"release: promote supported Hermes commit\"" in steps_by_name["Commit promoted release"]["run"]
+    assert "git push origin HEAD:main" in steps_by_name["Commit promoted release"]["run"]
     assert steps_by_name["Codex exec remediation"]["if"] == "${{ failure() }}"
     assert "bash scripts/run_codex_remediation.sh candidate out || true" in steps_by_name["Codex exec remediation"]["run"]
     assert steps_by_name["Collect failure bundle"]["if"] == "${{ failure() }}"

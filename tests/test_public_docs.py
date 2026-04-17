@@ -19,9 +19,11 @@ def test_public_docs_exist_and_are_linked():
     assert "CHANGELOG.md" in readme
     assert "CONTRIBUTING.md" in readme
     assert "LICENSE" in readme
+    assert "自动晋升" in readme
     assert "这里的“安装”指把这个 release 系统检出到本地" in install
     assert "release_version" in release
     assert "0.1.0" in release
+    assert "验证通过后自动晋升" in release
     assert "初始化 Hermes 中文化无人值守发布仓库" in changelog
     assert "This repository publishes and maintains the Hermes Chinese overlay release system." in contributing
     assert "Apache License" in license_text

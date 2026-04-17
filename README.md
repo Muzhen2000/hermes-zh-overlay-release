@@ -13,6 +13,7 @@
 - 官方基线：[`release.json`](./release.json)
 - 支持策略：[`payload/localization/support-policy.json`](./payload/localization/support-policy.json)
 - 无人值守工作流：[`.github/workflows/unattended-release.yml`](./.github/workflows/unattended-release.yml)
+- 自动晋升：workflow 验证通过后会自动更新 `release.json` / `support-policy.json` 并推回 `main`
 
 ## 入口
 
