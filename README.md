@@ -34,6 +34,7 @@
 
 - 官方基线：[`release.json`](./release.json)
 - 支持策略：[`payload/localization/support-policy.json`](./payload/localization/support-policy.json)
+- 本地维护器实现：[`payload/scripts/hermes_zh_overlay_manager.py`](./payload/scripts/hermes_zh_overlay_manager.py)
 - 无人值守工作流：[`.github/workflows/unattended-release.yml`](./.github/workflows/unattended-release.yml)
 - 自动晋升：workflow 验证通过后会自动更新 `release.json` / `support-policy.json` 并推回 `main`
 
@@ -49,7 +50,7 @@
 ## 仓库内容
 
 - `scripts/`：上游检测、候选构建、失败包收集、Codex remediation 调度
-- `payload/`：发布给本地 Hermes 维护器消费的策略和脚本
+- `payload/`：发布给本地 Hermes 维护器消费的策略和脚本，其中 `support-policy.json` 是支持真源，`hermes_zh_overlay_manager.py` 是本地自愈维护器
 - `codex/`：失败时交给 `codex exec` 的提示和输出 schema
 - `tests/`：release 流水线、失败包和 remediation 契约测试
 - `docs/`：安装、发布和失败包说明

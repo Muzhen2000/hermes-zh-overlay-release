@@ -9,6 +9,20 @@
 - 受支持 commit：以 `release.json` 和 `support-policy.json` 的当前值为准
 - 失败包镜像：`~/Desktop/Hermes-ZH-Failures/latest`
 
+## 本地维护真源
+
+本地 Hermes 机器不应自行决定“追到哪里”为最新，而应完全服从这里发布的真源：
+
+- `release.json`
+- `payload/localization/support-policy.json`
+
+本地维护器 `payload/scripts/hermes_zh_overlay_manager.py` 的职责是：
+
+- 把本地 Hermes 保持在 `supported_commit`
+- 如果用户误执行 `hermes update` 导致 HEAD 跑到受支持提交之上，自动拉回受支持提交
+- 如果 overlay 已存在但 patch 文件为空，自动重建 patch
+- 重铺 overlay、重装本地 editable install、复扫确认 `missing=0` / `control=0`
+
 ## 发布流程
 
 1. 先在隔离环境验证新的 Hermes 官方 commit。

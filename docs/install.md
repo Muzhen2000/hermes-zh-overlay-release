@@ -17,6 +17,13 @@ cd hermes-zh-overlay-release
 python3 -m pytest tests -q
 ```
 
+仓库里的本地维护 payload 有两个核心文件：
+
+- `payload/localization/support-policy.json`
+- `payload/scripts/hermes_zh_overlay_manager.py`
+
+前者声明当前受支持的 Hermes 官方 commit，后者是在用户本地执行“保持受支持版本、重铺 overlay、复扫验证”的维护器实现。
+
 ## 远端部署
 
 1. 把 `main` 推到 GitHub。
@@ -35,3 +42,4 @@ python3 -m pytest tests -q
 
 这些脚本都是仓库级维护工具，不会修改 Hermes 的用户配置、记忆或会话数据。
 
+如果你要核对“本地 Hermes 应该跟随哪个 commit”，看 `release.json` 和 `payload/localization/support-policy.json`；本地维护器必须以这里声明的 `supported_commit` 为准，而不是盲目追 `origin/main`。
