@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import importlib.util
 import plistlib
+import sys
 from pathlib import Path
 
 import pytest
@@ -121,6 +122,48 @@ def test_payload_manager_restores_previous_launchd_plist_when_bootstrap_fails(tm
         ["launchctl", "bootstrap", "gui/501", str(plist_path)],
         ["launchctl", "bootstrap", "gui/501", str(plist_path)],
     ]
+
+
+def test_payload_manager_writes_failure_bundle_to_desktop_when_maintain_fails(tmp_path, monkeypatch):
+    manager = _load_manager_module()
+    bundle_dir = tmp_path / "failure-bundle"
+    desktop_dir = tmp_path / "Desktop"
+
+    monkeypatch.setattr(manager, "LOCAL_FAILURE_BUNDLE_DIR", bundle_dir, raising=False)
+    monkeypatch.setattr(manager, "DESKTOP_DIR", desktop_dir, raising=False)
+    monkeypatch.setattr(manager, "LATEST_SCAN_FILE", tmp_path / "missing-scan.json", raising=False)
+    monkeypatch.setattr(manager, "_head_short", lambda: "deadbee", raising=False)
+    monkeypatch.setattr(
+        manager,
+        "_load_support_policy",
+        lambda: {
+            "upstream_repo": "https://github.com/NousResearch/hermes-agent.git",
+            "supported_commit": "abc123",
+            "maintenance_interval_seconds": 21600,
+        },
+        raising=False,
+    )
+
+    def _failing_maintain(_args):
+        raise manager.OverlayError("synthetic maintain failure")
+
+    monkeypatch.setattr(manager, "cmd_maintain", _failing_maintain, raising=False)
+    monkeypatch.setattr(sys, "argv", ["manager.py", "maintain", "--scheduled"])
+
+    exit_code = manager.main()
+
+    mirror_dir = desktop_dir / "Hermes-ZH-Failures" / "latest"
+    assert exit_code == 1
+    assert (bundle_dir / "failure-report.json").exists()
+    assert (bundle_dir / "failure-report.md").exists()
+    assert (mirror_dir / "failure-report.json").exists()
+    assert (mirror_dir / "failure-report.md").exists()
+
+    report = json.loads((bundle_dir / "failure-report.json").read_text(encoding="utf-8"))
+    assert report["command"] == "maintain"
+    assert report["error"] == "synthetic maintain failure"
+    assert report["head"] == "deadbee"
+    assert report["supported_commit"] == "abc123"
 
 
 def test_payload_manager_recovers_accidental_update_with_overlay_present(tmp_path, monkeypatch):

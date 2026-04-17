@@ -17,13 +17,17 @@ def test_public_docs_exist_and_are_linked():
     assert "用户体验视角" in readme
     assert "默认中文的 Hermes" in readme
     assert "正常运行 `hermes update`" in readme
+    assert "curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/install_local_overlay.py | python3 -" in readme
     assert "docs/install.md" in readme
     assert "docs/release.md" in readme
     assert "CHANGELOG.md" in readme
     assert "CONTRIBUTING.md" in readme
     assert "LICENSE" in readme
     assert "自动晋升" in readme
-    assert "这里的“安装”指把这个 release 系统检出到本地" in install
+    assert "一行安装" in install
+    assert "curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/install_local_overlay.py | python3 -" in install
+    assert "--no-bootstrap --no-maintain" in install
+    assert "~/Desktop/Hermes-ZH-Failures/latest" in install
     assert "release_version" in release
     assert "0.1.0" in release
     assert "验证通过后自动晋升" in release

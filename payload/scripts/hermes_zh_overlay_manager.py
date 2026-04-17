@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 import plistlib
@@ -23,6 +24,8 @@ SCAN_SCRIPT = HERMES_HOME / "scripts" / "scan_hermes_localization.py"
 LATEST_SCAN_FILE = HERMES_HOME / "localization" / "reports" / "hermes-zh-scan-latest.json"
 BASELINE_SCAN_FILE = HERMES_HOME / "localization" / "reports" / "hermes-zh-baseline.json"
 LOG_DIR = HERMES_HOME / "logs"
+DESKTOP_DIR = Path.home() / "Desktop"
+LOCAL_FAILURE_BUNDLE_DIR = HERMES_HOME / "localization" / "reports" / "failure-bundle"
 LAUNCHD_LABEL = "com.muzhen.hermes-zh-overlay-maintain"
 LAUNCHD_PLIST_PATH = Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
 
@@ -80,6 +83,79 @@ def mirror_failure_bundle(bundle_dir: Path, *, desktop_root: Path) -> Path:
             shutil.copy2(item, destination)
 
     return target
+
+
+def _safe_text(callback, default: str = "unavailable") -> str:
+    try:
+        return str(callback())
+    except Exception:
+        return default
+
+
+def _safe_json(callback, default):
+    try:
+        return callback()
+    except Exception:
+        return default
+
+
+def _write_local_failure_bundle(exc: OverlayError, args: argparse.Namespace) -> Path:
+    bundle_dir = LOCAL_FAILURE_BUNDLE_DIR
+    if bundle_dir.exists():
+        shutil.rmtree(bundle_dir)
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+
+    policy = _safe_json(_load_support_policy, {})
+    status_map = _safe_json(_git_status, {})
+    unexpected = _safe_json(lambda: _unexpected_paths(status_map), [])
+    managed = _safe_json(lambda: _managed_dirty_paths(status_map), [])
+    report = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "command": getattr(args, "command", "unknown"),
+        "scheduled": bool(getattr(args, "scheduled", False)),
+        "error": str(exc),
+        "head": _safe_text(_head_short),
+        "supported_commit": policy.get("supported_commit", "") if isinstance(policy, dict) else "",
+        "maintenance_interval_seconds": (
+            policy.get("maintenance_interval_seconds", "") if isinstance(policy, dict) else ""
+        ),
+        "managed_dirty": managed,
+        "unexpected_dirty": unexpected,
+    }
+
+    _write_text_if_changed(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        bundle_dir / "failure-report.json",
+    )
+    _write_text_if_changed(
+        "\n".join(
+            [
+                "# Hermes 中文化本地维护失败",
+                "",
+                f"- command: `{report['command']}`",
+                f"- scheduled: `{report['scheduled']}`",
+                f"- head: `{report['head']}`",
+                f"- supported_commit: `{report['supported_commit']}`",
+                f"- error: `{report['error']}`",
+                "",
+                "把这个目录交给新的 Codex 线程即可继续排查。",
+            ]
+        )
+        + "\n",
+        bundle_dir / "failure-report.md",
+    )
+
+    if SUPPORT_POLICY_FILE.exists():
+        shutil.copy2(SUPPORT_POLICY_FILE, bundle_dir / "support-policy.json")
+    if LATEST_SCAN_FILE.exists():
+        shutil.copy2(LATEST_SCAN_FILE, bundle_dir / "latest-scan.json")
+    for log_name in ("hermes-zh-overlay-maintain.log", "hermes-zh-overlay-maintain.err.log"):
+        log_path = LOG_DIR / log_name
+        if log_path.exists():
+            shutil.copy2(log_path, bundle_dir / log_name)
+
+    mirror_failure_bundle(bundle_dir, desktop_root=DESKTOP_DIR)
+    return bundle_dir
 
 
 def _ensure_dirs() -> None:
@@ -893,6 +969,11 @@ def main() -> int:
     try:
         return int(args.func(args))
     except OverlayError as exc:
+        if getattr(args, "command", "") == "maintain":
+            try:
+                _write_local_failure_bundle(exc, args)
+            except Exception as bundle_exc:
+                print(f"[hermes-zh-overlay] failed to write failure bundle: {bundle_exc}", file=sys.stderr)
         print(f"[hermes-zh-overlay] {exc}", file=sys.stderr)
         return 1
 

@@ -40,6 +40,12 @@
 
 ## 入口
 
+快速安装：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/install_local_overlay.py | python3 -
+```
+
 - 安装与本地检查：[`docs/install.md`](./docs/install.md)
 - 发布流程：[`docs/release.md`](./docs/release.md)
 - 失败包格式：[`docs/failure-package.md`](./docs/failure-package.md)
