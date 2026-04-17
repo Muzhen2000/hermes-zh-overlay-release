@@ -1,68 +1,84 @@
-# Hermes 中文化无人值守发布
+# Hermes 中文最小包
 
-公开 release 仓库，负责 Hermes 中文化 overlay 的发布、验证和失败接手。
+这个仓库不分叉 Hermes，也不自动追官方最新。
 
-## 适用对象
+它只做一件事：给**指定官方 Hermes commit**提供一份**最小中文包**，范围仅限：
 
-- 维护者：更新支持版本、修正 release 流程、发布新版本
-- 失败接手者：根据 failure bundle 定位问题并做最小修复
-- 普通用户：只需要跟随 release 仓库发布的结果，不直接改这里
+- 终端中用户可见、非 LLM 生成的固定文案
+- Telegram 中用户可见、非 LLM 生成的固定文案
 
-## 用户体验视角
+它**不处理 Web UI**。Web UI 完全跟随官方源码。
 
-如果你是普通用户，可以把它理解成：
+## 使用方式
 
-- 你平时直接把 Hermes 当成“默认中文的 Hermes”来用
-- 你正常使用终端/TUI 和 Telegram，不需要自己去找哪些英文该翻
-- 你想更新时，正常运行 `hermes update`
-- 大多数更新不会碰到中文化范围，所以更新后通常不需要你做额外处理
-- 更新后只要随手看一眼启动页、`/help` 和常用提示语是不是还在中文就够了
+前提：你已经按官方方式安装过 Hermes，本地有 `~/.hermes/hermes-agent`。
 
-这套系统真正想给你的体验是：
-
-- 平时只管用，不用管 release 仓库内部怎么工作
-- Hermes 更新时，系统会先检查这次更新有没有碰到“需要中文化”的范围
-- 没碰到就直接通过；碰到了才做最小修补
-- 如果自动处理失败，本地应当停在旧的稳定版本，而不是把 Hermes 直接更新坏
-
-一句话：
-
-- 普通用户的正确心智不是“我在维护一个魔改 fork”
-- 而是“我在用官方 Hermes，只是默认带了一层受控的中文 overlay”
-
-## 状态
-
-- 官方基线：[`release.json`](./release.json)
-- 支持策略：[`payload/localization/support-policy.json`](./payload/localization/support-policy.json)
-- 本地维护器实现：[`payload/scripts/hermes_zh_overlay_manager.py`](./payload/scripts/hermes_zh_overlay_manager.py)
-- 无人值守工作流：[`.github/workflows/unattended-release.yml`](./.github/workflows/unattended-release.yml)
-- 自动晋升：workflow 验证通过后会自动更新 `release.json` / `support-policy.json` 并推回 `main`
-
-## 入口
-
-快速安装：
+应用当前最新中文包：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/install_local_overlay.py | python3 -
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 -
 ```
 
-- 安装与本地检查：[`docs/install.md`](./docs/install.md)
-- 发布流程：[`docs/release.md`](./docs/release.md)
-- 失败包格式：[`docs/failure-package.md`](./docs/failure-package.md)
-- 变更记录：[`CHANGELOG.md`](./CHANGELOG.md)
-- 贡献规范：[`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- 许可证：[`LICENSE`](./LICENSE)
+应用指定版本：
 
-## 仓库内容
+```bash
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 31e72764
+```
 
-- `scripts/`：上游检测、候选构建、失败包收集、Codex remediation 调度
-- `payload/`：发布给本地 Hermes 维护器消费的策略和脚本，其中 `support-policy.json` 是支持真源，`hermes_zh_overlay_manager.py` 是本地自愈维护器
-- `codex/`：失败时交给 `codex exec` 的提示和输出 schema
-- `tests/`：release 流水线、失败包和 remediation 契约测试
-- `docs/`：安装、发布和失败包说明
+校验当前本地状态：
 
-## 约束
+```bash
+python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
+```
 
-- 不维护 Web UI 的汉化，Web UI 使用 Hermes 官方自带的中/英切换
-- 不直接追官方 `main`，只追 `release.json` / `support-policy.json` 声明的受支持版本
-- 失败时先收集失败包，再允许 remediation
+## 用户体验
+
+你以后不需要关心“自动维护系统”。
+
+流程只有两个：
+
+1. 官方 Hermes 出新版本后，这个仓库发布一个对应版本的中文包。
+2. 你或家人执行上面的同一条命令，把本地 Hermes 源码对齐到该官方版本，再应用该版本的最小中文包。
+
+这条命令会：
+
+- 更新本地这个中文包仓库
+- 将 `~/.hermes/hermes-agent` 对齐到指定官方 commit
+- 删除旧版中文自动维护残留
+- 复制当前 release 的词条文件
+- 应用当前 release 的最小 patch
+
+它不会做这些事：
+
+- 不处理 Web UI
+- 不做无人值守自动追官方
+- 不保留旧的自动维护系统
+- 不修改 `~/.hermes` 下的个人配置、记忆、会话数据
+
+## Release 结构
+
+每个 release 目录都绑定一个官方 commit，例如：
+
+```text
+releases/31e72764/
+  manifest.json
+  patches/hermes-zh.patch
+  localization/
+    commands.zh-CN.yaml
+    hermes_zh_runtime.py
+    skills.zh-CN.yaml
+    skins.zh-CN.yaml
+    tips.zh-CN.yaml
+    ui.zh-CN.yaml
+```
+
+## 维护原则
+
+- 基线永远是官方 Hermes 指定 commit
+- 非必要，不改源码
+- 必须改源码时，只做最小可见面改动
+- 不改控制流，不改条件块，不改运行路径
+- Web UI 不处理
+- 每个 release 都从官方基线重新生成最小 patch
+
+详细安装说明见 [`docs/install.md`](./docs/install.md)。

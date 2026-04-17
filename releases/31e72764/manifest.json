@@ -1,0 +1,38 @@
+{
+  "release": "31e72764",
+  "official_commit": "31e7276474976cd752d73de7701229eefd1b37ad",
+  "scope": [
+    "terminal",
+    "telegram"
+  ],
+  "web_ui_policy": "upstream-only",
+  "patch": "patches/hermes-zh.patch",
+  "localization_files": [
+    "commands.zh-CN.yaml",
+    "hermes_zh_runtime.py",
+    "skills.zh-CN.yaml",
+    "skins.zh-CN.yaml",
+    "tips.zh-CN.yaml",
+    "ui.zh-CN.yaml"
+  ],
+  "allowed_source_files": [
+    "agent/display.py",
+    "agent/manual_compression_feedback.py",
+    "cli.py",
+    "gateway/platforms/telegram.py",
+    "gateway/run.py",
+    "hermes_cli/banner.py",
+    "hermes_cli/commands.py",
+    "hermes_cli/gateway.py",
+    "hermes_cli/skin_engine.py",
+    "hermes_cli/status.py",
+    "hermes_cli/tips.py",
+    "tools/skills_tool.py"
+  ],
+  "justified_non_text_logic": [
+    {
+      "file": "cli.py",
+      "reason": "Use display-cell width for spinner row calculation so CJK text does not under-count terminal rows."
+    }
+  ]
+}

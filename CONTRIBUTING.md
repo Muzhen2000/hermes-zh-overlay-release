@@ -1,48 +1,37 @@
-# Contributing
+# CONTRIBUTING
 
-This repository publishes and maintains the Hermes Chinese overlay release system.
+这个仓库只接受“版本绑定的最小中文包”改动。
 
-## Scope
+## 基线
 
-- Keep changes limited to the release system.
-- Do not turn this repository into a Hermes fork.
-- Do not broaden the Chinese localization scope without an explicit release decision.
+- 先锁定一个官方 Hermes commit
+- 所有改动都从这个官方 commit 重新比较
+- 不在旧 patch 上继续叠补丁
 
-## Before you change anything
+## 范围
 
-1. Read `release.json`, `payload/localization/support-policy.json`, and the current workflow.
-2. Run `python3 -m pytest tests -q`.
-3. Keep in mind that the workflow is the source of truth for promoting the supported Hermes commit and the release policy.
+允许：
 
-## What belongs here
+- 终端固定提示语
+- Telegram 固定提示语
+- slash 命令说明、成功提示、banner、spinner、tips、skills 展示文案
 
-- Release metadata
-- Workflow and validation logic
-- Failure bundle handling
-- Release-facing documentation
-- Tests for the release pipeline and repository docs
+不允许：
 
-## What does not belong here
+- Web UI 汉化
+- 与中文化无关的修复
+- 自动维护、定时任务、失败包、远端自愈链路
+- 无必要的控制流改动
 
-- User Hermes configuration
-- API keys
-- Session history or memory
-- Web UI localization changes
-- Direct edits to Hermes upstream behavior unless they are part of the release pipeline contract
+## 源码改动标准
 
-## Change rules
+- 优先外置词条
+- 源码只保留最小钩子
+- 如需改逻辑，必须能证明是中文显示本身所必需
+- `manifest.json` 中要列出全部允许改动文件
 
-- Make the smallest change that satisfies the release goal.
-- Keep the failure path deterministic.
-- Update or add a test for any behavior change.
-- If a change affects the supported commit, use the release promotion path so `release.json` and `payload/localization/support-policy.json` stay in sync; manual edits are only for recovery and must update both files together.
+## 提交前检查
 
-## Verification
-
-Run:
-
-```bash
-python3 -m pytest tests -q
-```
-
-If the change affects GitHub Actions or the failure bundle path, verify the workflow structure tests still pass and keep the desktop mirror path unchanged.
+- patch 只触达 `manifest.json` 允许的源码文件
+- `python3 -m pytest tests`
+- `python3 scripts/verify_release.py`

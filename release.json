@@ -1,9 +1,10 @@
 {
   "official_repo": "https://github.com/NousResearch/hermes-agent.git",
-  "supported_commit": "64b354719f5e7d242b0405b9014fd60bd8ac0cd4",
-  "release_version": "0.1.0",
-  "failure_bundle": {
-    "desktop_path": "~/Desktop/Hermes-ZH-Failures/latest",
-    "artifact_name": "hermes-zh-failure-bundle"
-  }
+  "latest_release": "31e72764",
+  "web_ui_policy": "upstream-only",
+  "scope": [
+    "terminal",
+    "telegram"
+  ],
+  "prerequisite": "official-hermes-installed"
 }
