@@ -3333,147 +3333,152 @@ index 10597db1..d6e36e5c 100644
          pass
  
 diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
-index 160e7c11..354d553f 100644
+index 160e7c11..9c79ee2e 100644
 --- a/hermes_cli/skin_engine.py
 +++ b/hermes_cli/skin_engine.py
-@@ -103,6 +103,7 @@ Drop a YAML file in ``~/.hermes/skins/<name>.yaml`` following the schema above.
- Activate with ``/skin <name>`` in the CLI or ``display.skin: <name>`` in config.yaml.
- """
- 
-+import importlib.util
- import logging
- from dataclasses import dataclass, field
- from pathlib import Path
-@@ -112,6 +113,128 @@ from hermes_constants import get_hermes_home
+@@ -112,6 +112,141 @@ from hermes_constants import get_hermes_home
  
  logger = logging.getLogger(__name__)
  
-+_RUNTIME_LOCALIZATION_MODULE: Any | None = None
++_DEFAULT_LOCALE = "zh-CN"
++_LOCALIZATION_CACHE: Dict[Path, tuple[int, Dict[str, Any]]] = {}
 +
 +
-+def _load_runtime_localization_module() -> Any | None:
-+    global _RUNTIME_LOCALIZATION_MODULE
-+    if _RUNTIME_LOCALIZATION_MODULE is not None:
-+        return _RUNTIME_LOCALIZATION_MODULE
++def _localization_dir() -> Path:
++    return get_hermes_home() / "localization"
 +
-+    runtime_path = get_hermes_home() / "localization" / "hermes_zh_runtime.py"
-+    if not runtime_path.exists():
-+        _RUNTIME_LOCALIZATION_MODULE = False
-+        return None
++
++def _load_localization_yaml(path: Path) -> Dict[str, Any]:
++    try:
++        stat = path.stat()
++    except OSError:
++        return {}
++
++    cached = _LOCALIZATION_CACHE.get(path)
++    if cached and cached[0] == stat.st_mtime_ns:
++        return cached[1]
 +
 +    try:
-+        spec = importlib.util.spec_from_file_location("hermes_zh_runtime", runtime_path)
-+        if spec is None or spec.loader is None:
-+            _RUNTIME_LOCALIZATION_MODULE = False
-+            return None
-+        module = importlib.util.module_from_spec(spec)
-+        spec.loader.exec_module(module)
-+        _RUNTIME_LOCALIZATION_MODULE = module
-+        return module
++        import yaml
++
++        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 +    except Exception:
-+        logger.debug("Failed to load localization runtime from %s", runtime_path, exc_info=True)
-+        _RUNTIME_LOCALIZATION_MODULE = False
-+        return None
++        raw = {}
++
++    if not isinstance(raw, dict):
++        raw = {}
++
++    _LOCALIZATION_CACHE[path] = (stat.st_mtime_ns, raw)
++    return raw
 +
 +
-+def _call_runtime_localization(func_name: str, fallback: Any, *args: Any, **kwargs: Any) -> Any:
-+    module = _load_runtime_localization_module()
-+    if module is None:
-+        return fallback
-+    func = getattr(module, func_name, None)
-+    if not callable(func):
-+        return fallback
-+    try:
-+        return func(*args, **kwargs)
-+    except Exception:
-+        logger.debug("Localization runtime call failed: %s", func_name, exc_info=True)
-+        return fallback
++def _load_overlay(kind: str) -> Dict[str, Any]:
++    return _load_localization_yaml(_localization_dir() / f"{kind}.{_DEFAULT_LOCALE}.yaml")
 +
 +
-+def normalize_skill_slug(name: str) -> str:
-+    fallback = str(name or "").strip().lower().replace(" ", "-").replace("_", "-")
-+    return _call_runtime_localization("normalize_skill_slug", fallback, name)
++def _lookup_localized(mapping: Any, *keys: str | None) -> str:
++    if not isinstance(mapping, dict):
++        return ""
++    for key in keys:
++        if key is None:
++            continue
++        text = str(key).strip()
++        if not text:
++            continue
++        for candidate in (text, text.lower()):
++            value = mapping.get(candidate)
++            if isinstance(value, str) and value.strip():
++                return value.strip()
++    return ""
++
++
++def _lookup_localized_list(mapping: Any, *keys: str | None) -> List[str]:
++    if not isinstance(mapping, dict):
++        return []
++    for key in keys:
++        if key is None:
++            continue
++        text = str(key).strip()
++        if not text:
++            continue
++        for candidate in (text, text.lower()):
++            value = mapping.get(candidate)
++            if not isinstance(value, list):
++                continue
++            cleaned = [str(item).strip() for item in value if str(item).strip()]
++            if cleaned:
++                return cleaned
++    return []
 +
 +
 +def get_command_description(command_name: str, default: str) -> str:
-+    return _call_runtime_localization("get_command_description", default, command_name, default)
++    commands = _load_overlay("commands").get("commands", {})
++    return _lookup_localized(commands, command_name) or default
 +
 +
 +def get_command_meta(key: str, default: str) -> str:
-+    return _call_runtime_localization("get_command_meta", default, key, default)
-+
-+
-+def get_skill_description(
-+    *,
-+    name: str | None = None,
-+    slug: str | None = None,
-+    default: str = "",
-+) -> str:
-+    return _call_runtime_localization(
-+        "get_skill_description",
-+        default,
-+        name=name,
-+        slug=slug,
-+        default=default,
-+    )
-+
-+
-+def get_skill_meta(key: str, default: str) -> str:
-+    return _call_runtime_localization("get_skill_meta", default, key, default)
++    meta = _load_overlay("commands").get("meta", {})
++    return _lookup_localized(meta, key) or default
 +
 +
 +def get_category_description(category: str, default: str = "") -> str:
-+    return _call_runtime_localization("get_category_description", default, category, default)
-+
-+
-+def format_localized_text(template: str, **format_args: Any) -> str:
-+    fallback = template
-+    if format_args:
-+        try:
-+            fallback = template.format(**format_args)
-+        except Exception:
-+            fallback = template
-+    return _call_runtime_localization("format_localized_text", fallback, template, **format_args)
++    categories = _load_overlay("skills").get("categories", {})
++    return _lookup_localized(categories, category) or default
 +
 +
 +def get_ui_text(key: str, default: str = "", **format_args: Any) -> str:
-+    fallback = default
++    template = _lookup_localized(_load_overlay("ui").get("messages", {}), key) or default
 +    if format_args:
 +        try:
-+            fallback = default.format(**format_args)
++            return template.format(**format_args)
 +        except Exception:
-+            fallback = default
-+    return _call_runtime_localization("get_ui_text", fallback, key, default, **format_args)
++            return template
++    return template
 +
 +
 +def get_skin_branding_text(skin_name: str, key: str, default: str = "") -> str:
-+    return _call_runtime_localization("get_skin_branding_text", default, skin_name, key, default)
++    skins = _load_overlay("skins").get("skins", {})
++    normalized_skin = str(skin_name or "").strip().lower()
++    exact = skins.get(normalized_skin, {}) if isinstance(skins.get(normalized_skin), dict) else {}
++    fallback = skins.get("default", {}) if isinstance(skins.get("default"), dict) else {}
++    branding_exact = exact.get("branding", {}) if isinstance(exact.get("branding"), dict) else {}
++    branding_fallback = fallback.get("branding", {}) if isinstance(fallback.get("branding"), dict) else {}
++    return _lookup_localized(branding_exact, key) or _lookup_localized(branding_fallback, key) or default
 +
 +
 +def get_skin_spinner_text(skin_name: str, key: str, default: List[str] | None = None) -> List[str]:
-+    fallback = list(default or [])
-+    return _call_runtime_localization("get_skin_spinner_text", fallback, skin_name, key, default)
-+
-+
-+def _localize_skin_branding(skin_name: str, branding: Dict[str, str]) -> Dict[str, str]:
-+    return _call_runtime_localization("localize_skin_branding", dict(branding), skin_name, branding)
-+
-+
-+def _localize_skin_spinner(skin_name: str, spinner: Dict[str, Any]) -> Dict[str, Any]:
-+    return _call_runtime_localization("localize_skin_spinner", dict(spinner), skin_name, spinner)
++    skins = _load_overlay("skins").get("skins", {})
++    normalized_skin = str(skin_name or "").strip().lower()
++    exact = skins.get(normalized_skin, {}) if isinstance(skins.get(normalized_skin), dict) else {}
++    fallback = skins.get("default", {}) if isinstance(skins.get("default"), dict) else {}
++    spinner_exact = exact.get("spinner", {}) if isinstance(exact.get("spinner"), dict) else {}
++    spinner_fallback = fallback.get("spinner", {}) if isinstance(fallback.get("spinner"), dict) else {}
++    localized = _lookup_localized_list(spinner_exact, key) or _lookup_localized_list(spinner_fallback, key)
++    return localized or list(default or [])
 +
 +
 +def get_tip_corpus(defaults: List[str]) -> List[str]:
-+    return _call_runtime_localization("get_tip_corpus", list(defaults), defaults)
++    data = _load_overlay("tips")
 +
++    localized = data.get("tips", [])
++    if isinstance(localized, list):
++        cleaned = [str(item).strip() for item in localized if str(item).strip()]
++        if cleaned:
++            return cleaned
 +
-+def clear_localization_caches() -> None:
-+    _call_runtime_localization("clear_localization_caches", None)
++    translations = data.get("translations", {})
++    if isinstance(translations, dict):
++        mapped = [_lookup_localized(translations, item) or item for item in defaults]
++        cleaned = [str(item).strip() for item in mapped if str(item).strip()]
++        if cleaned:
++            return cleaned
++
++    return list(defaults)
 +
  
  # =============================================================================
  # Skin data structure
-@@ -145,7 +268,8 @@ class SkinConfig:
+@@ -145,7 +280,8 @@ class SkinConfig:
  
      def get_branding(self, key: str, fallback: str = "") -> str:
          """Get a branding value with fallback."""
@@ -3483,20 +3488,33 @@ index 160e7c11..354d553f 100644
  
  
  # =============================================================================
-@@ -618,9 +742,12 @@ def _build_skin_config(data: Dict[str, Any]) -> SkinConfig:
+@@ -618,13 +754,23 @@ def _build_skin_config(data: Dict[str, Any]) -> SkinConfig:
      spinner.update(data.get("spinner", {}))
      branding = dict(default.get("branding", {}))
      branding.update(data.get("branding", {}))
 +    skin_name = data.get("name", "unknown")
-+    spinner = _localize_skin_spinner(str(skin_name), spinner)
-+    branding = _localize_skin_branding(str(skin_name), branding)
++    localized_spinner = dict(spinner)
++    for key, value in spinner.items():
++        if isinstance(value, list):
++            localized_spinner[key] = get_skin_spinner_text(str(skin_name), key, value)
++
++    localized_branding = dict(branding)
++    for key, value in branding.items():
++        if isinstance(value, str):
++            localized_branding[key] = get_skin_branding_text(str(skin_name), key, value)
  
      return SkinConfig(
 -        name=data.get("name", "unknown"),
 +        name=skin_name,
          description=data.get("description", ""),
          colors=colors,
-         spinner=spinner,
+-        spinner=spinner,
+-        branding=branding,
++        spinner=localized_spinner,
++        branding=localized_branding,
+         tool_prefix=data.get("tool_prefix", default.get("tool_prefix", "┊")),
+         tool_emojis=data.get("tool_emojis", {}),
+         banner_logo=data.get("banner_logo", ""),
 diff --git a/hermes_cli/status.py b/hermes_cli/status.py
 index 2e34ae9c..685a150b 100644
 --- a/hermes_cli/status.py
@@ -3961,73 +3979,16 @@ index aa6cb972..11a8b881 100644
  
  
 -
-diff --git a/tests/tools/test_skills_tool.py b/tests/tools/test_skills_tool.py
-index 19c65cb8..bcf88416 100644
---- a/tests/tools/test_skills_tool.py
-+++ b/tests/tools/test_skills_tool.py
-@@ -3,6 +3,7 @@
- import json
- import os
- from pathlib import Path
-+from types import SimpleNamespace
- from unittest.mock import patch
+diff --git a/tests/hermes_cli/test_commands.py b/tests/hermes_cli/test_commands.py
+index 8b359709..de279b8e 100644
+--- a/tests/hermes_cli/test_commands.py
++++ b/tests/hermes_cli/test_commands.py
+@@ -339,7 +339,7 @@ class TestSlashCommandCompleter:
+     def test_builtin_completion_display_meta_shows_description(self):
+         completions = _completions(SlashCommandCompleter(), "/help")
+         assert len(completions) == 1
+-        assert completions[0].display_meta_text == "Show available commands"
++        assert completions[0].display_meta_text == COMMANDS["/help"]
  
- import pytest
-@@ -255,6 +256,21 @@ class TestFindAllSkills:
-         assert len(skills) == 1
-         assert skills[0]["name"] == "real-skill"
+     # -- exact-match trailing space --------------------------------------
  
-+    def test_localized_skill_description_does_not_break_discovery(self, tmp_path, monkeypatch):
-+        runtime = SimpleNamespace(
-+            normalize_skill_slug=lambda name: str(name).strip().lower(),
-+            get_skill_description=lambda *, name=None, slug=None, default="": f"{name}:{default}",
-+        )
-+        monkeypatch.setattr("hermes_cli.skin_engine._RUNTIME_LOCALIZATION_MODULE", runtime)
-+
-+        with patch("tools.skills_tool.SKILLS_DIR", tmp_path):
-+            _make_skill(tmp_path, "localized-skill")
-+            skills = _find_all_skills()
-+
-+        assert len(skills) == 1
-+        assert skills[0]["name"] == "localized-skill"
-+        assert skills[0]["description"] == "localized-skill:Description for localized-skill."
-+
- 
- # ---------------------------------------------------------------------------
- # skills_list
-diff --git a/tools/skills_tool.py b/tools/skills_tool.py
-index ed8c8cfb..2a89f296 100644
---- a/tools/skills_tool.py
-+++ b/tools/skills_tool.py
-@@ -76,6 +76,11 @@ from enum import Enum
- from pathlib import Path
- from typing import Dict, Any, List, Optional, Set, Tuple
- 
-+from hermes_cli.skin_engine import (
-+    get_category_description,
-+    get_skill_description,
-+    normalize_skill_slug,
-+)
- from tools.registry import registry, tool_error
- 
- logger = logging.getLogger(__name__)
-@@ -581,6 +586,11 @@ def _find_all_skills(*, skip_disabled: bool = False) -> List[Dict[str, Any]]:
-                     description = description[:MAX_DESCRIPTION_LENGTH - 3] + "..."
- 
-                 category = _get_category_from_path(skill_md)
-+                description = get_skill_description(
-+                    name=name,
-+                    slug=normalize_skill_slug(name),
-+                    default=description,
-+                )
- 
-                 seen_names.add(name)
-                 skills.append({
-@@ -633,6 +643,7 @@ def _load_category_description(category_dir: Path) -> Optional[str]:
-         if len(description) > MAX_DESCRIPTION_LENGTH:
-             description = description[: MAX_DESCRIPTION_LENGTH - 3] + "..."
- 
-+        description = get_category_description(category_dir.name, description)
-         return description if description else None
-     except (UnicodeDecodeError, PermissionError) as e:
-         logger.debug("Failed to read category description %s: %s", desc_file, e)

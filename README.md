@@ -160,9 +160,15 @@ releases/31e72764/
     ...
 ```
 
+说明：
+
+- 旧 release 中如果仍然带有 `hermes_zh_runtime.py`，应把它视为历史遗留文件。
+- 未来 release 的默认方向是“外置 YAML 数据 + 最薄源码钩子”，而不是继续扩展可执行本地化运行时桥。
+
 ## 维护说明
 
 给未来维护这个仓库的人类或 LLM Agent：
 
 - 用户安装与更新说明见 [docs/install.md](./docs/install.md)
 - 仓库维护与继续汉化规则见 [AGENTS.md](./AGENTS.md)
+- `AGENTS.md` 是维护主规范，其中已经固化了 6 条阶梯原则、范围边界、验证要求和历史失败教训
