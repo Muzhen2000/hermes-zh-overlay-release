@@ -2,6 +2,17 @@
 
 这个文件给未来接手此仓库的人类维护者或 LLM Agent 看。
 
+## 入口协议
+
+如果你是 LLM Agent，而用户让你处理这个仓库里的任何事情，先执行下面 4 步，再考虑是否改任何文件：
+
+1. 先读本文件完整内容。
+2. 如果本地存在 `~/.codex/skills/hermes-zh-release-guardrails/SKILL.md`，先显式使用它。
+3. 先跑 `python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent`。
+4. 先把当前任务分到第一类、第二类、第三类，再决定是否需要行动。
+
+没有完成这 4 步之前，不要进入实现，不要改源码，不要说“已经完成”。
+
 先记住一句话：
 
 **这个仓库的唯一目标，是为指定官方 Hermes commit 提供一份按版本发货的最小中文包。**
