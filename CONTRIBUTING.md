@@ -1,46 +1,39 @@
 # CONTRIBUTING
 
-这个仓库只接受“版本绑定的最小中文包”改动。
+这个仓库只接受：**某一版官方 Hermes 对应的最小中文包**改动。
 
-## 基线
+提交前先看：
 
-- 先锁定一个官方 Hermes commit
-- 所有改动都从这个官方 commit 重新比较
-- 不在旧 patch 上继续叠补丁
-- 不在已经偏离官方的本地脏树上继续修补
+- [AGENTS.md](./AGENTS.md)
 
 ## 范围
 
 允许：
 
-- 终端固定提示语
-- Telegram 固定提示语
-- slash 命令说明、成功提示、banner、spinner、tips、skills 展示文案
+- 终端中用户可见、非 LLM 生成的固定文案
+- Telegram 中用户可见、非 LLM 生成的固定文案
+- 与上述中文化直接相关的最小 patch、词条、皮肤、manifest、release 元数据
 
 不允许：
 
 - Web UI 汉化
-- 与中文化无关的修复
-- 自动维护、定时任务、失败包、远端自愈链路
-- 无必要的控制流改动
-- 只按一个截图或一个皮肤做症状修补
-- 可执行本地化运行时桥
+- LLM 回答正文汉化
+- 与中文化无关的修复、重构、顺手优化
+- 自动维护、定时任务、自愈链路、失败包系统
 
-## 源码改动标准
+## 改动标准
 
-- 优先外置词条
-- 优先只读 YAML 数据，不新增执行 `localization/*.py` 的依赖
-- 源码只保留最小钩子
-- 如需改逻辑，必须能证明是中文显示本身所必需
-- `manifest.json` 中要列出全部允许改动文件
-- 每一行源码改动都必须能直接追溯到终端或 Telegram 的固定可见中文化需求
+- 先锁定目标官方 commit
+- 必须从该官方基线出发，不在旧脏树上继续补丁
+- 优先外置词条和皮肤
+- 非必要不改源码
+- 必要时也只允许最小、可追溯到用户可见中文化需求的源码改动
+- 不改控制流、不改条件块、不扩散到无关区域
 
-## 提交前检查
+## 提交前校验
 
-- patch 只触达 `manifest.json` 允许的源码文件
-- `python3 scripts/verify_release.py`
-- 推荐至少运行：
-  - `python3 -m pytest tests/tools/test_skills_tool.py`
-  - `python3 -m pytest tests/agent/test_display.py`
-  - `python3 -m pytest tests/hermes_cli/test_skin_engine.py tests/hermes_cli/test_banner.py tests/hermes_cli/test_commands.py tests/hermes_cli/test_tips.py`
-- 如果有测试因缺少可选依赖而无法运行，必须明确记录原因，不能当作“已通过”
+- `python3 scripts/verify_release.py --source-dir ~/.hermes/hermes-agent`
+- patch 只触达当前 release 允许的源码文件
+- 如本次触及终端显示或命令文案，至少补跑相关 CLI 测试
+
+如果你是未来继续维护的 LLM Agent，不要只看这个文件，必须先完整阅读 `AGENTS.md`。
