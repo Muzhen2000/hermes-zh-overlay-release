@@ -68,3 +68,8 @@ def test_skin_localization_covers_builtins_and_release_custom_skins():
 
     assert builtin.issubset(localized)
     assert shipped_custom.issubset(localized)
+
+    for skin_name in builtin | shipped_custom:
+        skin = skins_data["skins"][skin_name]
+        verbs = (skin.get("spinner") or {}).get("thinking_verbs") or []
+        assert verbs, f"{skin_name} must define localized thinking_verbs"

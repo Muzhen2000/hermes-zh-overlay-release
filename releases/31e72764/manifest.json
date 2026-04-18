@@ -43,7 +43,10 @@
     "hermes_cli/skin_engine.py",
     "hermes_cli/status.py",
     "hermes_cli/tips.py",
-    "tests/hermes_cli/test_commands.py"
+    "tests/cli/test_cli_loading_indicator.py",
+    "tests/cli/test_cli_localized_feedback.py",
+    "tests/hermes_cli/test_commands.py",
+    "tests/hermes_cli/test_skin_engine.py"
   ],
   "justified_non_text_logic": [
     {

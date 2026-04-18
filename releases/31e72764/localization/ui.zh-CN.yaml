@@ -535,6 +535,10 @@ messages:
   cli.config.not_set_short: 未设置
   cli.yolo.off: '  ⚠ YOLO 模式 [bold red]关闭[/] — 危险命令仍需批准。'
   cli.yolo.on: '  ⚡ YOLO 模式 [bold green]开启[/] — 所有命令都会自动批准，请谨慎使用。'
+  cli.yolo.state_off: 关闭
+  cli.yolo.state_on: 开启
+  cli.yolo.off_ansi: '  ⚠ YOLO 模式 {state} — 危险命令仍需批准。'
+  cli.yolo.on_ansi: '  ⚡ YOLO 模式 {state} — 所有命令都会自动批准，请谨慎使用。'
   cli.browser.connect.already_listening: '   ✓ Chrome 已在端口 {port} 上监听'
   cli.browser.connect.launch_attempt: '   Chrome 当前未以远程调试模式运行，正在尝试启动……'
   cli.browser.connect.launched_ok: '   ✓ Chrome 已启动，并正在端口 {port} 上监听'
@@ -918,6 +922,7 @@ messages:
   cli.skill.loading: '
 
     ⚡ 正在加载技能：{name}'
+  cli.skill.preview: ⚡ 正在加载技能：{name}
   cli.skill.load_failed: 无法为 {command} 加载 skill
   cli.command.unknown: 未知命令：{command}
   cli.command.help_hint: 输入 /help 查看可用命令

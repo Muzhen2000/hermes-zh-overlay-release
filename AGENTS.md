@@ -68,11 +68,11 @@
 
 - 启动页固定说明文字
 - 终端欢迎语
-- 各皮肤的固定欢迎语、帮助头、固定思考状态提示语
+- 各皮肤的固定欢迎语、帮助头、固定思考状态提示语；必须覆盖全部内置皮肤和本仓库随包分发的自建皮肤，不能只修当前正在使用的皮肤
 - slash 命令注释
-- slash 命令触发后的固定提示语
+- slash 命令触发后的固定提示语，包括成功、失败、空状态、用法提示、加载中提示、确认/拒绝提示
 - 固定二级选项提示语
-- 用户发出消息后、LLM 回复前的固定状态提示语
+- 用户发出消息后、LLM 回复前的固定状态提示语，包括 agent 初始化提示、命令 busy 状态、spinner face + verb 组合、工具/记忆检索的短状态行
 - Telegram 中对应的固定命令说明与固定提示语
 
 这明确不包括：
@@ -87,6 +87,7 @@
 
 - 不要只根据一个截图或一个皮肤做症状修补。
 - 在范围内的固定文案，应按“同类问题”检查全部相关皮肤、终端面和 Telegram 面。
+- 如果不得不隐藏内部提示文本，只允许做“展示层摘要”，不得改写真正发给模型的内容。例如 skill 调用可在终端里显示“正在加载技能：xxx”，但不能为了汉化而改掉实际送入模型的 skill invocation payload。
 
 ## 3. 六条阶梯原则
 
@@ -220,6 +221,25 @@
 - Telegram slash 命令注释
 - Telegram 中非 LLM 生成的固定提示语
 
+检查时必须按“类别”扫，不要按截图扫。至少覆盖这些类别：
+
+- 启动页：版本行、更新提示、可用工具、MCP、可用技能、欢迎语、底部提示。
+- slash 命令元数据：`/help`、补全菜单、命令注释、命令分类。
+- slash 命令执行反馈：`/yolo`、`/snapshot`、`/skills`、skill slash command、`/reload-mcp`、`/browser`、`/queue`、`/background`、`/btw`、`/stop`、`/image`、插件/快捷命令等固定输出。
+- 二级/空状态提示：没有快照、没有插件、没有后台进程、缺少参数、未知子命令、最近项提示。
+- 用户输入后到 LLM 回复前：agent 初始化、busy command status、spinner thinking verbs、记忆/检索短状态行。
+- 皮肤：全部内置皮肤和本仓库自建皮肤的 welcome、goodbye、help header、thinking verbs。
+- Telegram：命令菜单描述、slash 命令执行反馈、按钮/确认提示、非 LLM 生成的状态消息。
+
+典型遗漏信号包括但不限于：
+
+- `YOLO mode ON`
+- `No state snapshots yet`
+- `Loading skill:`
+- `[SYSTEM: The user has invoked ...]` 被直接展示给用户
+- `reasoning...`、`formulating...`、`cogitating...`、`brainstorming...`
+- `Searching skills...`、`Reloading MCP servers...`
+
 如果官方更新没有触及这些范围，仍然可以发布一个新 release 绑定新的官方 commit，但原则是：
 
 - patch 仍然必须基于新的官方 commit 重新生成
@@ -300,7 +320,7 @@
 - 终端启动页能正常显示
 - 可用技能数量正常，不出现异常归零
 - `/help`、slash 命令注释、命令触发后的固定提示语仍正常
-- 各皮肤固定欢迎语、帮助头、固定思考状态提示语仍正常
+- 各皮肤固定欢迎语、帮助头、固定思考状态提示语仍正常；不能只测当前皮肤
 - Telegram 固定命令说明与固定提示语仍正常
 
 推荐测试集：
@@ -311,6 +331,8 @@
 - `tests/hermes_cli/test_banner.py`
 - `tests/hermes_cli/test_commands.py`
 - `tests/hermes_cli/test_tips.py`
+- `tests/cli/test_cli_loading_indicator.py`
+- `tests/cli/test_cli_localized_feedback.py`
 
 如果某些测试因本机缺少可选依赖而无法运行，必须明确记录：
 

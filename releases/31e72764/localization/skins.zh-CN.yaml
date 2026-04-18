@@ -68,6 +68,16 @@ skins:
       welcome: "日光模式已就绪。输入消息，或输入 /help 查看可用指令。"
       goodbye: "本次会话结束。愿你今天顺利。⚕"
       help_header: "[?] 可用指令"
+    spinner:
+      thinking_verbs:
+        - 明晰思路
+        - 梳理要点
+        - 校准答案
+        - 检查细节
+        - 聚焦问题
+        - 整理路径
+        - 形成回应
+        - 核对结果
 
   lain:
     branding:
@@ -90,6 +100,16 @@ skins:
       welcome: "单色模式已就绪。输入消息，或输入 /help 查看可用指令。"
       goodbye: "会话结束。⚕"
       help_header: "[?] 可用指令"
+    spinner:
+      thinking_verbs:
+        - 思考中
+        - 分析中
+        - 归纳中
+        - 校验中
+        - 排序中
+        - 压缩信息
+        - 对齐上下文
+        - 输出前检查
 
   mother:
     branding:
@@ -256,6 +276,16 @@ skins:
       welcome: "石板模式已就绪。输入消息，或输入 /help 查看可用指令。"
       goodbye: "会话结束。⚕"
       help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 梳理架构
+        - 追踪线索
+        - 分析状态
+        - 校准上下文
+        - 检查路径
+        - 组合方案
+        - 评估取舍
+        - 准备回答
 
   vault-tec:
     branding:
@@ -278,3 +308,13 @@ skins:
       welcome: "暖光模式已就绪。输入消息，或输入 /help 查看可用指令。"
       goodbye: "本次会话结束。⚕"
       help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 温和梳理
+        - 细读上下文
+        - 整理思路
+        - 校准语气
+        - 核对细节
+        - 形成答案
+        - 收束判断
+        - 准备回应

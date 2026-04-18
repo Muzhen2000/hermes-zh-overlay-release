@@ -108,10 +108,18 @@ index 8f2d5e5d..7db3b7e5 100644
  
      return {
 diff --git a/cli.py b/cli.py
-index 4102dcf0..9a3c0a28 100644
+index 4102dcf0..1bb14a4c 100644
 --- a/cli.py
 +++ b/cli.py
-@@ -64,10 +64,15 @@ from agent.usage_pricing import (
+@@ -23,6 +23,7 @@ import tempfile
+ import time
+ import uuid
+ import textwrap
++import re
+ from contextlib import contextmanager
+ from pathlib import Path
+ from datetime import datetime
+@@ -64,10 +65,32 @@ from agent.usage_pricing import (
      format_token_count_compact,
  )
  from hermes_cli.banner import _format_context_length, format_banner_version_label
@@ -124,10 +132,27 @@ index 4102dcf0..9a3c0a28 100644
 +    return get_ui_text(f"cli.{key}", default, **format_args)
 +
 +
++_SKILL_INVOCATION_PREVIEW_RE = re.compile(
++    r'^\[SYSTEM: The user has invoked the "([^"]+)" skill, indicating they want '
++    r'you to follow its instructions\. The full skill content is loaded below\.\]$'
++)
++
++
++def _summarize_user_input_for_display(user_input: str) -> str:
++    """Return a display-only summary without changing what is sent to the agent."""
++    if not isinstance(user_input, str):
++        return str(user_input)
++    first_line = user_input.split("\n", 1)[0].strip()
++    match = _SKILL_INVOCATION_PREVIEW_RE.match(first_line)
++    if match:
++        return _cli_ui("skill.preview", "⚡ Loading skill: {name}", name=match.group(1))
++    return first_line
++
++
  # Load .env from ~/.hermes/.env first, then project root as dev fallback.
  # User-managed env files should override stale shell exports on restart.
  from hermes_constants import get_hermes_home, display_hermes_home
-@@ -2028,16 +2033,38 @@ class HermesCLI:
+@@ -2028,16 +2051,38 @@ class HermesCLI:
              return 0
          if self._use_minimal_tui_chrome(width=width):
              return 0
@@ -171,7 +196,119 @@ index 4102dcf0..9a3c0a28 100644
      def _get_voice_status_fragments(self, width: Optional[int] = None):
          """Return the voice status bar fragments for the interactive TUI."""
          width = width or self._get_tui_terminal_width()
-@@ -3758,13 +3785,20 @@ class HermesCLI:
+@@ -2647,20 +2692,20 @@ class HermesCLI:
+         """Return a user-facing status message for slower slash commands."""
+         cmd_lower = command.lower().strip()
+         if cmd_lower.startswith("/skills search"):
+-            return "Searching skills..."
++            return _cli_ui("command_status.skills_search", "Searching skills...")
+         if cmd_lower.startswith("/skills browse"):
+-            return "Loading skills..."
++            return _cli_ui("command_status.skills_browse", "Loading skills...")
+         if cmd_lower.startswith("/skills inspect"):
+-            return "Inspecting skill..."
++            return _cli_ui("command_status.skills_inspect", "Inspecting skill...")
+         if cmd_lower.startswith("/skills install"):
+-            return "Installing skill..."
++            return _cli_ui("command_status.skills_install", "Installing skill...")
+         if cmd_lower.startswith("/skills"):
+-            return "Processing skills command..."
++            return _cli_ui("command_status.skills_generic", "Processing skills command...")
+         if cmd_lower == "/reload-mcp":
+-            return "Reloading MCP servers..."
++            return _cli_ui("command_status.reload_mcp", "Reloading MCP servers...")
+         if cmd_lower.startswith("/browser"):
+-            return "Configuring browser..."
+-        return "Processing command..."
++            return _cli_ui("command_status.browser", "Configuring browser...")
++        return _cli_ui("command_status.generic", "Processing command...")
+ 
+     def _command_spinner_frame(self) -> str:
+         """Return the current spinner frame for slow slash commands."""
+@@ -3425,11 +3470,17 @@ class HermesCLI:
+         if subcmd in ("list", "ls"):
+             snaps = list_quick_snapshots()
+             if not snaps:
+-                print("  No state snapshots yet.")
+-                print("  Create one: /snapshot create [label]")
++                print(_cli_ui("snapshot.no_snapshots", "  No state snapshots yet."))
++                print(_cli_ui("snapshot.create_hint", "  Create one: /snapshot create [label]"))
+                 return
+-            print(f"  State snapshots ({display_hermes_home()}/state-snapshots/):\n")
+-            print(f"  {'#':>3}  {'ID':<35} {'Files':>5} {'Size':>10} {'Label'}")
++            print(_cli_ui("snapshot.list_header", "  State snapshots ({home}/state-snapshots/):\n", home=display_hermes_home()))
++            print(
++                f"  {_cli_ui('snapshot.column_index', '#'):>3}  "
++                f"{_cli_ui('snapshot.column_id', 'ID'):<35} "
++                f"{_cli_ui('snapshot.column_files', 'Files'):>5} "
++                f"{_cli_ui('snapshot.column_size', 'Size'):>10} "
++                f"{_cli_ui('snapshot.column_label', 'Label')}"
++            )
+             print(f"  {'─'*3}  {'─'*35} {'─'*5} {'─'*10} {'─'*20}")
+             for i, s in enumerate(snaps, 1):
+                 size = s.get("total_size", 0)
+@@ -3446,17 +3497,17 @@ class HermesCLI:
+             label = " ".join(parts[2:]) if len(parts) > 2 else None
+             snap_id = create_quick_snapshot(label=label)
+             if snap_id:
+-                print(f"  Snapshot created: {snap_id}")
++                print(_cli_ui("snapshot.created", "  Snapshot created: {id}", id=snap_id))
+             else:
+-                print("  No state files found to snapshot.")
++                print(_cli_ui("snapshot.no_state_files", "  No state files found to snapshot."))
+ 
+         elif subcmd in ("restore", "rewind"):
+             if len(parts) < 3:
+-                print("  Usage: /snapshot restore <snapshot-id>")
++                print(_cli_ui("snapshot.restore_usage", "  Usage: /snapshot restore <snapshot-id>"))
+                 # Show hint with most recent snapshot
+                 snaps = list_quick_snapshots(limit=1)
+                 if snaps:
+-                    print(f"  Most recent: {snaps[0]['id']}")
++                    print(_cli_ui("snapshot.most_recent", "  Most recent: {id}", id=snaps[0]["id"]))
+                 return
+             snap_id = parts[2]
+             # Allow restore by number (1-indexed)
+@@ -3466,15 +3517,15 @@ class HermesCLI:
+                 if 1 <= idx <= len(snaps):
+                     snap_id = snaps[idx - 1]["id"]
+                 else:
+-                    print(f"  Invalid snapshot number. Use 1-{len(snaps)}.")
++                    print(_cli_ui("snapshot.invalid_number", "  Invalid snapshot number. Use 1-{max}.", max=len(snaps)))
+                     return
+             except ValueError:
+                 pass
+             if restore_quick_snapshot(snap_id):
+-                print(f"  Restored state from: {snap_id}")
+-                print("  Restart recommended for state.db changes to take effect.")
++                print(_cli_ui("snapshot.restored", "  Restored state from: {id}", id=snap_id))
++                print(_cli_ui("snapshot.restart_recommended", "  Restart recommended for state.db changes to take effect."))
+             else:
+-                print(f"  Snapshot not found: {snap_id}")
++                print(_cli_ui("snapshot.not_found", "  Snapshot not found: {id}", id=snap_id))
+ 
+         elif subcmd == "prune":
+             keep = 20
+@@ -3482,14 +3533,14 @@ class HermesCLI:
+                 try:
+                     keep = int(parts[2])
+                 except ValueError:
+-                    print("  Usage: /snapshot prune [keep-count]")
++                    print(_cli_ui("snapshot.prune_usage", "  Usage: /snapshot prune [keep-count]"))
+                     return
+             deleted = prune_quick_snapshots(keep=keep)
+-            print(f"  Pruned {deleted} old snapshot(s) (keeping {keep}).")
++            print(_cli_ui("snapshot.pruned", "  Pruned {count} old snapshot(s) (keeping {keep}).", count=deleted, keep=keep))
+ 
+         else:
+-            print(f"  Unknown subcommand: {subcmd}")
+-            print("  Usage: /snapshot [list|create [label]|restore <id>|prune [N]]")
++            print(_cli_ui("snapshot.unknown_subcmd", "  Unknown subcommand: {subcmd}", subcmd=subcmd))
++            print(_cli_ui("snapshot.usage", "  Usage: /snapshot [list|create [label]|restore <id>|prune [N]]"))
+ 
+     def _handle_stop_command(self):
+         """Handle /stop — kill all running background processes.
+@@ -3758,13 +3809,20 @@ class HermesCLI:
      def show_help(self):
          """Display help information with categorized commands."""
          from hermes_cli.commands import COMMANDS_BY_CATEGORY
@@ -195,7 +332,7 @@ index 4102dcf0..9a3c0a28 100644
          inner_width = 55
          if len(header) > inner_width:
              header = header[:inner_width]
-@@ -3773,37 +3807,45 @@ class HermesCLI:
+@@ -3773,37 +3831,45 @@ class HermesCLI:
          _cprint(f"{_BOLD}+{'-' * inner_width}+{_RST}")
  
          for category, commands in COMMANDS_BY_CATEGORY.items():
@@ -249,7 +386,7 @@ index 4102dcf0..9a3c0a28 100644
          width = 78
          pad = width - len(title)
          print("+" + "-" * width + "+")
-@@ -3832,7 +3874,7 @@ class HermesCLI:
+@@ -3832,7 +3898,7 @@ class HermesCLI:
                  print(f"    * {name:<20} - {desc}")
              print()
          
@@ -258,7 +395,7 @@ index 4102dcf0..9a3c0a28 100644
          print()
  
      def _handle_tools_command(self, cmd: str):
-@@ -3865,17 +3907,17 @@ class HermesCLI:
+@@ -3865,17 +3931,17 @@ class HermesCLI:
  
          names = parts[2:]
          if not names:
@@ -281,7 +418,7 @@ index 4102dcf0..9a3c0a28 100644
  
          tools_disable_enable_command(
              Namespace(tools_action=subcommand, names=names, platform="cli"))
-@@ -3885,7 +3927,7 @@ class HermesCLI:
+@@ -3885,7 +3951,7 @@ class HermesCLI:
          from hermes_cli.config import load_config
          self.enabled_toolsets = _get_platform_tools(load_config(), "cli")
          self.new_session()
@@ -290,7 +427,7 @@ index 4102dcf0..9a3c0a28 100644
  
      def show_toolsets(self):
          """Display available toolsets with kawaii ASCII art."""
-@@ -3893,7 +3935,7 @@ class HermesCLI:
+@@ -3893,7 +3959,7 @@ class HermesCLI:
          
          # Header
          print()
@@ -299,7 +436,7 @@ index 4102dcf0..9a3c0a28 100644
          width = 58
          pad = width - len(title)
          print("+" + "-" * width + "+")
-@@ -3909,13 +3951,14 @@ class HermesCLI:
+@@ -3909,13 +3975,14 @@ class HermesCLI:
                  
                  # Mark if currently enabled
                  marker = "(*)" if self.enabled_toolsets and name in self.enabled_toolsets else "   "
@@ -318,7 +455,7 @@ index 4102dcf0..9a3c0a28 100644
          print()
      
      def _handle_profile_command(self):
-@@ -4167,7 +4210,7 @@ class HermesCLI:
+@@ -4167,7 +4234,7 @@ class HermesCLI:
              self._notify_session_boundary("on_session_reset")
  
          if not silent:
@@ -327,7 +464,7 @@ index 4102dcf0..9a3c0a28 100644
  
      def _handle_resume_command(self, cmd_original: str) -> None:
          """Handle /resume <session_id_or_title> — switch to a previous session mid-conversation."""
-@@ -4175,10 +4218,10 @@ class HermesCLI:
+@@ -4175,10 +4242,10 @@ class HermesCLI:
          target = parts[1].strip() if len(parts) > 1 else ""
  
          if not target:
@@ -340,7 +477,7 @@ index 4102dcf0..9a3c0a28 100644
              return
  
          if not self._session_db:
-@@ -5138,19 +5181,19 @@ class HermesCLI:
+@@ -5138,19 +5205,19 @@ class HermesCLI:
              result = _cron_api(action="list")
              jobs = result.get("jobs", []) if result.get("success") else []
              if jobs:
@@ -364,7 +501,7 @@ index 4102dcf0..9a3c0a28 100644
              print()
              return
  
-@@ -5163,36 +5206,36 @@ class HermesCLI:
+@@ -5163,36 +5230,36 @@ class HermesCLI:
              result = _cron_api(action="list", include_disabled=opts["all"])
              jobs = result.get("jobs", []) if result.get("success") else []
              if not jobs:
@@ -413,7 +550,7 @@ index 4102dcf0..9a3c0a28 100644
                  return
              result = _cron_api(
                  action="create",
-@@ -5204,24 +5247,24 @@ class HermesCLI:
+@@ -5204,24 +5271,24 @@ class HermesCLI:
                  skills=skills or None,
              )
              if result.get("success"):
@@ -445,7 +582,7 @@ index 4102dcf0..9a3c0a28 100644
                  return
  
              final_skills = None
-@@ -5251,42 +5294,42 @@ class HermesCLI:
+@@ -5251,42 +5318,42 @@ class HermesCLI:
              )
              if result.get("success"):
                  job = result["job"]
@@ -503,7 +640,16 @@ index 4102dcf0..9a3c0a28 100644
      
      def _handle_skills_command(self, cmd: str):
          """Handle /skills slash command — delegates to hermes_cli.skills_hub."""
-@@ -5706,18 +5749,18 @@ class HermesCLI:
+@@ -5673,7 +5740,7 @@ class HermesCLI:
+                 )
+                 if msg:
+                     skill_name = _skill_commands[base_cmd]["name"]
+-                    print(f"\n⚡ Loading skill: {skill_name}")
++                    print(_cli_ui("skill.loading", "\n⚡ Loading skill: {name}", name=skill_name))
+                     if hasattr(self, '_pending_input'):
+                         self._pending_input.put(msg)
+                 else:
+@@ -5706,18 +5773,18 @@ class HermesCLI:
                      full_name = matches[0]
                      if full_name == typed_base:
                          # Already an exact token — no expansion possible; fall through
@@ -528,7 +674,35 @@ index 4102dcf0..9a3c0a28 100644
          
          return True
      
-@@ -6440,7 +6483,7 @@ class HermesCLI:
+@@ -6301,15 +6368,23 @@ class HermesCLI:
+         current = bool(os.environ.get("HERMES_YOLO_MODE"))
+         if current:
+             os.environ.pop("HERMES_YOLO_MODE", None)
++            state = f"{_Colors.BOLD}{_Colors.RED}{_cli_ui('yolo.state_off', 'OFF')}{_Colors.RESET}"
+             _cprint(
+-                f"  ⚠ YOLO mode {_Colors.BOLD}{_Colors.RED}OFF{_Colors.RESET}"
+-                " — dangerous commands will require approval."
++                _cli_ui(
++                    "yolo.off_ansi",
++                    "  ⚠ YOLO mode {state} — dangerous commands will require approval.",
++                    state=state,
++                )
+             )
+         else:
+             os.environ["HERMES_YOLO_MODE"] = "1"
++            state = f"{_Colors.BOLD}{_Colors.GREEN}{_cli_ui('yolo.state_on', 'ON')}{_Colors.RESET}"
+             _cprint(
+-                f"  ⚡ YOLO mode {_Colors.BOLD}{_Colors.GREEN}ON{_Colors.RESET}"
+-                " — all commands auto-approved. Use with caution."
++                _cli_ui(
++                    "yolo.on_ansi",
++                    "  ⚡ YOLO mode {state} — all commands auto-approved. Use with caution.",
++                    state=state,
++                )
+             )
+ 
+     def _handle_reasoning_command(self, cmd: str):
+@@ -6440,7 +6515,7 @@ class HermesCLI:
              return
  
          if not self.agent.compression_enabled:
@@ -537,7 +711,7 @@ index 4102dcf0..9a3c0a28 100644
              return
  
          # Extract optional focus topic from the command (e.g. "/compress database schema")
-@@ -6457,10 +6500,24 @@ class HermesCLI:
+@@ -6457,10 +6532,24 @@ class HermesCLI:
              original_history = list(self.conversation_history)
              approx_tokens = estimate_messages_tokens_rough(original_history)
              if focus_topic:
@@ -565,7 +739,7 @@ index 4102dcf0..9a3c0a28 100644
  
              compressed, _ = self.agent._compress_context(
                  original_history,
-@@ -6483,7 +6540,7 @@ class HermesCLI:
+@@ -6483,7 +6572,7 @@ class HermesCLI:
                  print(f"     {summary['note']}")
  
          except Exception as e:
@@ -574,7 +748,7 @@ index 4102dcf0..9a3c0a28 100644
  
      def _handle_debug_command(self):
          """Handle /debug — upload debug report + logs and print paste URLs."""
-@@ -6496,14 +6553,14 @@ class HermesCLI:
+@@ -6496,14 +6585,14 @@ class HermesCLI:
      def _show_usage(self):
          """Show rate limits (if available) and session token usage."""
          if not self.agent:
@@ -591,7 +765,7 @@ index 4102dcf0..9a3c0a28 100644
              return
  
          # ── Rate limits (shown first when available) ────────────────
-@@ -6543,33 +6600,33 @@ class HermesCLI:
+@@ -6543,33 +6632,33 @@ class HermesCLI:
          )
          elapsed = format_duration_compact((datetime.now() - self.session_start).total_seconds())
  
@@ -645,7 +819,7 @@ index 4102dcf0..9a3c0a28 100644
  
          if self.verbose:
              logging.getLogger().setLevel(logging.DEBUG)
-@@ -6661,14 +6718,14 @@ class HermesCLI:
+@@ -6661,14 +6750,14 @@ class HermesCLI:
          # timeout so a hung MCP server cannot block the process_loop
          # indefinitely (which would freeze the entire TUI).
          print()
@@ -662,7 +836,7 @@ index 4102dcf0..9a3c0a28 100644
  
      def _reload_mcp(self):
          """Reload MCP servers: disconnect all, re-read config.yaml, reconnect.
-@@ -6684,7 +6741,7 @@ class HermesCLI:
+@@ -6684,7 +6773,7 @@ class HermesCLI:
                  old_servers = set(_servers.keys())
  
              if not self._command_running:
@@ -671,7 +845,7 @@ index 4102dcf0..9a3c0a28 100644
  
              # Shutdown existing connections
              shutdown_mcp_servers()
-@@ -6701,15 +6758,22 @@ class HermesCLI:
+@@ -6701,15 +6790,22 @@ class HermesCLI:
              reconnected = connected_servers & old_servers
  
              if reconnected:
@@ -699,7 +873,7 @@ index 4102dcf0..9a3c0a28 100644
  
              # Refresh the agent's tool list so the model can call new tools
              if self.agent is not None:
-@@ -6751,10 +6815,16 @@ class HermesCLI:
+@@ -6751,10 +6847,16 @@ class HermesCLI:
                  except Exception:
                      pass  # Best-effort
  
@@ -718,7 +892,7 @@ index 4102dcf0..9a3c0a28 100644
  
      # ====================================================================
      # Tool-call generation indicator (shown during streaming)
-@@ -7721,7 +7791,7 @@ class HermesCLI:
+@@ -7721,7 +7823,7 @@ class HermesCLI:
  
          # Initialize agent if needed
          if self.agent is None:
@@ -727,7 +901,7 @@ index 4102dcf0..9a3c0a28 100644
          if not self._init_agent(
              model_override=turn_route["model"],
              runtime_override=turn_route["runtime"],
-@@ -7750,8 +7820,10 @@ class HermesCLI:
+@@ -7750,8 +7852,10 @@ class HermesCLI:
                  if _ctx_result.expanded or _ctx_result.blocked:
                      if _ctx_result.references:
                          _cprint(
@@ -740,7 +914,7 @@ index 4102dcf0..9a3c0a28 100644
                      for w in _ctx_result.warnings:
                          _cprint(f"  {_DIM}⚠ {w}{_RST}")
                      if _ctx_result.blocked:
-@@ -8411,10 +8483,13 @@ class HermesCLI:
+@@ -8411,10 +8515,13 @@ class HermesCLI:
          try:
              from hermes_cli.skin_engine import get_active_skin
              _welcome_skin = get_active_skin()
@@ -756,7 +930,7 @@ index 4102dcf0..9a3c0a28 100644
              _welcome_color = "#FFF8DC"
          self.console.print(f"[{_welcome_color}]{_welcome_text}[/]")
          # Show a random tip to help users discover features
-@@ -8425,13 +8500,13 @@ class HermesCLI:
+@@ -8425,13 +8532,13 @@ class HermesCLI:
                  _tip_color = _welcome_skin.get_color("banner_dim", "#B8860B")
              except Exception:
                  _tip_color = "#B8860B"
@@ -772,7 +946,7 @@ index 4102dcf0..9a3c0a28 100644
              )
              self._startup_skills_line_shown = True
          self.console.print()
-@@ -8820,13 +8895,13 @@ class HermesCLI:
+@@ -8820,13 +8927,13 @@ class HermesCLI:
  
              if self._agent_running and self.agent:
                  if now - self._last_ctrl_c_time < 2.0:
@@ -788,7 +962,7 @@ index 4102dcf0..9a3c0a28 100644
                  self.agent.interrupt()
              else:
                  # If there's text or images, clear them (like bash).
-@@ -9156,27 +9231,27 @@ class HermesCLI:
+@@ -9156,27 +9263,27 @@ class HermesCLI:
  
          def _get_placeholder():
              if cli_ref._voice_recording:
@@ -824,7 +998,7 @@ index 4102dcf0..9a3c0a28 100644
              return ""
  
          input_area.control.input_processors.append(_PlaceholderProcessor(_get_placeholder))
-@@ -9190,21 +9265,21 @@ class HermesCLI:
+@@ -9190,21 +9297,21 @@ class HermesCLI:
              if cli_ref._sudo_state:
                  remaining = max(0, int(cli_ref._sudo_deadline - _time.monotonic()))
                  return [
@@ -849,7 +1023,7 @@ index 4102dcf0..9a3c0a28 100644
                      ('class:clarify-countdown', f'  ({remaining}s)'),
                  ]
  
-@@ -9213,18 +9288,18 @@ class HermesCLI:
+@@ -9213,18 +9320,18 @@ class HermesCLI:
                  countdown = f'  ({remaining}s)' if cli_ref._clarify_deadline else ''
                  if cli_ref._clarify_freetext:
                      return [
@@ -871,7 +1045,7 @@ index 4102dcf0..9a3c0a28 100644
                  ]
  
              return []
-@@ -9245,11 +9320,7 @@ class HermesCLI:
+@@ -9245,11 +9352,7 @@ class HermesCLI:
              if t0 > 0:
                  import time as _time
                  elapsed = _time.monotonic() - t0
@@ -884,7 +1058,7 @@ index 4102dcf0..9a3c0a28 100644
                  return [('class:hint', f'  {txt}  ({elapsed_str})')]
              return [('class:hint', f'  {txt}')]
  
-@@ -9315,12 +9386,13 @@ class HermesCLI:
+@@ -9315,12 +9418,13 @@ class HermesCLI:
                  prefix = "❯ " if i == selected and not cli_ref._clarify_freetext else "  "
                  preview_lines.extend(_wrap_panel_text(f"{prefix}{choice}", 60, subsequent_indent="  "))
              other_label = (
@@ -902,7 +1076,7 @@ index 4102dcf0..9a3c0a28 100644
              inner_text_width = max(8, box_width - 2)
  
              # Pre-wrap choices + Other option — these are mandatory.
-@@ -9333,16 +9405,16 @@ class HermesCLI:
+@@ -9333,16 +9437,16 @@ class HermesCLI:
                  # Trailing Other row(s)
                  other_idx = len(choices)
                  if selected == other_idx and not cli_ref._clarify_freetext:
@@ -923,7 +1097,7 @@ index 4102dcf0..9a3c0a28 100644
                      inner_text_width,
                  )
              else:
-@@ -9378,8 +9450,8 @@ class HermesCLI:
+@@ -9378,8 +9482,8 @@ class HermesCLI:
              lines = []
              # Box top border
              lines.append(('class:clarify-border', '╭─ '))
@@ -934,7 +1108,7 @@ index 4102dcf0..9a3c0a28 100644
              if not use_compact_chrome:
                  _append_blank_panel_line(lines, 'class:clarify-border', box_width)
  
-@@ -9431,8 +9503,8 @@ class HermesCLI:
+@@ -9431,8 +9535,8 @@ class HermesCLI:
              state = cli_ref._sudo_state
              if not state:
                  return []
@@ -945,7 +1119,7 @@ index 4102dcf0..9a3c0a28 100644
              box_width = _panel_box_width(title, [body])
              lines = []
              lines.append(('class:sudo-border', '╭─ '))
-@@ -9457,11 +9529,11 @@ class HermesCLI:
+@@ -9457,11 +9561,11 @@ class HermesCLI:
              if not state:
                  return []
  
@@ -959,7 +1133,27 @@ index 4102dcf0..9a3c0a28 100644
              content_lines = [prompt, body]
              if help_text:
                  content_lines.insert(1, str(help_text))
-@@ -10158,7 +10230,7 @@ def main(
+@@ -9881,8 +9985,9 @@ class HermesCLI:
+                         user_input = expanded
+                     else:
+                         _user_bar = f"[{_accent_hex()}]{'─' * 40}[/]"
++                        display_user_input = _summarize_user_input_for_display(user_input)
+                         if '\n' in user_input:
+-                            first_line = user_input.split('\n')[0]
++                            first_line = display_user_input
+                             line_count = user_input.count('\n') + 1
+                             print()
+                             ChatConsole().print(_user_bar)
+@@ -9893,7 +9998,7 @@ class HermesCLI:
+                         else:
+                             print()
+                             ChatConsole().print(_user_bar)
+-                            ChatConsole().print(f"[bold {_accent_hex()}]●[/] [bold]{_escape(user_input)}[/]")
++                            ChatConsole().print(f"[bold {_accent_hex()}]●[/] [bold]{_escape(display_user_input)}[/]")
+                     
+                     # Show image attachment count
+                     if submit_images:
+@@ -10158,7 +10263,7 @@ def main(
      if gateway:
          import asyncio
          from gateway.run import start_gateway
@@ -968,7 +1162,7 @@ index 4102dcf0..9a3c0a28 100644
          asyncio.run(start_gateway())
          return
  
-@@ -10314,7 +10386,7 @@ def main(
+@@ -10314,7 +10419,7 @@ def main(
              cli.show_banner()
              _query_label = query or ("[image attached]" if single_query_images else "")
              if _query_label:
@@ -3333,7 +3527,7 @@ index 10597db1..d6e36e5c 100644
          pass
  
 diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
-index 160e7c11..9c79ee2e 100644
+index 160e7c11..4d3bd53d 100644
 --- a/hermes_cli/skin_engine.py
 +++ b/hermes_cli/skin_engine.py
 @@ -112,6 +112,141 @@ from hermes_constants import get_hermes_home
@@ -3488,15 +3682,18 @@ index 160e7c11..9c79ee2e 100644
  
  
  # =============================================================================
-@@ -618,13 +754,23 @@ def _build_skin_config(data: Dict[str, Any]) -> SkinConfig:
+@@ -618,13 +754,26 @@ def _build_skin_config(data: Dict[str, Any]) -> SkinConfig:
      spinner.update(data.get("spinner", {}))
      branding = dict(default.get("branding", {}))
      branding.update(data.get("branding", {}))
 +    skin_name = data.get("name", "unknown")
 +    localized_spinner = dict(spinner)
-+    for key, value in spinner.items():
++    for key in ("waiting_faces", "thinking_faces", "thinking_verbs", "wings"):
++        value = localized_spinner.get(key, [])
 +        if isinstance(value, list):
-+            localized_spinner[key] = get_skin_spinner_text(str(skin_name), key, value)
++            localized = get_skin_spinner_text(str(skin_name), key, value)
++            if localized:
++                localized_spinner[key] = localized
 +
 +    localized_branding = dict(branding)
 +    for key, value in branding.items():
@@ -3979,6 +4176,144 @@ index aa6cb972..11a8b881 100644
  
  
 -
+diff --git a/tests/cli/test_cli_loading_indicator.py b/tests/cli/test_cli_loading_indicator.py
+index 6cec9eca..cc0e4155 100644
+--- a/tests/cli/test_cli_loading_indicator.py
++++ b/tests/cli/test_cli_loading_indicator.py
+@@ -1,7 +1,12 @@
+ """Regression tests for loading feedback on slow slash commands."""
+ 
++import sys
++import types
+ from unittest.mock import patch
+ 
++sys.modules.setdefault("fire", types.SimpleNamespace(Fire=lambda *a, **k: None))
++sys.modules.setdefault("firecrawl", types.SimpleNamespace(Firecrawl=object))
++
+ from cli import HermesCLI
+ 
+ 
+diff --git a/tests/cli/test_cli_localized_feedback.py b/tests/cli/test_cli_localized_feedback.py
+new file mode 100644
+index 00000000..bf11742f
+--- /dev/null
++++ b/tests/cli/test_cli_localized_feedback.py
+@@ -0,0 +1,115 @@
++"""Regression tests for localized CLI feedback text."""
++
++from __future__ import annotations
++
++import sys
++import types
++import os
++from pathlib import Path
++from unittest.mock import MagicMock, patch
++
++import pytest
++
++sys.modules.setdefault("fire", types.SimpleNamespace(Fire=lambda *a, **k: None))
++sys.modules.setdefault("firecrawl", types.SimpleNamespace(Firecrawl=object))
++
++import cli as cli_mod
++from cli import HermesCLI
++
++
++def _write_ui_overlay():
++    localization_dir = Path(os.environ["HERMES_HOME"]) / "localization"
++    localization_dir.mkdir(parents=True, exist_ok=True)
++    (localization_dir / "ui.zh-CN.yaml").write_text(
++        """messages:
++  cli.command_status.skills_search: 正在搜索技能……
++  cli.command_status.skills_browse: 正在加载技能列表……
++  cli.command_status.skills_inspect: 正在查看技能详情……
++  cli.command_status.skills_install: 正在安装技能……
++  cli.command_status.skills_generic: 正在处理技能命令……
++  cli.command_status.reload_mcp: 正在重载 MCP 服务器……
++  cli.command_status.browser: 正在配置浏览器……
++  cli.command_status.generic: 正在处理命令……
++  cli.skill.loading: "\\n⚡ 正在加载技能：{name}"
++  cli.skill.preview: "⚡ 正在加载技能：{name}"
++  cli.snapshot.no_snapshots: 尚无状态快照。
++  cli.snapshot.create_hint: 创建一个：/snapshot create [标签]
++  cli.yolo.state_on: 开启
++  cli.yolo.state_off: 关闭
++  cli.yolo.on_ansi: "  ⚡ YOLO 模式 {state} — 所有命令都会自动批准，请谨慎使用。"
++  cli.yolo.off_ansi: "  ⚠ YOLO 模式 {state} — 危险命令仍需批准。"
++""",
++        encoding="utf-8",
++    )
++
++
++class TestCLILocalizedFeedback:
++    def _make_cli(self):
++        cli_obj = HermesCLI.__new__(HermesCLI)
++        cli_obj._app = None
++        cli_obj._last_invalidate = 0.0
++        cli_obj._command_running = False
++        cli_obj._command_status = ""
++        cli_obj._pending_input = MagicMock()
++        cli_obj.config = {}
++        cli_obj.session_id = "test-session"
++        return cli_obj
++
++    def test_slow_command_status_uses_localized_text(self):
++        _write_ui_overlay()
++        cli_obj = self._make_cli()
++
++        assert cli_obj._slow_command_status("/skills browse") == "正在加载技能列表……"
++        assert cli_obj._slow_command_status("/reload-mcp") == "正在重载 MCP 服务器……"
++        assert cli_obj._slow_command_status("/browser connect") == "正在配置浏览器……"
++        assert cli_obj._slow_command_status("/something-else") == "正在处理命令……"
++
++    def test_skill_command_prints_localized_loading_message(self, capsys):
++        _write_ui_overlay()
++        cli_obj = self._make_cli()
++
++        with patch.dict(cli_mod._skill_commands, {"/darwin-skill": {"name": "darwin-skill"}}, clear=True), patch(
++            "cli.build_skill_invocation_message",
++            return_value='[SYSTEM: The user has invoked the "darwin-skill" skill, indicating they want you to follow its instructions. The full skill content is loaded below.]\n\n# darwin-skill',
++        ):
++            assert cli_obj.process_command("/darwin-skill")
++
++        output = capsys.readouterr().out
++        assert "正在加载技能：darwin-skill" in output
++        cli_obj._pending_input.put.assert_called_once()
++
++    def test_snapshot_empty_state_is_localized(self, capsys):
++        _write_ui_overlay()
++        cli_obj = self._make_cli()
++
++        with patch("hermes_cli.backup.list_quick_snapshots", return_value=[]):
++            cli_obj._handle_snapshot_command("/snapshot")
++
++        output = capsys.readouterr().out
++        assert "尚无状态快照。" in output
++        assert "创建一个：/snapshot create [标签]" in output
++
++    def test_toggle_yolo_prints_localized_feedback(self, monkeypatch, capsys):
++        _write_ui_overlay()
++        cli_obj = self._make_cli()
++        monkeypatch.delenv("HERMES_YOLO_MODE", raising=False)
++
++        cli_obj._toggle_yolo()
++        enabled_output = capsys.readouterr().out
++        assert "YOLO 模式" in enabled_output
++        assert "所有命令都会自动批准，请谨慎使用。" in enabled_output
++
++        cli_obj._toggle_yolo()
++        disabled_output = capsys.readouterr().out
++        assert "YOLO 模式" in disabled_output
++        assert "危险命令仍需批准。" in disabled_output
++
++    def test_skill_invocation_preview_hides_internal_system_note(self):
++        _write_ui_overlay()
++        message = (
++            '[SYSTEM: The user has invoked the "darwin-skill" skill, indicating they want you to follow '
++            'its instructions. The full skill content is loaded below.]\n\n'
++            "# darwin-skill\n\nDo the thing."
++        )
++
++        assert cli_mod._summarize_user_input_for_display(message) == "⚡ 正在加载技能：darwin-skill"
 diff --git a/tests/hermes_cli/test_commands.py b/tests/hermes_cli/test_commands.py
 index 8b359709..de279b8e 100644
 --- a/tests/hermes_cli/test_commands.py
@@ -3992,3 +4327,88 @@ index 8b359709..de279b8e 100644
  
      # -- exact-match trailing space --------------------------------------
  
+diff --git a/tests/hermes_cli/test_skin_engine.py b/tests/hermes_cli/test_skin_engine.py
+index 3ce185b8..7c9671da 100644
+--- a/tests/hermes_cli/test_skin_engine.py
++++ b/tests/hermes_cli/test_skin_engine.py
+@@ -13,9 +13,11 @@ def reset_skin_state():
+     from hermes_cli import skin_engine
+     skin_engine._active_skin = None
+     skin_engine._active_skin_name = "default"
++    skin_engine._LOCALIZATION_CACHE.clear()
+     yield
+     skin_engine._active_skin = None
+     skin_engine._active_skin_name = "default"
++    skin_engine._LOCALIZATION_CACHE.clear()
+ 
+ 
+ class TestSkinConfig:
+@@ -45,6 +47,68 @@ class TestSkinConfig:
+         skin = load_skin("default")
+         assert skin.get_spinner_wings() == []
+ 
++    def test_default_skin_localizes_spinner_verbs(self):
++        from hermes_cli.skin_engine import load_skin
++
++        localization_dir = Path(os.environ["HERMES_HOME"]) / "localization"
++        localization_dir.mkdir(parents=True, exist_ok=True)
++        (localization_dir / "skins.zh-CN.yaml").write_text(
++            "skins:\n"
++            "  default:\n"
++            "    spinner:\n"
++            "      thinking_verbs:\n"
++            "        - 思考中\n"
++            "        - 推演中\n",
++            encoding="utf-8",
++        )
++
++        skin = load_skin("default")
++
++        assert skin.spinner.get("thinking_verbs")
++        assert skin.spinner["thinking_verbs"][0] == "思考中"
++
++    def test_localized_spinner_verbs_apply_to_builtin_skins_with_empty_spinner(self):
++        from hermes_cli.skin_engine import load_skin
++
++        localization_dir = Path(os.environ["HERMES_HOME"]) / "localization"
++        localization_dir.mkdir(parents=True, exist_ok=True)
++        (localization_dir / "skins.zh-CN.yaml").write_text(
++            "skins:\n"
++            "  default:\n"
++            "    spinner:\n"
++            "      thinking_verbs:\n"
++            "        - 默认思考\n"
++            "  daylight:\n"
++            "    spinner:\n"
++            "      thinking_verbs:\n"
++            "        - 日光思考\n"
++            "  mono:\n"
++            "    spinner:\n"
++            "      thinking_verbs:\n"
++            "        - 单色思考\n"
++            "  slate:\n"
++            "    spinner:\n"
++            "      thinking_verbs:\n"
++            "        - 石板思考\n"
++            "  warm-lightmode:\n"
++            "    spinner:\n"
++            "      thinking_verbs:\n"
++            "        - 暖光思考\n",
++            encoding="utf-8",
++        )
++
++        expected = {
++            "default": "默认思考",
++            "daylight": "日光思考",
++            "mono": "单色思考",
++            "slate": "石板思考",
++            "warm-lightmode": "暖光思考",
++        }
++        for skin_name, first_verb in expected.items():
++            skin = load_skin(skin_name)
++            assert skin.spinner.get("thinking_verbs")
++            assert skin.spinner["thinking_verbs"][0] == first_verb
++
+ 
+ class TestBuiltinSkins:
+     def test_ares_skin_loads(self):
