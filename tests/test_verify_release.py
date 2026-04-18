@@ -50,6 +50,7 @@ def test_validate_release_matches_manifest_and_patch():
         "hermes_cli/skin_engine.py",
         "hermes_cli/status.py",
         "hermes_cli/tips.py",
+        "tests/tools/test_skills_tool.py",
         "tools/skills_tool.py",
     ]
 

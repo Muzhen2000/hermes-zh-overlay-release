@@ -3333,7 +3333,7 @@ index 10597db1..d6e36e5c 100644
          pass
  
 diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
-index 160e7c11..b033c175 100644
+index 160e7c11..354d553f 100644
 --- a/hermes_cli/skin_engine.py
 +++ b/hermes_cli/skin_engine.py
 @@ -103,6 +103,7 @@ Drop a YAML file in ``~/.hermes/skins/<name>.yaml`` following the schema above.
@@ -3376,17 +3376,17 @@ index 160e7c11..b033c175 100644
 +        return None
 +
 +
-+def _call_runtime_localization(name: str, fallback: Any, *args: Any, **kwargs: Any) -> Any:
++def _call_runtime_localization(func_name: str, fallback: Any, *args: Any, **kwargs: Any) -> Any:
 +    module = _load_runtime_localization_module()
 +    if module is None:
 +        return fallback
-+    func = getattr(module, name, None)
++    func = getattr(module, func_name, None)
 +    if not callable(func):
 +        return fallback
 +    try:
 +        return func(*args, **kwargs)
 +    except Exception:
-+        logger.debug("Localization runtime call failed: %s", name, exc_info=True)
++        logger.debug("Localization runtime call failed: %s", func_name, exc_info=True)
 +        return fallback
 +
 +
@@ -3961,6 +3961,40 @@ index aa6cb972..11a8b881 100644
  
  
 -
+diff --git a/tests/tools/test_skills_tool.py b/tests/tools/test_skills_tool.py
+index 19c65cb8..bcf88416 100644
+--- a/tests/tools/test_skills_tool.py
++++ b/tests/tools/test_skills_tool.py
+@@ -3,6 +3,7 @@
+ import json
+ import os
+ from pathlib import Path
++from types import SimpleNamespace
+ from unittest.mock import patch
+ 
+ import pytest
+@@ -255,6 +256,21 @@ class TestFindAllSkills:
+         assert len(skills) == 1
+         assert skills[0]["name"] == "real-skill"
+ 
++    def test_localized_skill_description_does_not_break_discovery(self, tmp_path, monkeypatch):
++        runtime = SimpleNamespace(
++            normalize_skill_slug=lambda name: str(name).strip().lower(),
++            get_skill_description=lambda *, name=None, slug=None, default="": f"{name}:{default}",
++        )
++        monkeypatch.setattr("hermes_cli.skin_engine._RUNTIME_LOCALIZATION_MODULE", runtime)
++
++        with patch("tools.skills_tool.SKILLS_DIR", tmp_path):
++            _make_skill(tmp_path, "localized-skill")
++            skills = _find_all_skills()
++
++        assert len(skills) == 1
++        assert skills[0]["name"] == "localized-skill"
++        assert skills[0]["description"] == "localized-skill:Description for localized-skill."
++
+ 
+ # ---------------------------------------------------------------------------
+ # skills_list
 diff --git a/tools/skills_tool.py b/tools/skills_tool.py
 index ed8c8cfb..2a89f296 100644
 --- a/tools/skills_tool.py
