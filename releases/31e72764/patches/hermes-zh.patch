@@ -108,7 +108,7 @@ index 8f2d5e5d..7db3b7e5 100644
  
      return {
 diff --git a/cli.py b/cli.py
-index 4102dcf0..e1a85289 100644
+index 4102dcf0..9a3c0a28 100644
 --- a/cli.py
 +++ b/cli.py
 @@ -64,10 +64,15 @@ from agent.usage_pricing import (
@@ -171,7 +171,364 @@ index 4102dcf0..e1a85289 100644
      def _get_voice_status_fragments(self, width: Optional[int] = None):
          """Return the voice status bar fragments for the interactive TUI."""
          width = width or self._get_tui_terminal_width()
-@@ -6440,7 +6467,7 @@ class HermesCLI:
+@@ -3758,13 +3785,20 @@ class HermesCLI:
+     def show_help(self):
+         """Display help information with categorized commands."""
+         from hermes_cli.commands import COMMANDS_BY_CATEGORY
++        category_keys = {
++            "Session": "help.category.Session",
++            "Configuration": "help.category.Configuration",
++            "Tools & Skills": "help.category.ToolsSkills",
++            "Info": "help.category.Info",
++            "Exit": "help.category.Exit",
++        }
+ 
+         try:
+             from hermes_cli.skin_engine import get_active_help_header
+-            header = get_active_help_header("(^_^)? Available Commands")
++            header = get_active_help_header(_cli_ui("help.header", "(^_^)? Available Commands"))
+         except Exception:
+-            header = "(^_^)? Available Commands"
+-        header = (header or "").strip() or "(^_^)? Available Commands"
++            header = _cli_ui("help.header", "(^_^)? Available Commands")
++        header = (header or "").strip() or _cli_ui("help.header", "(^_^)? Available Commands")
+         inner_width = 55
+         if len(header) > inner_width:
+             header = header[:inner_width]
+@@ -3773,37 +3807,45 @@ class HermesCLI:
+         _cprint(f"{_BOLD}+{'-' * inner_width}+{_RST}")
+ 
+         for category, commands in COMMANDS_BY_CATEGORY.items():
+-            _cprint(f"\n  {_BOLD}── {category} ──{_RST}")
++            category_label = _cli_ui(category_keys.get(category, ""), category) if category in category_keys else category
++            _cprint(f"\n  {_BOLD}── {category_label} ──{_RST}")
+             for cmd, desc in commands.items():
+                 if not self._command_available(cmd):
+                     continue
+                 ChatConsole().print(f"    [bold {_accent_hex()}]{cmd:<15}[/] [dim]-[/] {_escape(desc)}")
+ 
+         if _skill_commands:
+-            _cprint(f"\n  ⚡ {_BOLD}Skill Commands{_RST} ({len(_skill_commands)} installed):")
++            _cprint(
++                f"\n  ⚡ {_BOLD}{_cli_ui('help.skill_commands', 'Skill Commands')}{_RST} "
++                f"({_cli_ui('help.skill_commands_count', '{count} installed', count=len(_skill_commands))}):"
++            )
+             for cmd, info in sorted(_skill_commands.items()):
+                 ChatConsole().print(
+                     f"    [bold {_accent_hex()}]{cmd:<22}[/] [dim]-[/] {_escape(info['description'])}"
+                 )
+ 
+-        _cprint(f"\n  {_DIM}Tip: Just type your message to chat with Hermes!{_RST}")
+-        _cprint(f"  {_DIM}Multi-line: Alt+Enter for a new line{_RST}")
++        _cprint(f"\n  {_DIM}{_cli_ui('help.tip.chat', 'Tip: Just type your message to chat with Hermes!')}{_RST}")
++        _cprint(f"  {_DIM}{_cli_ui('help.tip.multi_line', 'Multi-line: Alt+Enter for a new line')}{_RST}")
+         if _is_termux_environment():
+-            _cprint(f"  {_DIM}Attach image: /image {_termux_example_image_path()} or start your prompt with a local image path{_RST}\n")
++            _cprint(
++                f"  {_DIM}"
++                f"{_cli_ui('help.tip.attach_image', 'Attach image: /image {path} or start your prompt with a local image path', path=_termux_example_image_path())}"
++                f"{_RST}\n"
++            )
+         else:
+-            _cprint(f"  {_DIM}Paste image: Alt+V (or /paste){_RST}\n")
++            _cprint(f"  {_DIM}{_cli_ui('help.tip.paste_image', 'Paste image: Alt+V (or /paste)')}{_RST}\n")
+     
+     def show_tools(self):
+         """Display available tools with kawaii ASCII art."""
+         tools = get_tool_definitions(enabled_toolsets=self.enabled_toolsets, quiet_mode=True)
+         
+         if not tools:
+-            print("(;_;) No tools available")
++            print(_cli_ui("tools.none", "(;_;) No tools available"))
+             return
+         
+         # Header
+         print()
+-        title = "(^_^)/ Available Tools"
++        title = _cli_ui("tools.title", "(^_^)/ Available Tools")
+         width = 78
+         pad = width - len(title)
+         print("+" + "-" * width + "+")
+@@ -3832,7 +3874,7 @@ class HermesCLI:
+                 print(f"    * {name:<20} - {desc}")
+             print()
+         
+-        print(f"  Total: {len(tools)} tools  ヽ(^o^)ノ")
++        print(f"  {_cli_ui('tools.total', 'Total: {count} tools  ヽ(^o^)ノ', count=len(tools))}")
+         print()
+ 
+     def _handle_tools_command(self, cmd: str):
+@@ -3865,17 +3907,17 @@ class HermesCLI:
+ 
+         names = parts[2:]
+         if not names:
+-            print(f"(._.) Usage: /tools {subcommand} <name> [name ...]")
+-            print(f"  Built-in toolset:  /tools {subcommand} web")
+-            print(f"  MCP tool:          /tools {subcommand} github:create_issue")
++            print(_cli_ui("tools.manage.usage", "(._.) Usage: /tools {subcommand} <name> [name ...]", subcommand=subcommand))
++            print(_cli_ui("tools.manage.builtin", "  Built-in toolset:  /tools {subcommand} web", subcommand=subcommand))
++            print(_cli_ui("tools.manage.mcp", "  MCP tool:          /tools {subcommand} github:create_issue", subcommand=subcommand))
+             return
+ 
+         # Apply the change directly — the user typing the command is implicit
+         # consent.  Do NOT use input() here; it hangs inside prompt_toolkit's
+         # TUI event loop (known pitfall).
+-        verb = "Disabling" if subcommand == "disable" else "Enabling"
+         label = ", ".join(names)
+-        _cprint(f"{_ACCENT}{verb} {label}...{_RST}")
++        verb_key = "tools.manage.disabling" if subcommand == "disable" else "tools.manage.enabling"
++        _cprint(f"{_ACCENT}{_cli_ui(verb_key, '{label}...', label=label)}{_RST}")
+ 
+         tools_disable_enable_command(
+             Namespace(tools_action=subcommand, names=names, platform="cli"))
+@@ -3885,7 +3927,7 @@ class HermesCLI:
+         from hermes_cli.config import load_config
+         self.enabled_toolsets = _get_platform_tools(load_config(), "cli")
+         self.new_session()
+-        _cprint(f"{_DIM}Session reset. New tool configuration is active.{_RST}")
++        _cprint(f"{_DIM}{_cli_ui('tools.manage.session_reset', 'Session reset. New tool configuration is active.')}{_RST}")
+ 
+     def show_toolsets(self):
+         """Display available toolsets with kawaii ASCII art."""
+@@ -3893,7 +3935,7 @@ class HermesCLI:
+         
+         # Header
+         print()
+-        title = "(^_^)b Available Toolsets"
++        title = _cli_ui("toolsets.title", "(^_^)b Available Toolsets")
+         width = 58
+         pad = width - len(title)
+         print("+" + "-" * width + "+")
+@@ -3909,13 +3951,14 @@ class HermesCLI:
+                 
+                 # Mark if currently enabled
+                 marker = "(*)" if self.enabled_toolsets and name in self.enabled_toolsets else "   "
+-                print(f"  {marker} {name:<18} [{tool_count:>2} tools] - {desc}")
++                tools_label = _cli_ui("toolsets.tools_label", "{count} tools", count=tool_count)
++                print(f"  {marker} {name:<18} [{tools_label}] - {desc}")
+         
+         print()
+-        print("  (*) = currently enabled")
++        print("  " + _cli_ui("toolsets.current_enabled", "(*) = currently enabled"))
+         print()
+-        print("  Tip: Use 'all' or '*' to enable all toolsets")
+-        print("  Example: python cli.py --toolsets web,terminal")
++        print("  " + _cli_ui("toolsets.tip_enable_all", "Tip: Use all or * to enable all toolsets"))
++        print("  " + _cli_ui("toolsets.example", "Example: python cli.py --toolsets web,terminal"))
+         print()
+     
+     def _handle_profile_command(self):
+@@ -4167,7 +4210,7 @@ class HermesCLI:
+             self._notify_session_boundary("on_session_reset")
+ 
+         if not silent:
+-            print("(^_^)v New session started!")
++            print(_cli_ui("session.new_started", "(^_^)v New session started!"))
+ 
+     def _handle_resume_command(self, cmd_original: str) -> None:
+         """Handle /resume <session_id_or_title> — switch to a previous session mid-conversation."""
+@@ -4175,10 +4218,10 @@ class HermesCLI:
+         target = parts[1].strip() if len(parts) > 1 else ""
+ 
+         if not target:
+-            _cprint("  Usage: /resume <session_id_or_title>")
++            _cprint(_cli_ui("resume.usage", "  Usage: /resume <session_id_or_title>"))
+             if self._show_recent_sessions(reason="resume"):
+                 return
+-            _cprint("  Tip:   Use /history or `hermes sessions list` to find sessions.")
++            _cprint(_cli_ui("resume.tip_find", "  Tip:   Use /history or `hermes sessions list` to find sessions."))
+             return
+ 
+         if not self._session_db:
+@@ -5138,19 +5181,19 @@ class HermesCLI:
+             result = _cron_api(action="list")
+             jobs = result.get("jobs", []) if result.get("success") else []
+             if jobs:
+-                print("  Current Jobs:")
++                print(_cli_ui("cron.current_jobs", "  Current Jobs:"))
+                 print("  " + "-" * 63)
+                 for job in jobs:
+                     repeat_str = job.get("repeat", "?")
+                     print(f"    {job['job_id'][:12]:<12} | {job['schedule']:<15} | {repeat_str:<8}")
+                     if job.get("skills"):
+-                        print(f"      Skills: {', '.join(job['skills'])}")
++                        print(_cli_ui("cron.skills_label", "  Skills: {skills}", skills=", ".join(job["skills"])).replace("  ", "      ", 1))
+                     print(f"      {job.get('prompt_preview', '')}")
+                     if job.get("next_run_at"):
+-                        print(f"      Next: {job['next_run_at']}")
++                        print(_cli_ui("cron.next_label", "  Next: {value}", value=job["next_run_at"]).replace("  ", "      ", 1))
+                     print()
+             else:
+-                print("  No scheduled jobs. Use '/cron add' to create one.")
++                print(_cli_ui("cron.no_jobs_create", "  No scheduled jobs. Use '/cron add' to create one."))
+             print()
+             return
+ 
+@@ -5163,36 +5206,36 @@ class HermesCLI:
+             result = _cron_api(action="list", include_disabled=opts["all"])
+             jobs = result.get("jobs", []) if result.get("success") else []
+             if not jobs:
+-                print("(._.) No scheduled jobs.")
++                print(_cli_ui("cron.no_jobs", "(._.) No scheduled jobs."))
+                 return
+ 
+             print()
+-            print("Scheduled Jobs:")
++            print(_cli_ui("cron.list_title", "Scheduled Jobs:"))
+             print("-" * 80)
+             for job in jobs:
+-                print(f"  ID: {job['job_id']}")
+-                print(f"  Name: {job['name']}")
+-                print(f"  State: {job.get('state', '?')}")
+-                print(f"  Schedule: {job['schedule']} ({job.get('repeat', '?')})")
+-                print(f"  Next run: {job.get('next_run_at', 'N/A')}")
++                print(_cli_ui("cron.list.id", "  ID: {value}", value=job["job_id"]))
++                print(_cli_ui("cron.list.name", "  Name: {value}", value=job["name"]))
++                print(_cli_ui("cron.list.state", "  State: {value}", value=job.get("state", "?")))
++                print(_cli_ui("cron.list.schedule", "  Schedule: {schedule} ({repeat})", schedule=job["schedule"], repeat=job.get("repeat", "?")))
++                print(_cli_ui("cron.list.next_run", "  Next run: {value}", value=job.get("next_run_at", "N/A")))
+                 if job.get("skills"):
+-                    print(f"  Skills: {', '.join(job['skills'])}")
+-                print(f"  Prompt: {job.get('prompt_preview', '')}")
++                    print(_cli_ui("cron.list.skills", "  Skills: {skills}", skills=", ".join(job["skills"])))
++                print(_cli_ui("cron.list.prompt", "  Prompt: {value}", value=job.get("prompt_preview", "")))
+                 if job.get("last_run_at"):
+-                    print(f"  Last run: {job['last_run_at']} ({job.get('last_status', '?')})")
++                    print(_cli_ui("cron.list.last_run", "  Last run: {time} ({status})", time=job["last_run_at"], status=job.get("last_status", "?")))
+                 print()
+             return
+ 
+         if subcommand in {"add", "create"}:
+             positionals = opts["positionals"]
+             if not positionals:
+-                print("(._.) Usage: /cron add <schedule> <prompt>")
++                print(_cli_ui("cron.usage.add", "(._.) Usage: /cron add <schedule> <prompt>"))
+                 return
+             schedule = opts["schedule"] or positionals[0]
+             prompt = opts["prompt"] or " ".join(positionals[1:])
+             skills = _normalize_skills(opts["skills"])
+             if not prompt and not skills:
+-                print("(._.) Please provide a prompt or at least one skill")
++                print(_cli_ui("cron.prompt_or_skill", "(._.) Please provide a prompt or at least one skill"))
+                 return
+             result = _cron_api(
+                 action="create",
+@@ -5204,24 +5247,24 @@ class HermesCLI:
+                 skills=skills or None,
+             )
+             if result.get("success"):
+-                print(f"(^_^)b Created job: {result['job_id']}")
+-                print(f"  Schedule: {result['schedule']}")
++                print(_cli_ui("cron.created", "(^_^)b Created job: {job_id}", job_id=result["job_id"]))
++                print(_cli_ui("cron.schedule_label", "  Schedule: {value}", value=result["schedule"]))
+                 if result.get("skills"):
+-                    print(f"  Skills: {', '.join(result['skills'])}")
+-                print(f"  Next run: {result['next_run_at']}")
++                    print(_cli_ui("cron.skills_label", "  Skills: {skills}", skills=", ".join(result["skills"])))
++                print(_cli_ui("cron.next_run_label", "  Next run: {value}", value=result["next_run_at"]))
+             else:
+-                print(f"(x_x) Failed to create job: {result.get('error')}")
++                print(_cli_ui("cron.failed_create", "(x_x) Failed to create job: {error}", error=result.get("error")))
+             return
+ 
+         if subcommand == "edit":
+             positionals = opts["positionals"]
+             if not positionals:
+-                print("(._.) Usage: /cron edit <job_id> [--schedule ...] [--prompt ...] [--skill ...]")
++                print(_cli_ui("cron.usage.edit", "(._.) Usage: /cron edit <job_id> [--schedule ...] [--prompt ...] [--skill ...]"))
+                 return
+             job_id = positionals[0]
+             existing = get_job(job_id)
+             if not existing:
+-                print(f"(._.) Job not found: {job_id}")
++                print(_cli_ui("cron.job_not_found", "(._.) Job not found: {job_id}", job_id=job_id))
+                 return
+ 
+             final_skills = None
+@@ -5251,42 +5294,42 @@ class HermesCLI:
+             )
+             if result.get("success"):
+                 job = result["job"]
+-                print(f"(^_^)b Updated job: {job['job_id']}")
+-                print(f"  Schedule: {job['schedule']}")
++                print(_cli_ui("cron.updated", "(^_^)b Updated job: {job_id}", job_id=job["job_id"]))
++                print(_cli_ui("cron.schedule_label", "  Schedule: {value}", value=job["schedule"]))
+                 if job.get("skills"):
+-                    print(f"  Skills: {', '.join(job['skills'])}")
++                    print(_cli_ui("cron.skills_label", "  Skills: {skills}", skills=", ".join(job["skills"])))
+                 else:
+-                    print("  Skills: none")
++                    print(_cli_ui("cron.skills_none", "  Skills: none"))
+             else:
+-                print(f"(x_x) Failed to update job: {result.get('error')}")
++                print(_cli_ui("cron.failed_update", "(x_x) Failed to update job: {error}", error=result.get("error")))
+             return
+ 
+         if subcommand in {"pause", "resume", "run", "remove", "rm", "delete"}:
+             positionals = opts["positionals"]
+             if not positionals:
+-                print(f"(._.) Usage: /cron {subcommand} <job_id>")
++                print(_cli_ui("cron.usage.action", "(._.) Usage: /cron {action} <job_id>", action=subcommand))
+                 return
+             job_id = positionals[0]
+             action = "remove" if subcommand in {"remove", "rm", "delete"} else subcommand
+             result = _cron_api(action=action, job_id=job_id, reason="paused from /cron" if action == "pause" else None)
+             if not result.get("success"):
+-                print(f"(x_x) Failed to {action} job: {result.get('error')}")
++                print(_cli_ui("cron.failed_action", "(x_x) Failed to {action} job: {error}", action=action, error=result.get("error")))
+                 return
+             if action == "pause":
+-                print(f"(^_^)b Paused job: {result['job']['name']} ({job_id})")
++                print(_cli_ui("cron.paused", "(^_^)b Paused job: {name} ({job_id})", name=result["job"]["name"], job_id=job_id))
+             elif action == "resume":
+-                print(f"(^_^)b Resumed job: {result['job']['name']} ({job_id})")
+-                print(f"  Next run: {result['job'].get('next_run_at')}")
++                print(_cli_ui("cron.resumed", "(^_^)b Resumed job: {name} ({job_id})", name=result["job"]["name"], job_id=job_id))
++                print(_cli_ui("cron.next_run_label", "  Next run: {value}", value=result["job"].get("next_run_at")))
+             elif action == "run":
+-                print(f"(^_^)b Triggered job: {result['job']['name']} ({job_id})")
+-                print("  It will run on the next scheduler tick.")
++                print(_cli_ui("cron.triggered", "(^_^)b Triggered job: {name} ({job_id})", name=result["job"]["name"], job_id=job_id))
++                print(_cli_ui("cron.triggered_hint", "  It will run on the next scheduler tick."))
+             else:
+                 removed = result.get("removed_job", {})
+-                print(f"(^_^)b Removed job: {removed.get('name', job_id)} ({job_id})")
++                print(_cli_ui("cron.removed", "(^_^)b Removed job: {name} ({job_id})", name=removed.get("name", job_id), job_id=job_id))
+             return
+ 
+-        print(f"(._.) Unknown cron command: {subcommand}")
+-        print("  Available: list, add, edit, pause, resume, run, remove")
++        print(_cli_ui("cron.unknown", "(._.) Unknown cron command: {subcommand}", subcommand=subcommand))
++        print(_cli_ui("cron.available", "  Available: list, add, edit, pause, resume, run, remove"))
+     
+     def _handle_skills_command(self, cmd: str):
+         """Handle /skills slash command — delegates to hermes_cli.skills_hub."""
+@@ -5706,18 +5749,18 @@ class HermesCLI:
+                     full_name = matches[0]
+                     if full_name == typed_base:
+                         # Already an exact token — no expansion possible; fall through
+-                        _cprint(f"\033[1;31mUnknown command: {cmd_lower}{_RST}")
+-                        _cprint(f"{_DIM}{_ACCENT}Type /help for available commands{_RST}")
++                        _cprint(f"\033[1;31m{_cli_ui('commands.unknown', 'Unknown command: {command}', command=cmd_lower)}{_RST}")
++                        _cprint(f"{_DIM}{_ACCENT}{_cli_ui('commands.help_hint', 'Type /help for available commands')}{_RST}")
+                     else:
+                         remainder = cmd_original.strip()[len(typed_base):]
+                         full_cmd = full_name + remainder
+                         return self.process_command(full_cmd)
+                 elif len(matches) > 1:
+-                    _cprint(f"{_ACCENT}Ambiguous command: {cmd_lower}{_RST}")
+-                    _cprint(f"{_DIM}Did you mean: {', '.join(sorted(matches))}?{_RST}")
++                    _cprint(f"{_ACCENT}{_cli_ui('commands.ambiguous', 'Ambiguous command: {command}', command=cmd_lower)}{_RST}")
++                    _cprint(f"{_DIM}{_cli_ui('commands.did_you_mean', 'Did you mean: {matches}?', matches=', '.join(sorted(matches)))}{_RST}")
+                 else:
+-                    _cprint(f"\033[1;31mUnknown command: {cmd_lower}{_RST}")
+-                    _cprint(f"{_DIM}{_ACCENT}Type /help for available commands{_RST}")
++                    _cprint(f"\033[1;31m{_cli_ui('commands.unknown', 'Unknown command: {command}', command=cmd_lower)}{_RST}")
++                    _cprint(f"{_DIM}{_ACCENT}{_cli_ui('commands.help_hint', 'Type /help for available commands')}{_RST}")
+         
+         return True
+     
+@@ -6440,7 +6483,7 @@ class HermesCLI:
              return
  
          if not self.agent.compression_enabled:
@@ -180,7 +537,7 @@ index 4102dcf0..e1a85289 100644
              return
  
          # Extract optional focus topic from the command (e.g. "/compress database schema")
-@@ -6457,10 +6484,24 @@ class HermesCLI:
+@@ -6457,10 +6500,24 @@ class HermesCLI:
              original_history = list(self.conversation_history)
              approx_tokens = estimate_messages_tokens_rough(original_history)
              if focus_topic:
@@ -208,7 +565,7 @@ index 4102dcf0..e1a85289 100644
  
              compressed, _ = self.agent._compress_context(
                  original_history,
-@@ -6483,7 +6524,7 @@ class HermesCLI:
+@@ -6483,7 +6540,7 @@ class HermesCLI:
                  print(f"     {summary['note']}")
  
          except Exception as e:
@@ -217,7 +574,7 @@ index 4102dcf0..e1a85289 100644
  
      def _handle_debug_command(self):
          """Handle /debug — upload debug report + logs and print paste URLs."""
-@@ -6496,14 +6537,14 @@ class HermesCLI:
+@@ -6496,14 +6553,14 @@ class HermesCLI:
      def _show_usage(self):
          """Show rate limits (if available) and session token usage."""
          if not self.agent:
@@ -234,7 +591,7 @@ index 4102dcf0..e1a85289 100644
              return
  
          # ── Rate limits (shown first when available) ────────────────
-@@ -6543,33 +6584,33 @@ class HermesCLI:
+@@ -6543,33 +6600,33 @@ class HermesCLI:
          )
          elapsed = format_duration_compact((datetime.now() - self.session_start).total_seconds())
  
@@ -288,7 +645,80 @@ index 4102dcf0..e1a85289 100644
  
          if self.verbose:
              logging.getLogger().setLevel(logging.DEBUG)
-@@ -7721,7 +7762,7 @@ class HermesCLI:
+@@ -6661,14 +6718,14 @@ class HermesCLI:
+         # timeout so a hung MCP server cannot block the process_loop
+         # indefinitely (which would freeze the entire TUI).
+         print()
+-        print("🔄 MCP server config changed — reloading connections...")
++        print(_cli_ui("mcp.config_changed", "🔄 MCP server config changed — reloading connections..."))
+         _reload_thread = threading.Thread(
+             target=self._reload_mcp, daemon=True
+         )
+         _reload_thread.start()
+         _reload_thread.join(timeout=30)
+         if _reload_thread.is_alive():
+-            print("  ⚠️  MCP reload timed out (30s). Some servers may not have reconnected.")
++            print(_cli_ui("mcp.timeout", "  ⚠️  MCP reload timed out (30s). Some servers may not have reconnected."))
+ 
+     def _reload_mcp(self):
+         """Reload MCP servers: disconnect all, re-read config.yaml, reconnect.
+@@ -6684,7 +6741,7 @@ class HermesCLI:
+                 old_servers = set(_servers.keys())
+ 
+             if not self._command_running:
+-                print("🔄 Reloading MCP servers...")
++                print(_cli_ui("mcp.reloading", "🔄 Reloading MCP servers..."))
+ 
+             # Shutdown existing connections
+             shutdown_mcp_servers()
+@@ -6701,15 +6758,22 @@ class HermesCLI:
+             reconnected = connected_servers & old_servers
+ 
+             if reconnected:
+-                print(f"  ♻️  Reconnected: {', '.join(sorted(reconnected))}")
++                print(_cli_ui("mcp.reconnected", "  ♻️  Reconnected: {names}", names=", ".join(sorted(reconnected))))
+             if added:
+-                print(f"  ➕ Added: {', '.join(sorted(added))}")
++                print(_cli_ui("mcp.added", "  ➕ Added: {names}", names=", ".join(sorted(added))))
+             if removed:
+-                print(f"  ➖ Removed: {', '.join(sorted(removed))}")
++                print(_cli_ui("mcp.removed", "  ➖ Removed: {names}", names=", ".join(sorted(removed))))
+             if not connected_servers:
+-                print("  No MCP servers connected.")
++                print(_cli_ui("mcp.none_connected", "  No MCP servers connected."))
+             else:
+-                print(f"  🔧 {len(new_tools)} tool(s) available from {len(connected_servers)} server(s)")
++                print(
++                    _cli_ui(
++                        "mcp.available",
++                        "  🔧 {tool_count} tool(s) available from {server_count} server(s)",
++                        tool_count=len(new_tools),
++                        server_count=len(connected_servers),
++                    )
++                )
+ 
+             # Refresh the agent's tool list so the model can call new tools
+             if self.agent is not None:
+@@ -6751,10 +6815,16 @@ class HermesCLI:
+                 except Exception:
+                     pass  # Best-effort
+ 
+-            print(f"  ✅ Agent updated — {len(self.agent.tools if self.agent else [])} tool(s) available")
++            print(
++                _cli_ui(
++                    "mcp.agent_updated",
++                    "  ✅ Agent updated — {tool_count} tool(s) available",
++                    tool_count=len(self.agent.tools if self.agent else []),
++                )
++            )
+ 
+         except Exception as e:
+-            print(f"  ❌ MCP reload failed: {e}")
++            print(_cli_ui("mcp.failed", "  ❌ MCP reload failed: {error}", error=e))
+ 
+     # ====================================================================
+     # Tool-call generation indicator (shown during streaming)
+@@ -7721,7 +7791,7 @@ class HermesCLI:
  
          # Initialize agent if needed
          if self.agent is None:
@@ -297,7 +727,7 @@ index 4102dcf0..e1a85289 100644
          if not self._init_agent(
              model_override=turn_route["model"],
              runtime_override=turn_route["runtime"],
-@@ -7750,8 +7791,10 @@ class HermesCLI:
+@@ -7750,8 +7820,10 @@ class HermesCLI:
                  if _ctx_result.expanded or _ctx_result.blocked:
                      if _ctx_result.references:
                          _cprint(
@@ -310,7 +740,7 @@ index 4102dcf0..e1a85289 100644
                      for w in _ctx_result.warnings:
                          _cprint(f"  {_DIM}⚠ {w}{_RST}")
                      if _ctx_result.blocked:
-@@ -8411,10 +8454,13 @@ class HermesCLI:
+@@ -8411,10 +8483,13 @@ class HermesCLI:
          try:
              from hermes_cli.skin_engine import get_active_skin
              _welcome_skin = get_active_skin()
@@ -326,7 +756,7 @@ index 4102dcf0..e1a85289 100644
              _welcome_color = "#FFF8DC"
          self.console.print(f"[{_welcome_color}]{_welcome_text}[/]")
          # Show a random tip to help users discover features
-@@ -8425,13 +8471,13 @@ class HermesCLI:
+@@ -8425,13 +8500,13 @@ class HermesCLI:
                  _tip_color = _welcome_skin.get_color("banner_dim", "#B8860B")
              except Exception:
                  _tip_color = "#B8860B"
@@ -342,7 +772,7 @@ index 4102dcf0..e1a85289 100644
              )
              self._startup_skills_line_shown = True
          self.console.print()
-@@ -8820,13 +8866,13 @@ class HermesCLI:
+@@ -8820,13 +8895,13 @@ class HermesCLI:
  
              if self._agent_running and self.agent:
                  if now - self._last_ctrl_c_time < 2.0:
@@ -358,7 +788,7 @@ index 4102dcf0..e1a85289 100644
                  self.agent.interrupt()
              else:
                  # If there's text or images, clear them (like bash).
-@@ -9156,27 +9202,27 @@ class HermesCLI:
+@@ -9156,27 +9231,27 @@ class HermesCLI:
  
          def _get_placeholder():
              if cli_ref._voice_recording:
@@ -394,7 +824,7 @@ index 4102dcf0..e1a85289 100644
              return ""
  
          input_area.control.input_processors.append(_PlaceholderProcessor(_get_placeholder))
-@@ -9190,21 +9236,21 @@ class HermesCLI:
+@@ -9190,21 +9265,21 @@ class HermesCLI:
              if cli_ref._sudo_state:
                  remaining = max(0, int(cli_ref._sudo_deadline - _time.monotonic()))
                  return [
@@ -419,7 +849,7 @@ index 4102dcf0..e1a85289 100644
                      ('class:clarify-countdown', f'  ({remaining}s)'),
                  ]
  
-@@ -9213,18 +9259,18 @@ class HermesCLI:
+@@ -9213,18 +9288,18 @@ class HermesCLI:
                  countdown = f'  ({remaining}s)' if cli_ref._clarify_deadline else ''
                  if cli_ref._clarify_freetext:
                      return [
@@ -441,7 +871,7 @@ index 4102dcf0..e1a85289 100644
                  ]
  
              return []
-@@ -9245,11 +9291,7 @@ class HermesCLI:
+@@ -9245,11 +9320,7 @@ class HermesCLI:
              if t0 > 0:
                  import time as _time
                  elapsed = _time.monotonic() - t0
@@ -454,7 +884,7 @@ index 4102dcf0..e1a85289 100644
                  return [('class:hint', f'  {txt}  ({elapsed_str})')]
              return [('class:hint', f'  {txt}')]
  
-@@ -9315,12 +9357,13 @@ class HermesCLI:
+@@ -9315,12 +9386,13 @@ class HermesCLI:
                  prefix = "❯ " if i == selected and not cli_ref._clarify_freetext else "  "
                  preview_lines.extend(_wrap_panel_text(f"{prefix}{choice}", 60, subsequent_indent="  "))
              other_label = (
@@ -472,7 +902,7 @@ index 4102dcf0..e1a85289 100644
              inner_text_width = max(8, box_width - 2)
  
              # Pre-wrap choices + Other option — these are mandatory.
-@@ -9333,16 +9376,16 @@ class HermesCLI:
+@@ -9333,16 +9405,16 @@ class HermesCLI:
                  # Trailing Other row(s)
                  other_idx = len(choices)
                  if selected == other_idx and not cli_ref._clarify_freetext:
@@ -493,7 +923,7 @@ index 4102dcf0..e1a85289 100644
                      inner_text_width,
                  )
              else:
-@@ -9378,8 +9421,8 @@ class HermesCLI:
+@@ -9378,8 +9450,8 @@ class HermesCLI:
              lines = []
              # Box top border
              lines.append(('class:clarify-border', '╭─ '))
@@ -504,7 +934,7 @@ index 4102dcf0..e1a85289 100644
              if not use_compact_chrome:
                  _append_blank_panel_line(lines, 'class:clarify-border', box_width)
  
-@@ -9431,8 +9474,8 @@ class HermesCLI:
+@@ -9431,8 +9503,8 @@ class HermesCLI:
              state = cli_ref._sudo_state
              if not state:
                  return []
@@ -515,7 +945,7 @@ index 4102dcf0..e1a85289 100644
              box_width = _panel_box_width(title, [body])
              lines = []
              lines.append(('class:sudo-border', '╭─ '))
-@@ -9457,11 +9500,11 @@ class HermesCLI:
+@@ -9457,11 +9529,11 @@ class HermesCLI:
              if not state:
                  return []
  
@@ -529,7 +959,7 @@ index 4102dcf0..e1a85289 100644
              content_lines = [prompt, body]
              if help_text:
                  content_lines.insert(1, str(help_text))
-@@ -10158,7 +10201,7 @@ def main(
+@@ -10158,7 +10230,7 @@ def main(
      if gateway:
          import asyncio
          from gateway.run import start_gateway
@@ -538,7 +968,7 @@ index 4102dcf0..e1a85289 100644
          asyncio.run(start_gateway())
          return
  
-@@ -10314,7 +10357,7 @@ def main(
+@@ -10314,7 +10386,7 @@ def main(
              cli.show_banner()
              _query_label = query or ("[image attached]" if single_query_images else "")
              if _query_label:
@@ -910,7 +1340,7 @@ index 5b1fef13..a2a4c2a0 100644
                  reply_markup=None,
              )
 diff --git a/gateway/run.py b/gateway/run.py
-index bef967f8..29f347d5 100644
+index bef967f8..b6b0de9e 100644
 --- a/gateway/run.py
 +++ b/gateway/run.py
 @@ -93,6 +93,7 @@ _hermes_home = get_hermes_home()
@@ -1144,6 +1574,1275 @@ index bef967f8..29f347d5 100644
  
          # Plugin-registered slash commands
          if command:
+@@ -4612,23 +4685,23 @@ class GatewayRunner:
+             # Force-clean the sentinel so the session is unlocked.
+             self._release_running_agent_state(session_key)
+             logger.info("STOP (pending) for session %s — sentinel cleared", session_key[:20])
+-            return "⚡ Stopped. The agent hadn't started yet — you can continue this session."
++            return _gateway_ui("stop.pending", "⚡ Stopped. The agent hadn't started yet — you can continue this session.")
+         if agent:
+             agent.interrupt("Stop requested")
+             # Force-clean the session lock so a truly hung agent doesn't
+             # keep it locked forever.
+             self._release_running_agent_state(session_key)
+-            return "⚡ Stopped. You can continue this session."
++            return _gateway_ui("stop.running", "⚡ Stopped. You can continue this session.")
+         else:
+-            return "No active task to stop."
++            return _gateway_ui("stop.none", "No active task to stop.")
+ 
+     async def _handle_restart_command(self, event: MessageEvent) -> str:
+         """Handle /restart command - drain active work, then restart the gateway."""
+         if self._restart_requested or self._draining:
+             count = self._running_agent_count()
+             if count:
+-                return f"⏳ Draining {count} active agent(s) before restart..."
+-            return "⏳ Gateway restart already in progress..."
++                return _gateway_ui("restart.draining", "⏳ Draining {count} active agent(s) before restart...", count=count)
++            return _gateway_ui("restart.in_progress", "⏳ Gateway restart already in progress...")
+ 
+         # Save the requester's routing info so the new gateway process can
+         # notify them once it comes back online.
+@@ -4658,27 +4731,30 @@ class GatewayRunner:
+         else:
+             self.request_restart(detached=True, via_service=False)
+         if active_agents:
+-            return f"⏳ Draining {active_agents} active agent(s) before restart..."
+-        return "♻ Restarting gateway. If you aren't notified within 60 seconds, restart from the console with `hermes gateway restart`."
++            return _gateway_ui("restart.draining", "⏳ Draining {count} active agent(s) before restart...", count=active_agents)
++        return _gateway_ui(
++            "restart.started",
++            "♻ Restarting gateway. If you aren't notified within 60 seconds, restart from the console with `hermes gateway restart`.",
++        )
+ 
+     async def _handle_help_command(self, event: MessageEvent) -> str:
+         """Handle /help command - list available commands."""
+         from hermes_cli.commands import gateway_help_lines
+         lines = [
+-            "📖 **Hermes Commands**\n",
++            _gateway_ui("help.title", "📖 **Hermes Commands**\n"),
+             *gateway_help_lines(),
+         ]
+         try:
+             from agent.skill_commands import get_skill_commands
+             skill_cmds = get_skill_commands()
+             if skill_cmds:
+-                lines.append(f"\n⚡ **Skill Commands** ({len(skill_cmds)} active):")
++                lines.append(_gateway_ui("help.skills_title", "\n⚡ **Skill Commands** ({count} active):", count=len(skill_cmds)))
+                 # Show first 10, then point to /commands for the rest
+                 sorted_cmds = sorted(skill_cmds)
+                 for cmd in sorted_cmds[:10]:
+                     lines.append(f"`{cmd}` — {skill_cmds[cmd]['description']}")
+                 if len(sorted_cmds) > 10:
+-                    lines.append(f"\n... and {len(sorted_cmds) - 10} more. Use `/commands` for the full paginated list.")
++                    lines.append(_gateway_ui("help.more_skills", "\n... and {count} more. Use `/commands` for the full paginated list.", count=len(sorted_cmds) - 10))
+         except Exception:
+             pass
+         return "\n".join(lines)
+@@ -4692,7 +4768,7 @@ class GatewayRunner:
+             try:
+                 requested_page = int(raw_args)
+             except ValueError:
+-                return "Usage: `/commands [page]`"
++                return _gateway_ui("commands.usage", "Usage: `/commands [page]`")
+         else:
+             requested_page = 1
+ 
+@@ -4703,15 +4779,17 @@ class GatewayRunner:
+             skill_cmds = get_skill_commands()
+             if skill_cmds:
+                 entries.append("")
+-                entries.append("⚡ **Skill Commands**:")
++                entries.append(_gateway_ui("commands.skills_title", "⚡ **Skill Commands:**"))
+                 for cmd in sorted(skill_cmds):
+-                    desc = skill_cmds[cmd].get("description", "").strip() or "Skill command"
++                    desc = skill_cmds[cmd].get("description", "").strip() or _gateway_ui(
++                        "commands.skill_default_desc", "Skill command"
++                    )
+                     entries.append(f"`{cmd}` — {desc}")
+         except Exception:
+             pass
+ 
+         if not entries:
+-            return "No commands available."
++            return _gateway_ui("commands.none", "No commands available.")
+ 
+         from gateway.config import Platform
+         page_size = 15 if event.source.platform == Platform.TELEGRAM else 20
+@@ -4721,19 +4799,32 @@ class GatewayRunner:
+         page_entries = entries[start:start + page_size]
+ 
+         lines = [
+-            f"📚 **Commands** ({len(entries)} total, page {page}/{total_pages})",
++            _gateway_ui(
++                "commands.title",
++                "📚 **Commands** ({total} total, page {page}/{total_pages})",
++                total=len(entries),
++                page=page,
++                total_pages=total_pages,
++            ),
+             "",
+             *page_entries,
+         ]
+         if total_pages > 1:
+             nav_parts = []
+             if page > 1:
+-                nav_parts.append(f"`/commands {page - 1}` ← prev")
++                nav_parts.append(_gateway_ui("commands.prev", "`/commands {page}` ← prev", page=page - 1))
+             if page < total_pages:
+-                nav_parts.append(f"next → `/commands {page + 1}`")
++                nav_parts.append(_gateway_ui("commands.next", "next → `/commands {page}`", page=page + 1))
+             lines.extend(["", " | ".join(nav_parts)])
+         if page != requested_page:
+-            lines.append(f"_(Requested page {requested_page} was out of range, showing page {page}.)_")
++            lines.append(
++                _gateway_ui(
++                    "commands.page_clamped",
++                    "_(Requested page {requested_page} was out of range, showing page {page}.)_",
++                    requested_page=requested_page,
++                    page=page,
++                )
++            )
+         return "\n".join(lines)
+     
+     async def _handle_model_command(self, event: MessageEvent) -> Optional[str]:
+@@ -5141,18 +5232,22 @@ class GatewayRunner:
+             personalities = {}
+ 
+         if not personalities:
+-            return f"No personalities configured in `{display_hermes_home()}/config.yaml`"
++            return _gateway_ui(
++                "personality.none_configured",
++                "No personalities configured in `{home}/config.yaml`",
++                home=display_hermes_home(),
++            )
+ 
+         if not args:
+-            lines = ["🎭 **Available Personalities**\n"]
+-            lines.append("• `none` — (no personality overlay)")
++            lines = [_gateway_ui("personality.list_title", "🎭 **Available Personalities**\n")]
++            lines.append(_gateway_ui("personality.none_option", "• `none` — (no personality overlay)"))
+             for name, prompt in personalities.items():
+                 if isinstance(prompt, dict):
+                     preview = prompt.get("description") or prompt.get("system_prompt", "")[:50]
+                 else:
+                     preview = prompt[:50] + "..." if len(prompt) > 50 else prompt
+                 lines.append(f"• `{name}` — {preview}")
+-            lines.append("\nUsage: `/personality <name>`")
++            lines.append(_gateway_ui("personality.usage", "\nUsage: `/personality <name>`"))
+             return "\n".join(lines)
+ 
+         def _resolve_prompt(value):
+@@ -5172,9 +5267,12 @@ class GatewayRunner:
+                 config["agent"]["system_prompt"] = ""
+                 atomic_yaml_write(config_path, config)
+             except Exception as e:
+-                return f"⚠️ Failed to save personality change: {e}"
++                return _gateway_ui("personality.save_failed", "⚠️ Failed to save personality change: {error}", error=e)
+             self._ephemeral_system_prompt = ""
+-            return "🎭 Personality cleared — using base agent behavior.\n_(takes effect on next message)_"
++            return _gateway_ui(
++                "personality.cleared",
++                "🎭 Personality cleared — using base agent behavior.\n_(takes effect on next message)_",
++            )
+         elif args in personalities:
+             new_prompt = _resolve_prompt(personalities[args])
+ 
+@@ -5185,15 +5283,23 @@ class GatewayRunner:
+                 config["agent"]["system_prompt"] = new_prompt
+                 atomic_yaml_write(config_path, config)
+             except Exception as e:
+-                return f"⚠️ Failed to save personality change: {e}"
++                return _gateway_ui("personality.save_failed", "⚠️ Failed to save personality change: {error}", error=e)
+ 
+             # Update in-memory so it takes effect on the very next message.
+             self._ephemeral_system_prompt = new_prompt
+ 
+-            return f"🎭 Personality set to **{args}**\n_(takes effect on next message)_"
++            return _gateway_ui(
++                "personality.set",
++                "🎭 Personality set to **{name}**\n_(takes effect on next message)_",
++                name=args,
++            )
+ 
+         available = "`none`, " + ", ".join(f"`{n}`" for n in personalities)
+-        return f"Unknown personality: `{args}`\n\nAvailable: {available}"
++        return (
++            _gateway_ui("personality.unknown", "Unknown personality: `{name}`", name=args)
++            + "\n\n"
++            + _gateway_ui("personality.available", "Available: {available}", available=available)
++        )
+     
+     async def _handle_retry_command(self, event: MessageEvent) -> str:
+         """Handle /retry command - re-send the last user message."""
+@@ -5211,7 +5317,7 @@ class GatewayRunner:
+                 break
+         
+         if not last_user_msg:
+-            return "No previous message to retry."
++            return _gateway_ui("retry.none", "No previous message to retry.")
+         
+         # Truncate history to before the last user message and persist
+         truncated = history[:last_user_idx]
+@@ -5245,7 +5351,7 @@ class GatewayRunner:
+                 break
+         
+         if last_user_idx is None:
+-            return "Nothing to undo."
++            return _gateway_ui("undo.none", "Nothing to undo.")
+         
+         removed_msg = history[last_user_idx].get("content", "")
+         removed_count = len(history) - last_user_idx
+@@ -5254,7 +5360,12 @@ class GatewayRunner:
+         session_entry.last_prompt_tokens = 0
+         
+         preview = removed_msg[:40] + "..." if len(removed_msg) > 40 else removed_msg
+-        return f"↩️ Undid {removed_count} message(s).\nRemoved: \"{preview}\""
++        return _gateway_ui(
++            "undo.removed",
++            "↩️ Undid {count} message(s).\nRemoved: \"{preview}\"",
++            count=removed_count,
++            preview=preview,
++        )
+     
+     async def _handle_set_home_command(self, event: MessageEvent) -> str:
+         """Handle /sethome command -- set the current chat as the platform's home channel."""
+@@ -5311,26 +5422,22 @@ class GatewayRunner:
+             self._save_voice_modes()
+             if adapter:
+                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
+-            return (
+-                "Voice mode enabled.\n"
+-                "I'll reply with voice when you send voice messages.\n"
+-                "Use /voice tts to get voice replies for all messages."
++            return _gateway_ui(
++                "voice.enabled",
++                "Voice mode enabled.\nI'll reply with voice when you send voice messages.\nUse /voice tts to get voice replies for all messages.",
+             )
+         elif args in ("off", "disable"):
+             self._voice_mode[chat_id] = "off"
+             self._save_voice_modes()
+             if adapter:
+                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=True)
+-            return "Voice mode disabled. Text-only replies."
++            return _gateway_ui("voice.disabled", "Voice mode disabled. Text-only replies.")
+         elif args == "tts":
+             self._voice_mode[chat_id] = "all"
+             self._save_voice_modes()
+             if adapter:
+                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
+-            return (
+-                "Auto-TTS enabled.\n"
+-                "All replies will include a voice message."
+-            )
++            return _gateway_ui("voice.auto_tts", "Auto-TTS enabled.\nAll replies will include a voice message.")
+         elif args in ("channel", "join"):
+             return await self._handle_voice_channel_join(event)
+         elif args == "leave":
+@@ -5338,9 +5445,9 @@ class GatewayRunner:
+         elif args == "status":
+             mode = self._voice_mode.get(chat_id, "off")
+             labels = {
+-                "off": "Off (text only)",
+-                "voice_only": "On (voice reply to voice messages)",
+-                "all": "TTS (voice reply to all messages)",
++                "off": _gateway_ui("voice.status_off", "Off (text only)"),
++                "voice_only": _gateway_ui("voice.status_voice_only", "On (voice reply to voice messages)"),
++                "all": _gateway_ui("voice.status_all", "TTS (voice reply to all messages)"),
+             }
+             # Append voice channel info if connected
+             adapter = self.adapters.get(event.source.platform)
+@@ -5349,15 +5456,15 @@ class GatewayRunner:
+                 info = adapter.get_voice_channel_info(guild_id)
+                 if info:
+                     lines = [
+-                        f"Voice mode: {labels.get(mode, mode)}",
+-                        f"Voice channel: #{info['channel_name']}",
+-                        f"Participants: {info['member_count']}",
++                        _gateway_ui("voice.status", "Voice mode: {mode}", mode=labels.get(mode, mode)),
++                        _gateway_ui("voice.channel_label", "Voice channel: #{channel_name}", channel_name=info["channel_name"]),
++                        _gateway_ui("voice.participants_label", "Participants: {count}", count=info["member_count"]),
+                     ]
+                     for m in info["members"]:
+-                        status = " (speaking)" if m.get("is_speaking") else ""
++                        status = f" {_gateway_ui('voice.member_speaking', '(speaking)')}" if m.get("is_speaking") else ""
+                         lines.append(f"  - {m['display_name']}{status}")
+                     return "\n".join(lines)
+-            return f"Voice mode: {labels.get(mode, mode)}"
++            return _gateway_ui("voice.status", "Voice mode: {mode}", mode=labels.get(mode, mode))
+         else:
+             # Toggle: off → on, on/all → off
+             current = self._voice_mode.get(chat_id, "off")
+@@ -5366,29 +5473,29 @@ class GatewayRunner:
+                 self._save_voice_modes()
+                 if adapter:
+                     self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
+-                return "Voice mode enabled."
++                return _gateway_ui("voice.toggle_on", "Voice mode enabled.")
+             else:
+                 self._voice_mode[chat_id] = "off"
+                 self._save_voice_modes()
+                 if adapter:
+                     self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=True)
+-                return "Voice mode disabled."
++                return _gateway_ui("voice.toggle_off", "Voice mode disabled.")
+ 
+     async def _handle_voice_channel_join(self, event: MessageEvent) -> str:
+         """Join the user's current Discord voice channel."""
+         adapter = self.adapters.get(event.source.platform)
+         if not hasattr(adapter, "join_voice_channel"):
+-            return "Voice channels are not supported on this platform."
++            return _gateway_ui("voice.unsupported", "Voice channels are not supported on this platform.")
+ 
+         guild_id = self._get_guild_id(event)
+         if not guild_id:
+-            return "This command only works in a Discord server."
++            return _gateway_ui("voice.server_only", "This command only works in a Discord server.")
+ 
+         voice_channel = await adapter.get_user_voice_channel(
+             guild_id, event.source.user_id
+         )
+         if not voice_channel:
+-            return "You need to be in a voice channel first."
++            return _gateway_ui("voice.join_needed", "You need to be in a voice channel first.")
+ 
+         # Wire callbacks BEFORE join so voice input arriving immediately
+         # after connection is not lost.
+@@ -5404,12 +5511,11 @@ class GatewayRunner:
+             adapter._voice_input_callback = None
+             err_lower = str(e).lower()
+             if "pynacl" in err_lower or "nacl" in err_lower or "davey" in err_lower:
+-                return (
+-                    "Voice dependencies are missing (PyNaCl / davey). "
+-                    "Install or reinstall Hermes with the messaging extra, e.g. "
+-                    "`pip install hermes-agent[messaging]`."
++                return _gateway_ui(
++                    "voice.deps_missing",
++                    "Voice dependencies are missing (PyNaCl / davey). Install or reinstall Hermes with the messaging extra, e.g. `pip install hermes-agent[messaging]`.",
+                 )
+-            return f"Failed to join voice channel: {e}"
++            return _gateway_ui("voice.join_failed_error", "Failed to join voice channel: {error}", error=e)
+ 
+         if success:
+             adapter._voice_text_channels[guild_id] = int(event.source.chat_id)
+@@ -5418,13 +5524,14 @@ class GatewayRunner:
+             self._voice_mode[event.source.chat_id] = "all"
+             self._save_voice_modes()
+             self._set_adapter_auto_tts_disabled(adapter, event.source.chat_id, disabled=False)
+-            return (
+-                f"Joined voice channel **{voice_channel.name}**.\n"
+-                f"I'll speak my replies and listen to you. Use /voice leave to disconnect."
++            return _gateway_ui(
++                "voice.joined",
++                "Joined voice channel **{channel_name}**.\nI'll speak my replies and listen to you. Use /voice leave to disconnect.",
++                channel_name=voice_channel.name,
+             )
+         # Join failed — clear callback
+         adapter._voice_input_callback = None
+-        return "Failed to join voice channel. Check bot permissions (Connect + Speak)."
++        return _gateway_ui("voice.join_failed", "Failed to join voice channel. Check bot permissions (Connect + Speak).")
+ 
+     async def _handle_voice_channel_leave(self, event: MessageEvent) -> str:
+         """Leave the Discord voice channel."""
+@@ -5432,10 +5539,10 @@ class GatewayRunner:
+         guild_id = self._get_guild_id(event)
+ 
+         if not guild_id or not hasattr(adapter, "leave_voice_channel"):
+-            return "Not in a voice channel."
++            return _gateway_ui("voice.leave_none", "Not in a voice channel.")
+ 
+         if not hasattr(adapter, "is_in_voice_channel") or not adapter.is_in_voice_channel(guild_id):
+-            return "Not in a voice channel."
++            return _gateway_ui("voice.leave_none", "Not in a voice channel.")
+ 
+         try:
+             await adapter.leave_voice_channel(guild_id)
+@@ -5447,7 +5554,7 @@ class GatewayRunner:
+         self._set_adapter_auto_tts_disabled(adapter, event.source.chat_id, disabled=True)
+         if hasattr(adapter, "_voice_input_callback"):
+             adapter._voice_input_callback = None
+-        return "Left voice channel."
++        return _gateway_ui("voice.left", "Left voice channel.")
+ 
+     def _handle_voice_timeout_cleanup(self, chat_id: str) -> None:
+         """Called by the adapter when a voice channel times out.
+@@ -5745,7 +5852,7 @@ class GatewayRunner:
+         # Restore by number or hash
+         checkpoints = mgr.list_checkpoints(cwd)
+         if not checkpoints:
+-            return f"No checkpoints found for {cwd}"
++            return _gateway_ui("rollback.none_found", "No checkpoints found for {cwd}", cwd=cwd)
+ 
+         target_hash = None
+         try:
+@@ -5753,17 +5860,19 @@ class GatewayRunner:
+             if 0 <= idx < len(checkpoints):
+                 target_hash = checkpoints[idx]["hash"]
+             else:
+-                return f"Invalid checkpoint number. Use 1-{len(checkpoints)}."
++                return _gateway_ui("rollback.invalid_number", "Invalid checkpoint number. Use 1-{max_index}.", max_index=len(checkpoints))
+         except ValueError:
+             target_hash = arg
+ 
+         result = mgr.restore(cwd, target_hash)
+         if result["success"]:
+-            return (
+-                f"✅ Restored to checkpoint {result['restored_to']}: {result['reason']}\n"
+-                f"A pre-rollback snapshot was saved automatically."
++            return _gateway_ui(
++                "rollback.restored",
++                "✅ Restored to checkpoint {checkpoint}: {reason}\nA pre-rollback snapshot was saved automatically.",
++                checkpoint=result["restored_to"],
++                reason=result["reason"],
+             )
+-        return f"❌ {result['error']}"
++        return _gateway_ui("rollback.restore_failed", "❌ {error}", error=result["error"])
+ 
+     async def _handle_background_command(self, event: MessageEvent) -> str:
+         """Handle /background <prompt> — run a prompt in a separate background session.
+@@ -5774,11 +5883,9 @@ class GatewayRunner:
+         """
+         prompt = event.get_command_args().strip()
+         if not prompt:
+-            return (
+-                "Usage: /background <prompt>\n"
+-                "Example: /background Summarize the top HN stories today\n\n"
+-                "Runs the prompt in a separate session. "
+-                "You can keep chatting — the result will appear here when done."
++            return _gateway_ui(
++                "background.usage",
++                "Usage: /background <prompt>\nExample: /background Summarize the top HN stories today\n\nRuns the prompt in a separate session. You can keep chatting — the result will appear here when done.",
+             )
+ 
+         source = event.source
+@@ -5792,7 +5899,12 @@ class GatewayRunner:
+         _task.add_done_callback(self._background_tasks.discard)
+ 
+         preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
+-        return f'🔄 Background task started: "{preview}"\nTask ID: {task_id}\nYou can keep chatting — results will appear when done.'
++        return _gateway_ui(
++            "background.started",
++            '🔄 Background task started: "{preview}"\nTask ID: {task_id}\nYou can keep chatting — results will appear when done.',
++            preview=preview,
++            task_id=task_id,
++        )
+ 
+     async def _run_background_task(
+         self, prompt: str, source: "SessionSource", task_id: str
+@@ -5816,7 +5928,11 @@ class GatewayRunner:
+             if not runtime_kwargs.get("api_key"):
+                 await adapter.send(
+                     source.chat_id,
+-                    f"❌ Background task {task_id} failed: no provider credentials configured.",
++                    _gateway_ui(
++                        "background.no_credentials",
++                        "❌ Background task {task_id} failed: no provider credentials configured.",
++                        task_id=task_id,
++                    ),
+                     metadata=_thread_metadata,
+                 )
+                 return
+@@ -5868,7 +5984,7 @@ class GatewayRunner:
+ 
+             response = result.get("final_response", "") if result else ""
+             if not response and result and result.get("error"):
+-                response = f"Error: {result['error']}"
++                response = _gateway_ui("background.error_prefix", "Error: {error}", error=result["error"])
+ 
+             # Extract media files from the response
+             if response:
+@@ -5876,7 +5992,11 @@ class GatewayRunner:
+                 images, text_content = adapter.extract_images(response)
+ 
+                 preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
+-                header = f'✅ Background task complete\nPrompt: "{preview}"\n\n'
++                header = _gateway_ui(
++                    "background.complete",
++                    '✅ Background task complete\nPrompt: "{preview}"\n\n',
++                    preview=preview,
++                )
+ 
+                 if text_content:
+                     await adapter.send(
+@@ -5887,7 +6007,7 @@ class GatewayRunner:
+                 elif not images and not media_files:
+                     await adapter.send(
+                         chat_id=source.chat_id,
+-                        content=header + "(No response generated)",
++                        content=header + _gateway_ui("background.no_response", "(No response generated)"),
+                         metadata=_thread_metadata,
+                     )
+ 
+@@ -5915,7 +6035,12 @@ class GatewayRunner:
+                 preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
+                 await adapter.send(
+                     chat_id=source.chat_id,
+-                    content=f'✅ Background task complete\nPrompt: "{preview}"\n\n(No response generated)',
++                    content=_gateway_ui(
++                        "background.complete",
++                        '✅ Background task complete\nPrompt: "{preview}"\n\n',
++                        preview=preview,
++                    )
++                    + _gateway_ui("background.no_response", "(No response generated)"),
+                     metadata=_thread_metadata,
+                 )
+ 
+@@ -5924,7 +6049,12 @@ class GatewayRunner:
+             try:
+                 await adapter.send(
+                     chat_id=source.chat_id,
+-                    content=f"❌ Background task {task_id} failed: {e}",
++                    content=_gateway_ui(
++                        "background.failed",
++                        "❌ Background task {task_id} failed: {error}",
++                        task_id=task_id,
++                        error=e,
++                    ),
+                     metadata=_thread_metadata,
+                 )
+             except Exception:
+@@ -5934,10 +6064,9 @@ class GatewayRunner:
+         """Handle /btw <question> — ephemeral side question in the same chat."""
+         question = event.get_command_args().strip()
+         if not question:
+-            return (
+-                "Usage: /btw <question>\n"
+-                "Example: /btw what module owns session title sanitization?\n\n"
+-                "Answers using session context. No tools, not persisted."
++            return _gateway_ui(
++                "btw.usage",
++                "Usage: /btw <question>\nExample: /btw what module owns session title sanitization?\n\nAnswers using session context. No tools, not persisted.",
+             )
+ 
+         source = event.source
+@@ -5946,7 +6075,7 @@ class GatewayRunner:
+         # Guard: one /btw at a time per session
+         existing = getattr(self, "_active_btw_tasks", {}).get(session_key)
+         if existing and not existing.done():
+-            return "A /btw is already running for this chat. Wait for it to finish."
++            return _gateway_ui("btw.running", "A /btw is already running for this chat. Wait for it to finish.")
+ 
+         if not hasattr(self, "_active_btw_tasks"):
+             self._active_btw_tasks: dict = {}
+@@ -5965,7 +6094,11 @@ class GatewayRunner:
+         _task.add_done_callback(_cleanup)
+ 
+         preview = question[:60] + ("..." if len(question) > 60 else "")
+-        return f'💬 /btw: "{preview}"\nReply will appear here shortly.'
++        return _gateway_ui(
++            "btw.started",
++            '💬 /btw: "{preview}"\nReply will appear here shortly.',
++            preview=preview,
++        )
+ 
+     async def _run_btw_task(
+         self, question: str, source, session_key: str, task_id: str,
+@@ -5990,7 +6123,7 @@ class GatewayRunner:
+             if not runtime_kwargs.get("api_key"):
+                 await adapter.send(
+                     source.chat_id,
+-                    "❌ /btw failed: no provider credentials configured.",
++                    _gateway_ui("btw.no_credentials", "❌ /btw failed: no provider credentials configured."),
+                     metadata=_thread_meta,
+                 )
+                 return
+@@ -6053,14 +6186,14 @@ class GatewayRunner:
+ 
+             response = (result.get("final_response") or "") if result else ""
+             if not response and result and result.get("error"):
+-                response = f"Error: {result['error']}"
++                response = _gateway_ui("btw.error_prefix", "Error: {error}", error=result["error"])
+             if not response:
+-                response = "(No response generated)"
++                response = _gateway_ui("btw.no_response", "(No response generated)")
+ 
+             media_files, response = adapter.extract_media(response)
+             images, text_content = adapter.extract_images(response)
+             preview = question[:60] + ("..." if len(question) > 60 else "")
+-            header = f'💬 /btw: "{preview}"\n\n'
++            header = _gateway_ui("btw.answer_header", '💬 /btw: "{preview}"\n\n', preview=preview)
+ 
+             if text_content:
+                 await adapter.send(
+@@ -6071,7 +6204,7 @@ class GatewayRunner:
+             elif not images and not media_files:
+                 await adapter.send(
+                     chat_id=source.chat_id,
+-                    content=header + "(No response generated)",
++                    content=header + _gateway_ui("btw.no_response", "(No response generated)"),
+                     metadata=_thread_meta,
+                 )
+ 
+@@ -6092,7 +6225,7 @@ class GatewayRunner:
+             try:
+                 await adapter.send(
+                     chat_id=source.chat_id,
+-                    content=f"❌ /btw failed: {e}",
++                    content=_gateway_ui("btw.failed", "❌ /btw failed: {error}", error=e),
+                     metadata=_thread_meta,
+                 )
+             except Exception:
+@@ -6144,11 +6277,17 @@ class GatewayRunner:
+             else:
+                 level = rc.get("effort", "medium")
+             display_state = "on ✓" if self._show_reasoning else "off"
+-            return (
+-                "🧠 **Reasoning Settings**\n\n"
+-                f"**Effort:** `{level}`\n"
+-                f"**Display:** {display_state}\n\n"
+-                "_Usage:_ `/reasoning <none|minimal|low|medium|high|xhigh|show|hide>`"
++            return "\n\n".join(
++                [
++                    _gateway_ui("reasoning.settings_title", "🧠 **Reasoning Settings**"),
++                    "\n".join(
++                        [
++                            _gateway_ui("reasoning.effort_label", "**Effort:** `{level}`", level=level),
++                            _gateway_ui("reasoning.display_label", "**Display:** {state}", state=display_state),
++                        ]
++                    ),
++                    _gateway_ui("reasoning.usage", "_Usage:_ `/reasoning <none|minimal|low|medium|high|xhigh|show|hide>`"),
++                ]
+             )
+ 
+         # Display toggle (per-platform)
+@@ -6157,14 +6296,19 @@ class GatewayRunner:
+             self._show_reasoning = True
+             _save_config_key(f"display.platforms.{platform_key}.show_reasoning", True)
+             return (
+-                "🧠 ✓ Reasoning display: **ON**\n"
+-                f"Model thinking will be shown before each response on **{platform_key}**."
++                _gateway_ui("reasoning.show_on", "🧠 ✓ Reasoning display: **ON**")
++                + "\n"
++                + _gateway_ui(
++                    "reasoning.show_on_detail",
++                    "Model thinking will be shown before each response on **{platform_key}**.",
++                    platform_key=platform_key,
++                )
+             )
+ 
+         if args in ("hide", "off"):
+             self._show_reasoning = False
+             _save_config_key(f"display.platforms.{platform_key}.show_reasoning", False)
+-            return f"🧠 ✓ Reasoning display: **OFF** for **{platform_key}**"
++            return _gateway_ui("reasoning.show_off", "🧠 ✓ Reasoning display: **OFF** for **{platform_key}**", platform_key=platform_key)
+ 
+         # Effort level change
+         effort = args.strip()
+@@ -6173,17 +6317,27 @@ class GatewayRunner:
+         elif effort in ("minimal", "low", "medium", "high", "xhigh"):
+             parsed = {"enabled": True, "effort": effort}
+         else:
+-            return (
+-                f"⚠️ Unknown argument: `{effort}`\n\n"
+-                "**Valid levels:** none, minimal, low, medium, high, xhigh\n"
+-                "**Display:** show, hide"
++            return "\n\n".join(
++                [
++                    _gateway_ui("reasoning.invalid_arg", "⚠️ Unknown argument: `{effort}`", effort=effort),
++                    "\n".join(
++                        [
++                            _gateway_ui("reasoning.valid_levels", "**Valid levels:** none, minimal, low, medium, high, xhigh"),
++                            _gateway_ui("reasoning.display_options", "**Display:** show, hide"),
++                        ]
++                    ),
++                ]
+             )
+ 
+         self._reasoning_config = parsed
+         if _save_config_key("agent.reasoning_effort", effort):
+-            return f"🧠 ✓ Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_"
++            return _gateway_ui(
++                "reasoning.saved",
++                "🧠 ✓ Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_",
++                effort=effort,
++            )
+         else:
+-            return f"🧠 ✓ Reasoning effort set to `{effort}` (this session only)"
++            return _gateway_ui("reasoning.session_only", "🧠 ✓ Reasoning effort set to `{effort}` (this session only)", effort=effort)
+ 
+     async def _handle_fast_command(self, event: MessageEvent) -> str:
+         """Handle /fast — mirror the CLI Priority Processing toggle in gateway chats."""
+@@ -6197,7 +6351,7 @@ class GatewayRunner:
+         user_config = _load_gateway_config()
+         model = _resolve_gateway_model(user_config)
+         if not model_supports_fast_mode(model):
+-            return "⚡ /fast is only available for OpenAI models that support Priority Processing."
++            return _gateway_ui("fast.unsupported", "⚡ /fast is only available for OpenAI models that support Priority Processing.")
+ 
+         def _save_config_key(key_path: str, value):
+             """Save a dot-separated key to config.yaml."""
+@@ -6221,29 +6375,37 @@ class GatewayRunner:
+ 
+         if not args or args == "status":
+             status = "fast" if self._service_tier == "priority" else "normal"
+-            return (
+-                "⚡ Priority Processing\n\n"
+-                f"Current mode: `{status}`\n\n"
+-                "_Usage:_ `/fast <normal|fast|status>`"
++            return "\n\n".join(
++                [
++                    _gateway_ui("fast.title", "⚡ Priority Processing"),
++                    _gateway_ui("fast.current_mode", "Current mode: `{status}`", status=status),
++                    _gateway_ui("fast.usage", "_Usage:_ `/fast <normal|fast|status>`"),
++                ]
+             )
+ 
+         if args in {"fast", "on"}:
+             self._service_tier = "priority"
+             saved_value = "fast"
+-            label = "FAST"
++            label = _gateway_ui("fast.label_fast", "FAST")
+         elif args in {"normal", "off"}:
+             self._service_tier = None
+             saved_value = "normal"
+-            label = "NORMAL"
++            label = _gateway_ui("fast.label_normal", "NORMAL")
+         else:
+-            return (
+-                f"⚠️ Unknown argument: `{args}`\n\n"
+-                "**Valid options:** normal, fast, status"
++            return "\n\n".join(
++                [
++                    _gateway_ui("fast.invalid_arg", "⚠️ Unknown argument: `{args}`", args=args),
++                    _gateway_ui("fast.valid_options", "**Valid options:** normal, fast, status"),
++                ]
+             )
+ 
+         if _save_config_key("agent.service_tier", saved_value):
+-            return f"⚡ ✓ Priority Processing: **{label}** (saved to config)\n_(takes effect on next message)_"
+-        return f"⚡ ✓ Priority Processing: **{label}** (this session only)"
++            return _gateway_ui(
++                "fast.saved",
++                "⚡ ✓ Priority Processing: **{label}** (saved to config)\n_(takes effect on next message)_",
++                label=label,
++            )
++        return _gateway_ui("fast.session_only", "⚡ ✓ Priority Processing: **{label}** (this session only)", label=label)
+ 
+     async def _handle_yolo_command(self, event: MessageEvent) -> str:
+         """Handle /yolo — toggle dangerous command approval bypass for this session only."""
+@@ -6257,10 +6419,10 @@ class GatewayRunner:
+         current = is_session_yolo_enabled(session_key)
+         if current:
+             disable_session_yolo(session_key)
+-            return "⚠️ YOLO mode **OFF** for this session — dangerous commands will require approval."
++            return _gateway_ui("yolo.off", "⚠️ YOLO mode **OFF** for this session — dangerous commands will require approval.")
+         else:
+             enable_session_yolo(session_key)
+-            return "⚡ YOLO mode **ON** for this session — all commands auto-approved. Use with caution."
++            return _gateway_ui("yolo.on", "⚡ YOLO mode **ON** for this session — all commands auto-approved. Use with caution.")
+ 
+     async def _handle_verbose_command(self, event: MessageEvent) -> str:
+         """Handle /verbose command — cycle tool progress display mode.
+@@ -6341,7 +6503,7 @@ class GatewayRunner:
+         history = self.session_store.load_transcript(session_entry.session_id)
+ 
+         if not history or len(history) < 4:
+-            return "Not enough conversation to compress (need at least 4 messages)."
++            return _gateway_ui("compress.not_enough", "Not enough conversation to compress (need at least 4 messages).")
+ 
+         # Extract optional focus topic from command args
+         focus_topic = (event.get_command_args() or "").strip() or None
+@@ -6357,7 +6519,7 @@ class GatewayRunner:
+                 session_key=session_key,
+             )
+             if not runtime_kwargs.get("api_key"):
+-                return "No provider configured -- cannot compress."
++                return _gateway_ui("compress.no_provider", "No provider configured -- cannot compress.")
+ 
+             msgs = [
+                 {"role": m.get("role"), "content": m.get("content")}
+@@ -6384,7 +6546,7 @@ class GatewayRunner:
+                 compress_start = compressor._align_boundary_forward(msgs, compress_start)
+                 compress_end = compressor._find_tail_cut_by_tokens(msgs, compress_start)
+                 if compress_start >= compress_end:
+-                    return "Nothing to compress yet (the transcript is still all protected context)."
++                    return _gateway_ui("compress.nothing", "Nothing to compress yet (the transcript is still all protected context).")
+ 
+                 loop = asyncio.get_running_loop()
+                 compressed, _ = await loop.run_in_executor(
+@@ -6417,14 +6579,14 @@ class GatewayRunner:
+                 self._cleanup_agent_resources(tmp_agent)
+             lines = [f"🗜️ {summary['headline']}"]
+             if focus_topic:
+-                lines.append(f"Focus: \"{focus_topic}\"")
++                lines.append(_gateway_ui("compress.focus", "Focus: \"{focus}\"", focus=focus_topic))
+             lines.append(summary["token_line"])
+             if summary["note"]:
+                 lines.append(summary["note"])
+             return "\n".join(lines)
+         except Exception as e:
+             logger.warning("Manual compress failed: %s", e)
+-            return f"Compression failed: {e}"
++            return _gateway_ui("compress.failed", "Compression failed: {error}", error=e)
+ 
+     async def _handle_title_command(self, event: MessageEvent) -> str:
+         """Handle /title command — set or show the current session's title."""
+@@ -6978,7 +7140,6 @@ class GatewayRunner:
+         from hermes_cli.debug import (
+             _capture_dump, collect_debug_report,
+             upload_to_pastebin, _schedule_auto_delete,
+-            _GATEWAY_PRIVACY_NOTICE,
+         )
+ 
+         loop = asyncio.get_running_loop()
+@@ -6992,20 +7153,31 @@ class GatewayRunner:
+             try:
+                 urls["Report"] = upload_to_pastebin(report)
+             except Exception as exc:
+-                return f"✗ Failed to upload debug report: {exc}"
++                return _gateway_ui(
++                    "debug.upload_failed",
++                    "✗ Failed to upload debug report: {error}",
++                    error=exc,
++                )
+ 
+             # Schedule auto-deletion after 6 hours
+             _schedule_auto_delete(list(urls.values()))
+ 
+-            lines = [_GATEWAY_PRIVACY_NOTICE, "", "**Debug report uploaded:**", ""]
++            lines = [
++                _gateway_ui(
++                    "debug.privacy_notice",
++                    "⚠️ **Privacy notice:** This uploads system info + recent log tails (may contain conversation fragments) to a public paste service. Full logs are NOT included from the gateway — use `hermes debug share` from the CLI for full log uploads.",
++                ),
++                "",
++                _gateway_ui("debug.title", "**Debug report uploaded:**"),
++                "",
++            ]
+             label_width = max(len(k) for k in urls)
+             for label, url in urls.items():
+                 lines.append(f"`{label:<{label_width}}`  {url}")
+ 
+-            lines.append("")
+-            lines.append("⏱ Pastes will auto-delete in 6 hours.")
+-            lines.append("For full log uploads, use `hermes debug share` from the CLI.")
+-            lines.append("Share these links with the Hermes team for support.")
++            lines.append(_gateway_ui("debug.auto_delete_hint", "\n⏱ Pastes will auto-delete in 6 hours."))
++            lines.append(_gateway_ui("debug.cli_share_hint", "For full log uploads, use `hermes debug share` from the CLI."))
++            lines.append(_gateway_ui("debug.share_hint", "\nShare these links with the Hermes team for support."))
+             return "\n".join(lines)
+ 
+         return await loop.run_in_executor(None, _collect_and_upload)
+diff --git a/hermes_cli/auth.py b/hermes_cli/auth.py
+index 421836c2..a8479c6e 100644
+--- a/hermes_cli/auth.py
++++ b/hermes_cli/auth.py
+@@ -38,10 +38,15 @@ import httpx
+ import yaml
+ 
+ from hermes_cli.config import get_hermes_home, get_config_path, read_raw_config
++from hermes_cli.skin_engine import get_ui_text
+ from hermes_constants import OPENROUTER_BASE_URL
+ 
+ logger = logging.getLogger(__name__)
+ 
++
++def _ui(key: str, default: str = "", **format_args: Any) -> str:
++    return get_ui_text(f"auth.{key}", default, **format_args)
++
+ try:
+     import fcntl
+ except Exception:
+@@ -2827,23 +2832,27 @@ def _prompt_model_selection(
+         else:
+             base = mid
+         if mid == current_model:
+-            base += "  ← currently in use"
++            base += _ui("model_menu.current_marker", "  ← currently in use")
+         return base
+ 
+     # Default cursor on the current model (index 0 if it was reordered to top)
+     default_idx = 0
+ 
+     # Build a pricing header hint for the menu title
+-    menu_title = "Select default model:"
++    menu_title = _ui("model_menu.title", "Select default model:")
+     if has_pricing:
+         # Align the header with the model column.
+         # Each choice is "  {label}" (2 spaces) and simple_term_menu prepends
+         # a 3-char cursor region ("-> " or "   "), so content starts at col 5.
+         pad = " " * 5
+-        header = f"\n{pad}{'':>{name_col}} {'In':>{price_col}}  {'Out':>{price_col}}"
++        header = (
++            f"\n{pad}{'':>{name_col}} "
++            f"{_ui('model_menu.price_in', 'In'):>{price_col}}  "
++            f"{_ui('model_menu.price_out', 'Out'):>{price_col}}"
++        )
+         if has_cache:
+-            header += f"  {'Cache':>{cache_col}}"
+-        menu_title += header + "  /Mtok"
++            header += f"  {_ui('model_menu.price_cache', 'Cache'):>{cache_col}}"
++        menu_title += header + f"  {_ui('model_menu.price_unit', '/Mtok')}"
+ 
+     # ANSI escape for dim text
+     _DIM = "\033[2m"
+@@ -2854,8 +2863,8 @@ def _prompt_model_selection(
+         from simple_term_menu import TerminalMenu
+ 
+         choices = [f"  {_label(mid)}" for mid in ordered]
+-        choices.append("  Enter custom model name")
+-        choices.append("  Skip (keep current)")
++        choices.append(f"  {_ui('model_menu.custom', 'Enter custom model name')}")
++        choices.append(f"  {_ui('model_menu.skip', 'Skip (keep current)')}")
+ 
+         # Print the unavailable block BEFORE the menu via regular print().
+         # simple_term_menu pads title lines to terminal width (causes wrapping),
+@@ -2868,9 +2877,13 @@ def _prompt_model_selection(
+             for mid in _unavailable:
+                 print(f"{_DIM}     {_label(mid)}{_RESET}")
+             print()
+-            print(f"{_DIM}  ── Upgrade at {_upgrade_url} for paid models ──{_RESET}")
++            print(
++                f"{_DIM}  ── "
++                f"{_ui('model_menu.upgrade_banner', 'Upgrade at {url} for paid models', url=_upgrade_url)}"
++                f" ──{_RESET}"
++            )
+             print()
+-            effective_title = "Available free models:"
++            effective_title = _ui("model_menu.free_title", "Available free models:")
+         else:
+             effective_title = menu_title
+ 
+@@ -2893,7 +2906,7 @@ def _prompt_model_selection(
+         if idx < len(ordered):
+             return ordered[idx]
+         elif idx == len(ordered):
+-            custom = input("Enter model name: ").strip()
++            custom = input(_ui("model_menu.enter_name", "Enter model name: ")).strip()
+             return custom if custom else None
+         return None
+     except (ImportError, NotImplementedError, OSError, subprocess.SubprocessError):
+@@ -2905,33 +2918,39 @@ def _prompt_model_selection(
+     for i, mid in enumerate(ordered, 1):
+         print(f"  {i:>{num_width}}. {_label(mid)}")
+     n = len(ordered)
+-    print(f"  {n + 1:>{num_width}}. Enter custom model name")
+-    print(f"  {n + 2:>{num_width}}. Skip (keep current)")
++    print(f"  {n + 1:>{num_width}}. {_ui('model_menu.custom', 'Enter custom model name')}")
++    print(f"  {n + 2:>{num_width}}. {_ui('model_menu.skip', 'Skip (keep current)')}")
+ 
+     if _unavailable:
+         _upgrade_url = (portal_url or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
+         print()
+-        print(f"  {_DIM}── Unavailable models (requires paid tier — upgrade at {_upgrade_url}) ──{_RESET}")
++        print(
++            f"  {_DIM}── "
++            f"{_ui('model_menu.unavailable_banner', 'Unavailable models (requires paid tier — upgrade at {url})', url=_upgrade_url)}"
++            f" ──{_RESET}"
++        )
+         for mid in _unavailable:
+             print(f"  {'':>{num_width}}  {_DIM}{_label(mid)}{_RESET}")
+     print()
+ 
+     while True:
+         try:
+-            choice = input(f"Choice [1-{n + 2}] (default: skip): ").strip()
++            choice = input(
++                _ui("model_menu.choice_prompt", "Choice [1-{max_choice}] (default: skip): ", max_choice=n + 2)
++            ).strip()
+             if not choice:
+                 return None
+             idx = int(choice)
+             if 1 <= idx <= n:
+                 return ordered[idx - 1]
+             elif idx == n + 1:
+-                custom = input("Enter model name: ").strip()
++                custom = input(_ui("model_menu.enter_name", "Enter model name: ")).strip()
+                 return custom if custom else None
+             elif idx == n + 2:
+                 return None
+-            print(f"Please enter 1-{n + 2}")
++            print(_ui("model_menu.choice_range_error", "Please enter 1-{max_choice}", max_choice=n + 2))
+         except ValueError:
+-            print("Please enter a number")
++            print(_ui("model_menu.number_error", "Please enter a number"))
+         except (KeyboardInterrupt, EOFError):
+             return None
+ 
+@@ -2955,9 +2974,14 @@ def _save_model_choice(model_id: str) -> None:
+ 
+ def login_command(args) -> None:
+     """Deprecated: use 'hermes model' or 'hermes setup' instead."""
+-    print("The 'hermes login' command has been removed.")
+-    print("Use 'hermes auth' to manage credentials,")
+-    print("'hermes model' to select a provider, or 'hermes setup' for full setup.")
++    print(_ui("login.removed", "The 'hermes login' command has been removed."))
++    print(_ui("login.removed_line2", "Use 'hermes auth' to manage credentials,"))
++    print(
++        _ui(
++            "login.removed_line3",
++            "'hermes model' to select a provider, or 'hermes setup' for full setup.",
++        )
++    )
+     raise SystemExit(0)
+ 
+ 
+@@ -2973,29 +2997,39 @@ def _login_openai_codex(args, pconfig: ProviderConfig) -> None:
+         # the user "Login successful!".
+         _resolved_key = existing.get("api_key", "")
+         if isinstance(_resolved_key, str) and _resolved_key and not _codex_access_token_is_expiring(_resolved_key, 60):
+-            print("Existing Codex credentials found in Hermes auth store.")
++            print(_ui("codex.existing_credentials", "Existing Codex credentials found in Hermes auth store."))
+             try:
+-                reuse = input("Use existing credentials? [Y/n]: ").strip().lower()
++                reuse = input(_ui("codex.reuse_prompt", "Use existing credentials? [Y/n]: ")).strip().lower()
+             except (EOFError, KeyboardInterrupt):
+                 reuse = "y"
+             if reuse in ("", "y", "yes"):
+                 config_path = _update_config_for_provider("openai-codex", existing.get("base_url", DEFAULT_CODEX_BASE_URL))
+                 print()
+-                print("Login successful!")
+-                print(f"  Config updated: {config_path} (model.provider=openai-codex)")
++                print(_ui("login.success", "Login successful!"))
++                print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="openai-codex"))
+                 return
+         else:
+-            print("Existing Codex credentials are expired. Starting fresh login...")
++            print(_ui("codex.existing_expired", "Existing Codex credentials are expired. Starting fresh login..."))
+     except AuthError:
+         pass
+ 
+     # Check for existing Codex CLI tokens we can import
+     cli_tokens = _import_codex_cli_tokens()
+     if cli_tokens:
+-        print("Found existing Codex CLI credentials at ~/.codex/auth.json")
+-        print("Hermes will create its own session to avoid conflicts with Codex CLI / VS Code.")
++        print(_ui("codex.found_cli_credentials", "Found existing Codex CLI credentials at ~/.codex/auth.json"))
++        print(
++            _ui(
++                "codex.separate_session",
++                "Hermes will create its own session to avoid conflicts with Codex CLI / VS Code.",
++            )
++        )
+         try:
+-            do_import = input("Import these credentials? (a separate login is recommended) [y/N]: ").strip().lower()
++            do_import = input(
++                _ui(
++                    "codex.import_prompt",
++                    "Import these credentials? (a separate login is recommended) [y/N]: ",
++                )
++            ).strip().lower()
+         except (EOFError, KeyboardInterrupt):
+             do_import = "n"
+         if do_import in ("y", "yes"):
+@@ -3003,15 +3037,15 @@ def _login_openai_codex(args, pconfig: ProviderConfig) -> None:
+             base_url = os.getenv("HERMES_CODEX_BASE_URL", "").strip().rstrip("/") or DEFAULT_CODEX_BASE_URL
+             config_path = _update_config_for_provider("openai-codex", base_url)
+             print()
+-            print("Credentials imported. Note: if Codex CLI refreshes its token,")
+-            print("Hermes will keep working independently with its own session.")
+-            print(f"  Config updated: {config_path} (model.provider=openai-codex)")
++            print(_ui("codex.imported_line1", "Credentials imported. Note: if Codex CLI refreshes its token,"))
++            print(_ui("codex.imported_line2", "Hermes will keep working independently with its own session."))
++            print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="openai-codex"))
+             return
+ 
+     # Run a fresh device code flow — Hermes gets its own OAuth session
+     print()
+-    print("Signing in to OpenAI Codex...")
+-    print("(Hermes creates its own session — won't affect Codex CLI or VS Code)")
++    print(_ui("codex.signing_in", "Signing in to OpenAI Codex..."))
++    print(_ui("codex.signing_in_note", "(Hermes creates its own session — won't affect Codex CLI or VS Code)"))
+     print()
+ 
+     creds = _codex_device_code_login()
+@@ -3020,10 +3054,10 @@ def _login_openai_codex(args, pconfig: ProviderConfig) -> None:
+     _save_codex_tokens(creds["tokens"], creds.get("last_refresh"))
+     config_path = _update_config_for_provider("openai-codex", creds.get("base_url", DEFAULT_CODEX_BASE_URL))
+     print()
+-    print("Login successful!")
++    print(_ui("login.success", "Login successful!"))
+     from hermes_constants import display_hermes_home as _dhh
+-    print(f"  Auth state: {_dhh()}/auth.json")
+-    print(f"  Config updated: {config_path} (model.provider=openai-codex)")
++    print(_ui("login.auth_state", "  Auth state: {path}", path=f"{_dhh()}/auth.json"))
++    print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="openai-codex"))
+ 
+ 
+ def _codex_device_code_login() -> Dict[str, Any]:
+@@ -3065,12 +3099,12 @@ def _codex_device_code_login() -> Dict[str, Any]:
+         )
+ 
+     # Step 2: Show user the code
+-    print("To continue, follow these steps:\n")
+-    print("  1. Open this URL in your browser:")
++    print(_ui("codex.device_steps_intro", "To continue, follow these steps:\n"))
++    print(_ui("codex.device_step_open", "  1. Open this URL in your browser:"))
+     print(f"     \033[94m{issuer}/codex/device\033[0m\n")
+-    print("  2. Enter this code:")
++    print(_ui("codex.device_step_code", "  2. Enter this code:"))
+     print(f"     \033[94m{user_code}\033[0m\n")
+-    print("Waiting for sign-in... (press Ctrl+C to cancel)")
++    print(_ui("codex.device_waiting", "Waiting for sign-in... (press Ctrl+C to cancel)"))
+ 
+     # Step 3: Poll for authorization code
+     max_wait = 15 * 60  # 15 minutes
+@@ -3204,12 +3238,12 @@ def _nous_device_code_login(
+     if _is_remote_session():
+         open_browser = False
+ 
+-    print(f"Starting Hermes login via {pconfig.name}...")
+-    print(f"Portal: {portal_base_url}")
++    print(_ui("nous.starting_login", "Starting Hermes login via {provider}...", provider=pconfig.name))
++    print(_ui("nous.portal", "Portal: {url}", url=portal_base_url))
+     if insecure:
+-        print("TLS verification: disabled (--insecure)")
++        print(_ui("nous.tls_disabled", "TLS verification: disabled (--insecure)"))
+     elif ca_bundle:
+-        print(f"TLS verification: custom CA bundle ({ca_bundle})")
++        print(_ui("nous.tls_custom_ca", "TLS verification: custom CA bundle ({path})", path=ca_bundle))
+ 
+     with httpx.Client(timeout=timeout, headers={"Accept": "application/json"}, verify=verify) as client:
+         device_data = _request_device_code(
+@@ -3225,19 +3259,19 @@ def _nous_device_code_login(
+         interval = int(device_data["interval"])
+ 
+         print()
+-        print("To continue:")
+-        print(f"  1. Open: {verification_url}")
+-        print(f"  2. If prompted, enter code: {user_code}")
++        print(_ui("nous.continue", "To continue:"))
++        print(_ui("nous.step_open", "  1. Open: {url}", url=verification_url))
++        print(_ui("nous.step_code", "  2. If prompted, enter code: {code}", code=user_code))
+ 
+         if open_browser:
+             opened = webbrowser.open(verification_url)
+             if opened:
+-                print("  (Opened browser for verification)")
++                print(_ui("nous.browser_opened", "  (Opened browser for verification)"))
+             else:
+-                print("  Could not open browser automatically — use the URL above.")
++                print(_ui("nous.browser_failed", "  Could not open browser automatically — use the URL above."))
+ 
+         effective_interval = max(1, min(interval, DEVICE_AUTH_POLL_INTERVAL_CAP_SECONDS))
+-        print(f"Waiting for approval (polling every {effective_interval}s)...")
++        print(_ui("nous.waiting", "Waiting for approval (polling every {seconds}s)...", seconds=effective_interval))
+ 
+         token_data = _poll_for_token(
+             client=client,
+@@ -3256,7 +3290,7 @@ def _nous_device_code_login(
+         or requested_inference_url
+     )
+     if resolved_inference_url != requested_inference_url:
+-        print(f"Using portal-provided inference URL: {resolved_inference_url}")
++        print(_ui("nous.portal_inference_url", "Using portal-provided inference URL: {url}", url=resolved_inference_url))
+ 
+     auth_state = {
+         "portal_base_url": portal_base_url,
+@@ -3294,10 +3328,10 @@ def _nous_device_code_login(
+                 "portal_base_url", DEFAULT_NOUS_PORTAL_URL
+             ).rstrip("/")
+             print()
+-            print("Your Nous Portal account does not have an active subscription.")
+-            print(f"  Subscribe here: {portal_url}/billing")
++            print(_ui("nous.subscription_missing", "Your Nous Portal account does not have an active subscription."))
++            print(_ui("nous.subscribe_here", "  Subscribe here: {url}/billing", url=portal_url))
+             print()
+-            print("After subscribing, run `hermes model` again to finish setup.")
++            print(_ui("nous.after_subscribe", "After subscribing, run `hermes model` again to finish setup."))
+             raise SystemExit(1)
+         raise
+ 
+@@ -3341,8 +3375,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+             saved_to = _save_auth_store(auth_store)
+ 
+         print()
+-        print("Login successful!")
+-        print(f"  Auth state: {saved_to}")
++        print(_ui("login.success", "Login successful!"))
++        print(_ui("login.auth_state", "  Auth state: {path}", path=saved_to))
+ 
+         # Resolve model BEFORE writing provider to config.yaml so we never
+         # leave the config in a half-updated state (provider=nous but model
+@@ -3376,7 +3410,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+                     )
+             _portal = auth_state.get("portal_base_url", "")
+             if model_ids:
+-                print(f"Showing {len(model_ids)} curated models — use \"Enter custom model name\" for others.")
++                print(_ui("nous.showing_models", "Showing {count} curated models — use \"Enter custom model name\" for others.", count=len(model_ids)))
+                 selected_model = _prompt_model_selection(
+                     model_ids, pricing=pricing,
+                     unavailable_models=unavailable_models,
+@@ -3384,14 +3418,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+                 )
+             elif unavailable_models:
+                 _url = (_portal or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
+-                print("No free models currently available.")
+-                print(f"Upgrade at {_url} to access paid models.")
++                print(_ui("nous.no_free_models", "No free models currently available."))
++                print(_ui("nous.upgrade_paid", "Upgrade at {url} to access paid models.", url=_url))
+             else:
+-                print("No curated models available for Nous Portal.")
++                print(_ui("nous.no_curated_models", "No curated models available for Nous Portal."))
+         except Exception as exc:
+             message = format_auth_error(exc) if isinstance(exc, AuthError) else str(exc)
+             print()
+-            print(f"Login succeeded, but could not fetch available models. Reason: {message}")
++            print(_ui("nous.fetch_models_failed", "Login succeeded, but could not fetch available models. Reason: {message}", message=message))
+ 
+         # Write provider + model atomically so config is never mismatched.
+         # If no model was selected (user picked "Skip (keep current)",
+@@ -3411,8 +3445,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+                     auth_store.pop("active_provider", None)
+                 _save_auth_store(auth_store)
+             print()
+-            print("No provider change. Nous credentials saved for future use.")
+-            print("  Run `hermes model` again to switch to Nous Portal.")
++            print(_ui("login.no_provider_change", "No provider change. Nous credentials saved for future use."))
++            print(_ui("login.run_model_again", "  Run `hermes model` again to switch to Nous Portal."))
+             return
+ 
+         config_path = _update_config_for_provider(
+@@ -3420,14 +3454,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+         )
+         if selected_model:
+             _save_model_choice(selected_model)
+-            print(f"Default model set to: {selected_model}")
+-        print(f"  Config updated: {config_path} (model.provider=nous)")
++            print(_ui("nous.default_model_set", "Default model set to: {model}", model=selected_model))
++        print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="nous"))
+ 
+     except KeyboardInterrupt:
+-        print("\nLogin cancelled.")
++        print(f"\n{_ui('login.cancelled', 'Login cancelled.')}")
+         raise SystemExit(130)
+     except Exception as exc:
+-        print(f"Login failed: {exc}")
++        print(_ui("login.failed", "Login failed: {error}", error=exc))
+         raise SystemExit(1)
+ 
+ 
+@@ -3436,24 +3470,24 @@ def logout_command(args) -> None:
+     provider_id = getattr(args, "provider", None)
+ 
+     if provider_id and provider_id not in PROVIDER_REGISTRY:
+-        print(f"Unknown provider: {provider_id}")
++        print(_ui("logout.unknown_provider", "Unknown provider: {provider}", provider=provider_id))
+         raise SystemExit(1)
+ 
+     active = get_active_provider()
+     target = provider_id or active
+ 
+     if not target:
+-        print("No provider is currently logged in.")
++        print(_ui("logout.none_logged_in", "No provider is currently logged in."))
+         return
+ 
+     provider_name = PROVIDER_REGISTRY[target].name if target in PROVIDER_REGISTRY else target
+ 
+     if clear_provider_auth(target):
+         _reset_config_provider()
+-        print(f"Logged out of {provider_name}.")
++        print(_ui("logout.logged_out", "Logged out of {provider}.", provider=provider_name))
+         if os.getenv("OPENROUTER_API_KEY"):
+-            print("Hermes will use OpenRouter for inference.")
++            print(_ui("logout.use_openrouter", "Hermes will use OpenRouter for inference."))
+         else:
+-            print("Run `hermes model` or configure an API key to use Hermes.")
++            print(_ui("logout.run_model", "Run `hermes model` or configure an API key to use Hermes."))
+     else:
+-        print(f"No auth state found for {provider_name}.")
++        print(_ui("logout.no_auth_state", "No auth state found for {provider}.", provider=provider_name))
 diff --git a/hermes_cli/banner.py b/hermes_cli/banner.py
 index fb6068a8..eb1c272d 100644
 --- a/hermes_cli/banner.py
@@ -1341,6 +3040,137 @@ index 09ecfca5..b40cb768 100644
      return result
  
  
+diff --git a/hermes_cli/debug.py b/hermes_cli/debug.py
+index 998631b0..17ca5c83 100644
+--- a/hermes_cli/debug.py
++++ b/hermes_cli/debug.py
+@@ -13,9 +13,14 @@ import urllib.request
+ from pathlib import Path
+ from typing import Optional
+ 
++from hermes_cli.skin_engine import get_ui_text
+ from hermes_constants import get_hermes_home
+ 
+ 
++def _ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"debug.{key}", default, **format_args)
++
++
+ # ---------------------------------------------------------------------------
+ # Paste services — try paste.rs first, dpaste.com as fallback.
+ # ---------------------------------------------------------------------------
+@@ -355,9 +360,9 @@ def run_debug_share(args):
+     local_only = getattr(args, "local", False)
+ 
+     if not local_only:
+-        print(_PRIVACY_NOTICE)
++        print(_ui("privacy_notice", _PRIVACY_NOTICE))
+ 
+-    print("Collecting debug report...")
++    print(_ui("collecting", "Collecting debug report..."))
+ 
+     # Capture dump once — prepended to every paste for context.
+     dump_text = _capture_dump()
+@@ -386,7 +391,7 @@ def run_debug_share(args):
+             print(gateway_log)
+         return
+ 
+-    print("Uploading...")
++    print(_ui("uploading", "Uploading..."))
+     urls: dict[str, str] = {}
+     failures: list[str] = []
+ 
+@@ -394,7 +399,7 @@ def run_debug_share(args):
+     try:
+         urls["Report"] = upload_to_pastebin(report, expiry_days=expiry)
+     except RuntimeError as exc:
+-        print(f"\nUpload failed: {exc}", file=sys.stderr)
++        print(f"\n{_ui('upload_failed', 'Upload failed')}: {exc}", file=sys.stderr)
+         print("\nFull report printed below — copy-paste it manually:\n")
+         print(report)
+         sys.exit(1)
+@@ -415,42 +420,43 @@ def run_debug_share(args):
+ 
+     # Print results
+     label_width = max(len(k) for k in urls)
+-    print(f"\nDebug report uploaded:")
++    print(f"\n{_ui('uploaded', 'Debug report uploaded:')}")
+     for label, url in urls.items():
+         print(f"  {label:<{label_width}}  {url}")
+ 
+     if failures:
+-        print(f"\n  (failed to upload: {', '.join(failures)})")
++        print(_ui("upload_failed", "Upload failed"))
++        print(f"  {', '.join(failures)}")
+ 
+     # Schedule auto-deletion after 6 hours
+     _schedule_auto_delete(list(urls.values()))
+-    print(f"\n⏱  Pastes will auto-delete in 6 hours.")
++    print(_ui("auto_delete_hint", "\n⏱  Pastes will auto-delete in 6 hours."))
+ 
+     # Manual delete fallback
+-    print(f"To delete now:  hermes debug delete <url>")
++    print(_ui("delete_now_hint", "To delete now:  hermes debug delete <url>"))
+ 
+-    print(f"\nShare these links with the Hermes team for support.")
++    print(f"\n{_ui('share_hint', 'Share these links with the Hermes team for support.')}")
+ 
+ 
+ def run_debug_delete(args):
+     """Delete one or more paste URLs uploaded by /debug."""
+     urls = getattr(args, "urls", [])
+     if not urls:
+-        print("Usage: hermes debug delete <url> [<url> ...]")
+-        print("  Deletes paste.rs pastes uploaded by 'hermes debug share'.")
++        print(_ui("delete_usage", "Usage: hermes debug delete <url> [<url> ...]"))
++        print(_ui("delete_help", "  Deletes paste.rs pastes uploaded by 'hermes debug share'."))
+         return
+ 
+     for url in urls:
+         try:
+             ok = delete_paste(url)
+             if ok:
+-                print(f"  ✓ Deleted: {url}")
++                print(_ui("delete_success", "  ✓ Deleted: {url}", url=url))
+             else:
+-                print(f"  ✗ Failed to delete: {url} (unexpected response)")
++                print(_ui("delete_failed_response", "  ✗ Failed to delete: {url} (unexpected response)", url=url))
+         except ValueError as exc:
+-            print(f"  ✗ {exc}")
++            print(_ui("delete_failed", "  ✗ {error}", error=exc))
+         except Exception as exc:
+-            print(f"  ✗ Could not delete {url}: {exc}")
++            print(_ui("delete_failed_error", "  ✗ Could not delete {url}: {error}", url=url, error=exc))
+ 
+ 
+ def run_debug(args):
+@@ -462,16 +468,16 @@ def run_debug(args):
+         run_debug_delete(args)
+     else:
+         # Default: show help
+-        print("Usage: hermes debug <command>")
++        print(_ui("usage", "Usage: hermes debug <command>"))
+         print()
+-        print("Commands:")
+-        print("  share    Upload debug report to a paste service and print URL")
+-        print("  delete   Delete a previously uploaded paste")
++        print(_ui("commands_label", "Commands:"))
++        print(_ui("share_desc", "  share    Upload debug report to a paste service and print URL"))
++        print(_ui("delete_desc", "  delete   Delete a previously uploaded paste"))
+         print()
+-        print("Options (share):")
+-        print("  --lines N    Number of log lines to include (default: 200)")
+-        print("  --expire N   Paste expiry in days (default: 7)")
+-        print("  --local      Print report locally instead of uploading")
++        print(_ui("options_label", "Options:"))
++        print(_ui("lines_option", "  --lines N    Number of log lines to include (default: 200)"))
++        print(_ui("expire_option", "  --expire N   Paste expiry in days (default: 7)"))
++        print(_ui("local_option", "  --local      Print report locally instead of uploading"))
+         print()
+-        print("Options (delete):")
+-        print("  <url> ...    One or more paste URLs to delete")
++        print(_ui("delete_options_label", "Options (delete):"))
++        print(_ui("delete_arg", "  <url> ...    One or more paste URLs to delete"))
 diff --git a/hermes_cli/gateway.py b/hermes_cli/gateway.py
 index 585bbe44..8905150c 100644
 --- a/hermes_cli/gateway.py
@@ -1407,6 +3237,101 @@ index 585bbe44..8905150c 100644
      print("└─────────────────────────────────────────────────────────┘")
      print()
      
+diff --git a/hermes_cli/main.py b/hermes_cli/main.py
+index 10597db1..d6e36e5c 100644
+--- a/hermes_cli/main.py
++++ b/hermes_cli/main.py
+@@ -50,6 +50,22 @@ import sys
+ from pathlib import Path
+ from typing import Optional
+ 
++
++def _ui(key: str, default: str = "", **format_args) -> str:
++    fallback = default
++    if format_args:
++        try:
++            fallback = default.format(**format_args)
++        except Exception:
++            fallback = default
++    try:
++        from hermes_cli.skin_engine import get_ui_text
++
++        return get_ui_text(f"main.{key}", default, **format_args)
++    except Exception:
++        return fallback
++
++
+ def _require_tty(command_name: str) -> None:
+     """Exit with a clear error if stdin is not a terminal.
+ 
+@@ -59,9 +75,13 @@ def _require_tty(command_name: str) -> None:
+     """
+     if not sys.stdin.isatty():
+         print(
+-            f"Error: 'hermes {command_name}' requires an interactive terminal.\n"
+-            f"It cannot be run through a pipe or non-interactive subprocess.\n"
+-            f"Run it directly in your terminal instead.",
++            _ui(
++                "require_tty.message",
++                "Error: 'hermes {command_name}' requires an interactive terminal.\n"
++                "It cannot be run through a pipe or non-interactive subprocess.\n"
++                "Run it directly in your terminal instead.",
++                command_name=command_name,
++            ),
+             file=sys.stderr,
+         )
+         sys.exit(1)
+@@ -2336,18 +2356,23 @@ def _model_flow_copilot_acp(config, current_model=""):
+     resolved_command = status.get("resolved_command") or status.get("command") or "copilot"
+     effective_base = status.get("base_url") or pconfig.inference_base_url
+ 
+-    print("  GitHub Copilot ACP delegates Hermes turns to `copilot --acp`.")
+-    print("  Hermes currently starts its own ACP subprocess for each request.")
+-    print("  Hermes uses your selected model as a hint for the Copilot ACP session.")
+-    print(f"  Command: {resolved_command}")
+-    print(f"  Backend marker: {effective_base}")
++    print(_ui("copilot_acp.delegates", "  GitHub Copilot ACP delegates Hermes turns to `copilot --acp`."))
++    print(_ui("copilot_acp.subprocess", "  Hermes currently starts its own ACP subprocess for each request."))
++    print(_ui("copilot_acp.model_hint", "  Hermes uses your selected model as a hint for the Copilot ACP session."))
++    print(_ui("copilot_acp.command", "  Command: {command}", command=resolved_command))
++    print(_ui("copilot_acp.backend", "  Backend marker: {backend}", backend=effective_base))
+     print()
+ 
+     try:
+         creds = resolve_external_process_provider_credentials(provider_id)
+     except Exception as exc:
+         print(f"  ⚠ {exc}")
+-        print("  Set HERMES_COPILOT_ACP_COMMAND or COPILOT_CLI_PATH if Copilot CLI is installed elsewhere.")
++        print(
++            _ui(
++                "copilot_acp.configure_hint",
++                "  Set HERMES_COPILOT_ACP_COMMAND or COPILOT_CLI_PATH if Copilot CLI is installed elsewhere.",
++            )
++        )
+         return
+ 
+     effective_base = creds.get("base_url") or effective_base
+@@ -3201,13 +3226,16 @@ def cmd_version(args):
+         from hermes_cli.config import recommended_update_command
+         behind = check_for_updates()
+         if behind and behind > 0:
+-            commits_word = "commit" if behind == 1 else "commits"
+             print(
+-                f"Update available: {behind} {commits_word} behind — "
+-                f"run '{recommended_update_command()}'"
++                _ui(
++                    "version.update_available",
++                    "Update available: {count} commits behind — run '{command}'",
++                    count=behind,
++                    command=recommended_update_command(),
++                )
+             )
+         elif behind == 0:
+-            print("Up to date")
++            print(_ui("version.up_to_date", "Up to date"))
+     except Exception:
+         pass
+ 
 diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
 index 160e7c11..b033c175 100644
 --- a/hermes_cli/skin_engine.py

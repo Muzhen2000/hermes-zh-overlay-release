@@ -18,10 +18,14 @@ messages:
   auth.login.removed_line2: 请使用 `hermes auth` 管理凭证，
   auth.login.removed_line3: 使用 `hermes model` 选择服务商，或运行 `hermes setup` 完成完整配置。
   auth.login.success: 登录成功！
+  auth.login.auth_state: '  认证状态：{path}'
   auth.login.cancelled: '
 
     已取消登录。'
+  auth.login.config_updated: '  配置已更新：{path}（model.provider={provider}）'
   auth.login.failed: 登录失败：{error}
+  auth.login.no_provider_change: 未切换当前 provider。Nous 凭证已保存，供后续使用。
+  auth.login.run_model_again: '  之后运行 `hermes model` 即可切换到 Nous Portal。'
   auth.codex.existing_credentials: 发现 Hermes 已保存的 Codex 凭证。
   auth.codex.reuse_prompt: 继续使用现有凭证？[Y/n]：
   auth.codex.existing_expired: 现有 Codex 凭证已过期，正在重新登录……
@@ -64,6 +68,15 @@ messages:
   auth.logout.use_openrouter: Hermes 将回退为使用 OpenRouter 推理。
   auth.logout.run_model: 请运行 `hermes model`，或配置 API key 后再使用 Hermes。
   auth.logout.no_auth_state: '{provider} 没有可清除的登录状态。'
+  main.require_tty.message: "错误：`hermes {command_name}` 需要交互式终端。\n它不能通过管道或非交互子进程运行。\n请直接在终端中执行。"
+  main.copilot_acp.delegates: '  GitHub Copilot ACP 会把 Hermes 的回合委托给 `copilot --acp`。'
+  main.copilot_acp.subprocess: '  Hermes 当前会为每次请求启动独立的 ACP 子进程。'
+  main.copilot_acp.model_hint: '  Hermes 会把你当前选择的模型作为 Copilot ACP 会话的提示。'
+  main.copilot_acp.command: '  命令：{command}'
+  main.copilot_acp.backend: '  后端标记：{backend}'
+  main.copilot_acp.configure_hint: '  如果 Copilot CLI 安装在其他位置，请设置 HERMES_COPILOT_ACP_COMMAND 或 COPILOT_CLI_PATH。'
+  main.version.update_available: "有更新可用：落后 {count} 个提交 —— 运行 '{command}'"
+  main.version.up_to_date: 已是最新
   status.banner.title: ⚕ Hermes 状态
   status.sections.environment: ◆ 环境
   status.sections.api_keys: ◆ API 密钥
@@ -548,7 +561,12 @@ messages:
   cli.browser.usage.status: '   status       显示当前浏览器模式'
   cli.help.header: (^_^)? 可用命令
   cli.help.category.Session: 会话
+  cli.help.category.Configuration: 配置
+  cli.help.category.ToolsSkills: 工具与技能
+  cli.help.category.Info: 信息
+  cli.help.category.Exit: 退出
   cli.help.skill_commands: Skill 命令
+  cli.help.skill_commands_count: '{count} 个已安装'
   cli.help.tip.chat: 直接输入消息即可和 Hermes 对话！
   cli.help.tip.multi_line: 多行输入：Alt+Enter 可换行
   cli.help.tip.attach_image: 输入 /image {path}，或在提示词开头直接写本地图片路径
@@ -1405,9 +1423,9 @@ messages:
   debug.delete_failed: '  ✗ {error}'
   debug.delete_failed_error: '  ✗ 无法删除 {url}：{error}'
   debug.delete_desc: '  delete   删除之前上传的粘贴'
-  debug.delete_options_label: 'Options (delete)：'
+  debug.delete_options_label: '删除选项：'
   debug.delete_arg: '  <url> ...    一个或多个要删除的粘贴链接'
-  debug.usage: '用法：hermes debug share [--lines N] [--expire N] [--local]'
+  debug.usage: '用法：hermes debug <command>'
   debug.commands_label: '命令：'
   debug.share_desc: '  share    上传调试报告到粘贴服务并打印链接'
   debug.options_label: '选项：'

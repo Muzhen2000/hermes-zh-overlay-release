@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,3 +34,37 @@ def test_manifest_lists_existing_skin_files():
 
     for name in manifest["skin_files"]:
         assert (skins_dir / name).exists()
+
+
+def test_manifest_keeps_terminal_localization_entrypoints_under_management():
+    manifest = json.loads(
+        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+    )
+
+    for path in ["hermes_cli/auth.py", "hermes_cli/debug.py", "hermes_cli/main.py"]:
+        assert path in manifest["allowed_source_files"]
+
+
+def test_skin_localization_covers_builtins_and_release_custom_skins():
+    manifest = json.loads(
+        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+    )
+    skins_data = yaml.safe_load(
+        (ROOT / "releases" / "31e72764" / "localization" / "skins.zh-CN.yaml").read_text(encoding="utf-8")
+    )
+    localized = set((skins_data or {}).get("skins", {}).keys())
+    builtin = {
+        "default",
+        "ares",
+        "charizard",
+        "daylight",
+        "mono",
+        "poseidon",
+        "sisyphus",
+        "slate",
+        "warm-lightmode",
+    }
+    shipped_custom = {name.removesuffix(".yaml") for name in manifest["skin_files"]}
+
+    assert builtin.issubset(localized)
+    assert shipped_custom.issubset(localized)
