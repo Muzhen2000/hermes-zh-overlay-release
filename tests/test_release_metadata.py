@@ -10,6 +10,11 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _latest_release() -> str:
+    release_index = json.loads((ROOT / "release.json").read_text(encoding="utf-8"))
+    return str(release_index["latest_release"])
+
+
 def test_release_index_scope_is_terminal_and_telegram_only():
     release_index = json.loads((ROOT / "release.json").read_text(encoding="utf-8"))
 
@@ -18,30 +23,33 @@ def test_release_index_scope_is_terminal_and_telegram_only():
 
 
 def test_manifest_lists_existing_localization_files():
+    release_id = _latest_release()
     manifest = json.loads(
-        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
-    release_dir = ROOT / "releases" / "31e72764" / "localization"
+    release_dir = ROOT / "releases" / release_id / "localization"
 
     for name in manifest["localization_files"]:
         assert (release_dir / name).exists()
 
 
 def test_release_does_not_ship_legacy_runtime_bridge():
+    release_id = _latest_release()
     manifest = json.loads(
-        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
-    release_dir = ROOT / "releases" / "31e72764" / "localization"
+    release_dir = ROOT / "releases" / release_id / "localization"
 
     assert "hermes_zh_runtime.py" not in manifest["localization_files"]
     assert not (release_dir / "hermes_zh_runtime.py").exists()
 
 
 def test_real_ui_catalog_covers_all_static_runtime_keys():
+    release_id = _latest_release()
     manifest = json.loads(
-        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
-    release_dir = ROOT / "releases" / "31e72764"
+    release_dir = ROOT / "releases" / release_id
     ui_data = yaml.safe_load((release_dir / "localization" / "ui.zh-CN.yaml").read_text(encoding="utf-8"))
     messages = set((ui_data or {}).get("messages", {}))
     patch_text = (release_dir / manifest["patch"]).read_text(encoding="utf-8")
@@ -63,18 +71,20 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
 
 
 def test_manifest_lists_existing_skin_files():
+    release_id = _latest_release()
     manifest = json.loads(
-        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
-    skins_dir = ROOT / "releases" / "31e72764" / "skins"
+    skins_dir = ROOT / "releases" / release_id / "skins"
 
     for name in manifest["skin_files"]:
         assert (skins_dir / name).exists()
 
 
 def test_manifest_keeps_terminal_localization_entrypoints_under_management():
+    release_id = _latest_release()
     manifest = json.loads(
-        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
 
     for path in ["hermes_cli/auth.py", "hermes_cli/debug.py", "hermes_cli/main.py"]:
@@ -82,11 +92,12 @@ def test_manifest_keeps_terminal_localization_entrypoints_under_management():
 
 
 def test_skin_localization_covers_builtins_and_release_custom_skins():
+    release_id = _latest_release()
     manifest = json.loads(
-        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
     skins_data = yaml.safe_load(
-        (ROOT / "releases" / "31e72764" / "localization" / "skins.zh-CN.yaml").read_text(encoding="utf-8")
+        (ROOT / "releases" / release_id / "localization" / "skins.zh-CN.yaml").read_text(encoding="utf-8")
     )
     localized = set((skins_data or {}).get("skins", {}).keys())
     builtin = {

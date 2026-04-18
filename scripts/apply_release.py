@@ -166,6 +166,21 @@ def _prune_legacy_overlay(hermes_home: Path, user_home: Path) -> list[str]:
     return removed
 
 
+def _invalidate_update_cache(hermes_home: Path) -> list[str]:
+    removed: list[str] = []
+    homes = [hermes_home]
+    profiles_root = hermes_home / "profiles"
+    if profiles_root.is_dir():
+        for entry in profiles_root.iterdir():
+            if entry.is_dir():
+                homes.append(entry)
+    for home in homes:
+        cache_file = home / ".update_check"
+        if _remove_path(cache_file):
+            removed.append(str(cache_file))
+    return removed
+
+
 def _align_source_to_official(*, source_dir: Path, official_repo: str, official_commit: str) -> None:
     if source_dir.exists() and not (source_dir / ".git").exists():
         raise ReleaseError(f"Hermes source dir exists but is not a git checkout: {source_dir}")
@@ -220,6 +235,7 @@ def apply_release(
         official_commit=official_commit,
     )
     _apply_patch(source_dir=source_dir, patch_path=Path(copied["patch_path"]))
+    invalidated_update_cache = _invalidate_update_cache(hermes_home)
 
     return {
         "release": resolved_release,
@@ -230,6 +246,7 @@ def apply_release(
         "patch_path": copied["patch_path"],
         "localization_changed": copied["changed"],
         "legacy_removed": removed,
+        "update_cache_removed": invalidated_update_cache,
     }
 
 

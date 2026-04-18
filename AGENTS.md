@@ -134,6 +134,9 @@
 9. 生成新的 `releases/<new_release>/`
 10. 运行校验和 smoke test
 11. 全部通过后，才更新 `release.json` 的 `latest_release`
+12. 用 `scripts/apply_release.py` 把新 release 真正应用到本地 Hermes，一次实测完整升级路径
+13. 确认 `scripts/apply_release.py` 已清掉默认 profile 和所有 named profiles 下的 `.update_check`
+14. 再运行 `zsh -lc 'hermes --version'`，确认 banner / update notice 与真实 git 状态一致
 
 不要这样做：
 
@@ -320,6 +323,7 @@
 - `allowed_source_files` 只列当前 release 真正允许改动的源码文件
 - `localization_files` 只列当前 release 真正需要的词条文件
 - `justified_non_text_logic` 只列真正必要的显示层例外
+- `scripts/apply_release.py` 如果把 Hermes 对齐到新的官方 commit，必须同步失效默认 profile 与所有 named profiles 的 `.update_check`
 
 如果某个历史 release 的 manifest 里还有旧实现痕迹：
 
@@ -373,6 +377,9 @@
 - 本地中文包仓库 `release.json` 指向的 release 与当前 release 一致
 - 本地中文包仓库 `HEAD` 与远端 `origin/main` 一致
 - `verify_release.py --source-dir ~/.hermes/hermes-agent` 通过
+- 用 `scripts/apply_release.py` 真实应用当前 release 后，`~/.hermes/.update_check` 不再保留旧的 behind 结果
+- 如果存在 `~/.hermes/profiles/*`，这些 profile 下的 `.update_check` 也必须一并失效
+- `zsh -lc 'hermes --version'` 的 update notice 与真实 git 状态一致；当 `HEAD == origin/main` 时，不得再显示旧的 “commits behind”
 
 只要这 4 条中任意一条不成立，就不能说“三者一致”。
 
@@ -386,6 +393,7 @@
 4. 为了修一个文案问题，顺手扩大到结构重构。
 5. 保留已经不再对应真实代码路径的旧测试或旧说明。
 6. 不做验证就宣称“全部完成”。
+7. 只看 git `HEAD` 已经对齐，就忽略启动 banner 仍然读取旧 `.update_check` 缓存造成的假失败。
 
 ## 11. 新线程的默认工作流
 
@@ -427,6 +435,7 @@
 5. 外置优先，源码最小
 6. 重新生成 patch / manifest / release
 7. 验证通过后再推送远端
+8. 升级完成后补做一次真正的本地 apply + `hermes --version` 实测，不要只停留在 patch / verify 通过
 
 ## 12. 提交前最后自检
 
@@ -440,5 +449,6 @@
 6. 我有没有避免再引入可执行本地化运行时桥？
 7. 我的验证是不是已经真的跑过，而不是口头假设？
 8. 这个 release 是否真的还能让用户得到“官方 Hermes + 对应最小中文包”？
+9. 我是不是已经检查过 update notice 没有被旧 `.update_check` 缓存伪造失败？
 
 如果其中任一项不能明确回答“是”，不要提交。

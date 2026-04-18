@@ -1,0 +1,61 @@
+{
+  "release": "a828daa7",
+  "official_commit": "a828daa7f8eb8f2969c2c46a7796845bab900d04",
+  "scope": [
+    "terminal",
+    "telegram"
+  ],
+  "web_ui_policy": "upstream-only",
+  "patch": "patches/hermes-zh.patch",
+  "localization_files": [
+    "commands.zh-CN.yaml",
+    "skills.zh-CN.yaml",
+    "skins.zh-CN.yaml",
+    "tips.zh-CN.yaml",
+    "ui.zh-CN.yaml"
+  ],
+  "skin_files": [
+    "bubblegum-80s.yaml",
+    "lain.yaml",
+    "mother.yaml",
+    "mythos.yaml",
+    "neonwave.yaml",
+    "netrunner.yaml",
+    "nous.yaml",
+    "pirate.yaml",
+    "sakura.yaml",
+    "skynet.yaml",
+    "vault-tec.yaml"
+  ],
+  "allowed_source_files": [
+    "agent/display.py",
+    "agent/manual_compression_feedback.py",
+    "cli.py",
+    "gateway/platforms/telegram.py",
+    "gateway/run.py",
+    "hermes_cli/auth.py",
+    "hermes_cli/banner.py",
+    "hermes_cli/commands.py",
+    "hermes_cli/debug.py",
+    "hermes_cli/gateway.py",
+    "hermes_cli/main.py",
+    "hermes_cli/skin_engine.py",
+    "hermes_cli/status.py",
+    "hermes_cli/tips.py",
+    "tests/cli/test_cli_loading_indicator.py",
+    "tests/cli/test_cli_localized_feedback.py",
+    "tests/gateway/test_localized_slash_replies.py",
+    "tests/hermes_cli/test_commands.py",
+    "tests/hermes_cli/test_skin_engine.py"
+  ],
+  "justified_non_text_logic": [
+    {
+      "file": "cli.py",
+      "reason": "Use display-cell width for spinner row calculation so CJK text does not under-count terminal rows."
+    },
+    {
+      "file": "cli.py",
+      "reason": "Summarize internal skill-invocation payloads into a display-only localized preview so users see a fixed visible loading line without changing the model-facing input."
+    }
+  ]
+}

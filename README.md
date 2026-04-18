@@ -1,13 +1,13 @@
 # Hermes 中文最小包
 
-这是**官方 Hermes `31e72764`** 对应的**最小中文包**。
+这是**官方 Hermes `a828daa7`** 对应的**最小中文包**。
 
 - 汉化范围：终端、Telegram 中用户可见且非 LLM 生成的固定文案
 
 当前版本：
 
-- 官方 Hermes：`31e72764`
-- 中文包 release：`31e72764`
+- 官方 Hermes：`a828daa7`
+- 中文包 release：`a828daa7`
 
 具体汉化内容：
 
@@ -24,7 +24,7 @@
 1. 应用这一版中文包
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 31e72764
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release a828daa7
 ```
 
 2. 校验本机 Hermes 与这版中文包是否一致

@@ -20,9 +20,10 @@ def _load_module():
 def test_validate_release_matches_manifest_and_patch():
     module = _load_module()
     result = module.validate_release(ROOT)
+    release_id, _, manifest = module._load_metadata(ROOT)
 
-    assert result["release"] == "31e72764"
-    assert result["official_commit"] == "31e7276474976cd752d73de7701229eefd1b37ad"
+    assert result["release"] == release_id
+    assert result["official_commit"] == manifest["official_commit"]
     assert sorted(Path(path).name for path in result["skin_files"]) == [
         "bubblegum-80s.yaml",
         "lain.yaml",
@@ -36,27 +37,7 @@ def test_validate_release_matches_manifest_and_patch():
         "skynet.yaml",
         "vault-tec.yaml",
     ]
-    assert sorted(result["patch_files"]) == [
-        "agent/display.py",
-        "agent/manual_compression_feedback.py",
-        "cli.py",
-        "gateway/platforms/telegram.py",
-        "gateway/run.py",
-        "hermes_cli/auth.py",
-        "hermes_cli/banner.py",
-        "hermes_cli/commands.py",
-        "hermes_cli/debug.py",
-        "hermes_cli/gateway.py",
-        "hermes_cli/main.py",
-        "hermes_cli/skin_engine.py",
-        "hermes_cli/status.py",
-        "hermes_cli/tips.py",
-        "tests/cli/test_cli_loading_indicator.py",
-        "tests/cli/test_cli_localized_feedback.py",
-        "tests/gateway/test_localized_slash_replies.py",
-        "tests/hermes_cli/test_commands.py",
-        "tests/hermes_cli/test_skin_engine.py",
-    ]
+    assert sorted(result["patch_files"]) == sorted(manifest["allowed_source_files"])
 
 
 def test_release_json_points_to_existing_release():

@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 ## 一行应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 31e72764
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release a828daa7
 ```
 
 ## 给家人的最短说明
@@ -60,6 +60,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 5. 写入 `~/.hermes/localization/*.yaml`
 6. 如果该 release 附带皮肤，则写入 `~/.hermes/skins/*.yaml`
 7. 应用 `releases/<release>/patches/hermes-zh.patch`
+8. 清掉默认 profile 与 named profiles 下旧的 `.update_check`，避免升级后仍误报“落后若干提交”
 
 ## 不会动的内容
 

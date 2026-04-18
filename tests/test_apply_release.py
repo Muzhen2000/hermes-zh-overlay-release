@@ -75,3 +75,24 @@ def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):
     assert not legacy_reports.exists()
     assert not legacy_patch.exists()
     assert not legacy_plist.exists()
+
+
+def test_invalidate_update_cache_removes_default_and_profile_caches(tmp_path):
+    module = _load_module()
+    hermes_home = tmp_path / ".hermes"
+    default_cache = hermes_home / ".update_check"
+    ops_cache = hermes_home / "profiles" / "ops" / ".update_check"
+    dev_cache = hermes_home / "profiles" / "dev" / ".update_check"
+
+    for path in [default_cache, ops_cache, dev_cache]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('{"ts":1,"behind":279}', encoding="utf-8")
+
+    removed = module._invalidate_update_cache(hermes_home)
+
+    assert str(default_cache) in removed
+    assert str(ops_cache) in removed
+    assert str(dev_cache) in removed
+    assert not default_cache.exists()
+    assert not ops_cache.exists()
+    assert not dev_cache.exists()
