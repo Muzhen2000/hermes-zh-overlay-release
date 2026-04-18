@@ -139,6 +139,40 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 - 登录态
 - API key
 
+## 给家人的两行命令
+
+如果你要让家人得到**和你现在同一版**的 Hermes 中文包，不要让她追“官方最新”，而是让她锁定到**同一版 release**。
+
+当前这一版的概念是：
+
+- 官方 Hermes：`31e72764`
+- 对应中文包 release：`31e72764`
+
+她只需要执行这两行：
+
+1. 应用这一版中文包
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 31e72764
+```
+
+2. 校验她本机 Hermes 与这一版中文包是否一致
+
+```bash
+python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
+```
+
+她应该如何理解这两行命令：
+
+- 第一行不是“更新到官方最新”，而是“对齐到某一版 Hermes，并应用这**一版对应的**中文包”
+- 第二行会检查她本机 Hermes 和这版中文包是否真的对齐
+
+如果第二行通过，她得到的就是：
+
+- 某一版官方 Hermes
+- 这一版对应的最小中文包
+- 与你当前同版的 Hermes 中文环境
+
 ## Release 结构
 
 每个 release 目录都绑定一个官方 commit，例如：
