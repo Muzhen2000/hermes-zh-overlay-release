@@ -108,7 +108,7 @@ index 8f2d5e5d..7db3b7e5 100644
  
      return {
 diff --git a/cli.py b/cli.py
-index 4102dcf0..dd2f0e18 100644
+index 4102dcf0..889c6bb1 100644
 --- a/cli.py
 +++ b/cli.py
 @@ -23,6 +23,7 @@ import tempfile
@@ -431,7 +431,7 @@ index 4102dcf0..dd2f0e18 100644
              )
              return
  
-@@ -3529,35 +3578,35 @@ class HermesCLI:
+@@ -3529,35 +3578,40 @@ class HermesCLI:
          if has_clipboard_image():
              if self._try_attach_clipboard_image():
                  n = len(self._attached_images)
@@ -472,11 +472,16 @@ index 4102dcf0..dd2f0e18 100644
 +            _cprint(f"  {_DIM}{_cli_ui('image.prompt_hint', 'Now type your prompt (or use --image in single-query mode): {remainder}', remainder=_remainder)}{_RST}")
          elif _is_termux_environment():
 -            _cprint(f"  {_DIM}Tip: type your next message, or run hermes chat -q --image {_termux_example_image_path(image_path.name)} \"What do you see?\"{_RST}")
-+            _cprint(f"  {_DIM}{_cli_ui('image.termux_hint', 'Tip: type your next message, or run hermes chat -q --image {path} \"What do you see?\"', path=_termux_example_image_path(image_path.name))}{_RST}")
++            termux_hint = _cli_ui(
++                "image.termux_hint",
++                'Tip: type your next message, or run hermes chat -q --image {path} "What do you see?"',
++                path=_termux_example_image_path(image_path.name),
++            )
++            _cprint(f"  {_DIM}{termux_hint}{_RST}")
  
      def _preprocess_images_with_vision(self, text: str, images: list, *, announce: bool = True) -> str:
          """Analyze attached images via the vision tool and return enriched text.
-@@ -3725,19 +3774,23 @@ class HermesCLI:
+@@ -3725,19 +3779,23 @@ class HermesCLI:
          is_running = bool(getattr(self, "_agent_running", False))
  
          lines = [
@@ -509,7 +514,7 @@ index 4102dcf0..dd2f0e18 100644
          ])
          self.console.print("\n".join(lines), highlight=False, markup=False)
      
-@@ -3758,13 +3811,20 @@ class HermesCLI:
+@@ -3758,13 +3816,20 @@ class HermesCLI:
      def show_help(self):
          """Display help information with categorized commands."""
          from hermes_cli.commands import COMMANDS_BY_CATEGORY
@@ -533,7 +538,7 @@ index 4102dcf0..dd2f0e18 100644
          inner_width = 55
          if len(header) > inner_width:
              header = header[:inner_width]
-@@ -3773,37 +3833,45 @@ class HermesCLI:
+@@ -3773,37 +3838,45 @@ class HermesCLI:
          _cprint(f"{_BOLD}+{'-' * inner_width}+{_RST}")
  
          for category, commands in COMMANDS_BY_CATEGORY.items():
@@ -587,7 +592,7 @@ index 4102dcf0..dd2f0e18 100644
          width = 78
          pad = width - len(title)
          print("+" + "-" * width + "+")
-@@ -3832,7 +3900,7 @@ class HermesCLI:
+@@ -3832,7 +3905,7 @@ class HermesCLI:
                  print(f"    * {name:<20} - {desc}")
              print()
          
@@ -596,7 +601,7 @@ index 4102dcf0..dd2f0e18 100644
          print()
  
      def _handle_tools_command(self, cmd: str):
-@@ -3865,17 +3933,17 @@ class HermesCLI:
+@@ -3865,17 +3938,17 @@ class HermesCLI:
  
          names = parts[2:]
          if not names:
@@ -619,7 +624,7 @@ index 4102dcf0..dd2f0e18 100644
  
          tools_disable_enable_command(
              Namespace(tools_action=subcommand, names=names, platform="cli"))
-@@ -3885,7 +3953,7 @@ class HermesCLI:
+@@ -3885,7 +3958,7 @@ class HermesCLI:
          from hermes_cli.config import load_config
          self.enabled_toolsets = _get_platform_tools(load_config(), "cli")
          self.new_session()
@@ -628,7 +633,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def show_toolsets(self):
          """Display available toolsets with kawaii ASCII art."""
-@@ -3893,7 +3961,7 @@ class HermesCLI:
+@@ -3893,7 +3966,7 @@ class HermesCLI:
          
          # Header
          print()
@@ -637,7 +642,7 @@ index 4102dcf0..dd2f0e18 100644
          width = 58
          pad = width - len(title)
          print("+" + "-" * width + "+")
-@@ -3909,13 +3977,14 @@ class HermesCLI:
+@@ -3909,13 +3982,14 @@ class HermesCLI:
                  
                  # Mark if currently enabled
                  marker = "(*)" if self.enabled_toolsets and name in self.enabled_toolsets else "   "
@@ -656,7 +661,7 @@ index 4102dcf0..dd2f0e18 100644
          print()
      
      def _handle_profile_command(self):
-@@ -3927,8 +3996,8 @@ class HermesCLI:
+@@ -3927,8 +4001,8 @@ class HermesCLI:
          profile_name = get_active_profile_name()
  
          print()
@@ -667,7 +672,7 @@ index 4102dcf0..dd2f0e18 100644
          print()
  
      def show_config(self):
-@@ -3944,41 +4013,41 @@ class HermesCLI:
+@@ -3944,41 +4018,41 @@ class HermesCLI:
              config_path = user_config_path
          else:
              config_path = project_config_path
@@ -730,7 +735,7 @@ index 4102dcf0..dd2f0e18 100644
          print()
      
      def _list_recent_sessions(self, limit: int = 10) -> list[dict[str, Any]]:
-@@ -4008,11 +4077,16 @@ class HermesCLI:
+@@ -4008,11 +4082,16 @@ class HermesCLI:
  
          print()
          if reason == "history":
@@ -750,7 +755,7 @@ index 4102dcf0..dd2f0e18 100644
          print(f"  {'─' * 32} {'─' * 40} {'─' * 13} {'─' * 24}")
          for session in sessions:
              title = (session.get("title") or "—")[:30]
-@@ -4020,7 +4094,7 @@ class HermesCLI:
+@@ -4020,7 +4099,7 @@ class HermesCLI:
              last_active = _relative_time(session.get("last_active"))
              print(f"  {title:<32} {preview:<40} {last_active:<13} {session['id']}")
          print()
@@ -759,7 +764,7 @@ index 4102dcf0..dd2f0e18 100644
          print()
          return True
  
-@@ -4028,7 +4102,7 @@ class HermesCLI:
+@@ -4028,7 +4107,7 @@ class HermesCLI:
          """Display conversation history."""
          if not self.conversation_history:
              if not self._show_recent_sessions(reason="history"):
@@ -768,7 +773,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          preview_limit = 400
-@@ -4040,14 +4114,15 @@ class HermesCLI:
+@@ -4040,14 +4119,15 @@ class HermesCLI:
              if not hidden_tool_messages:
                  return
  
@@ -788,7 +793,7 @@ index 4102dcf0..dd2f0e18 100644
          print("+" + "-" * 50 + "+")
  
          for msg in self.conversation_history:
-@@ -4067,24 +4142,24 @@ class HermesCLI:
+@@ -4067,24 +4147,24 @@ class HermesCLI:
              content_text = "" if content is None else str(content)
  
              if role == "user":
@@ -818,7 +823,7 @@ index 4102dcf0..dd2f0e18 100644
                  suffix = ""
              print(f"    {preview}{suffix}")
  
-@@ -4167,7 +4242,7 @@ class HermesCLI:
+@@ -4167,7 +4247,7 @@ class HermesCLI:
              self._notify_session_boundary("on_session_reset")
  
          if not silent:
@@ -827,7 +832,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _handle_resume_command(self, cmd_original: str) -> None:
          """Handle /resume <session_id_or_title> — switch to a previous session mid-conversation."""
-@@ -4175,14 +4250,14 @@ class HermesCLI:
+@@ -4175,14 +4255,14 @@ class HermesCLI:
          target = parts[1].strip() if len(parts) > 1 else ""
  
          if not target:
@@ -845,7 +850,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # Resolve title or ID
-@@ -4192,12 +4267,12 @@ class HermesCLI:
+@@ -4192,12 +4272,12 @@ class HermesCLI:
  
          session_meta = self._session_db.get_session(target_id)
          if not session_meta:
@@ -861,7 +866,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # End current session
-@@ -4240,13 +4315,21 @@ class HermesCLI:
+@@ -4240,13 +4320,21 @@ class HermesCLI:
          title_part = f" \"{session_meta['title']}\"" if session_meta.get("title") else ""
          msg_count = len([m for m in self.conversation_history if m.get("role") == "user"])
          if self.conversation_history:
@@ -889,7 +894,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _handle_branch_command(self, cmd_original: str) -> None:
          """Handle /branch [name] — fork the current session into a new independent copy.
-@@ -4256,11 +4339,11 @@ class HermesCLI:
+@@ -4256,11 +4344,11 @@ class HermesCLI:
          Inspired by Claude Code's /branch command.
          """
          if not self.conversation_history:
@@ -903,7 +908,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          parts = cmd_original.split(None, 1)
-@@ -4305,7 +4388,7 @@ class HermesCLI:
+@@ -4305,7 +4393,7 @@ class HermesCLI:
                  parent_session_id=parent_session_id,
              )
          except Exception as e:
@@ -912,7 +917,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # Copy conversation history to the new session
-@@ -4352,17 +4435,20 @@ class HermesCLI:
+@@ -4352,17 +4440,20 @@ class HermesCLI:
                  self.agent._invalidate_system_prompt()
  
          msg_count = len([m for m in self.conversation_history if m.get("role") == "user"])
@@ -940,7 +945,7 @@ index 4102dcf0..dd2f0e18 100644
              return
          
          timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-@@ -4374,10 +4460,10 @@ class HermesCLI:
+@@ -4374,10 +4465,10 @@ class HermesCLI:
                      "model": self.model,
                      "session_start": self.session_start.isoformat(),
                      "messages": self.conversation_history,
@@ -954,7 +959,7 @@ index 4102dcf0..dd2f0e18 100644
      
      def retry_last(self):
          """Retry the last user message by removing the last exchange and re-sending.
-@@ -4387,7 +4473,7 @@ class HermesCLI:
+@@ -4387,7 +4478,7 @@ class HermesCLI:
          Returns the message to re-send, or None if there's nothing to retry.
          """
          if not self.conversation_history:
@@ -963,7 +968,7 @@ index 4102dcf0..dd2f0e18 100644
              return None
          
          # Walk backwards to find the last user message
-@@ -4398,14 +4484,15 @@ class HermesCLI:
+@@ -4398,14 +4489,15 @@ class HermesCLI:
                  break
          
          if last_user_idx is None:
@@ -981,7 +986,7 @@ index 4102dcf0..dd2f0e18 100644
          return last_message
      
      def undo_last(self):
-@@ -4415,7 +4502,7 @@ class HermesCLI:
+@@ -4415,7 +4507,7 @@ class HermesCLI:
          onward (including assistant responses, tool calls, etc.).
          """
          if not self.conversation_history:
@@ -990,7 +995,7 @@ index 4102dcf0..dd2f0e18 100644
              return
          
          # Walk backwards to find the last user message
-@@ -4426,7 +4513,7 @@ class HermesCLI:
+@@ -4426,7 +4518,7 @@ class HermesCLI:
                  break
          
          if last_user_idx is None:
@@ -999,7 +1004,7 @@ index 4102dcf0..dd2f0e18 100644
              return
          
          # Count how many messages we're removing
-@@ -4436,9 +4523,10 @@ class HermesCLI:
+@@ -4436,9 +4528,10 @@ class HermesCLI:
          # Truncate history to before the last user message
          self.conversation_history = self.conversation_history[:last_user_idx]
          
@@ -1012,7 +1017,7 @@ index 4102dcf0..dd2f0e18 100644
      
      def _run_curses_picker(self, title: str, items: list[str], default_index: int = 0) -> int | None:
          """Run curses_single_select via run_in_terminal so prompt_toolkit handles terminal ownership cleanly."""
-@@ -4544,7 +4632,7 @@ class HermesCLI:
+@@ -4544,7 +4637,7 @@ class HermesCLI:
  
      def _apply_model_switch_result(self, result, persist_global: bool) -> None:
          if not result.success:
@@ -1021,7 +1026,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          old_model = self.model
-@@ -4570,7 +4658,7 @@ class HermesCLI:
+@@ -4570,7 +4663,7 @@ class HermesCLI:
                      api_mode=result.api_mode,
                  )
              except Exception as exc:
@@ -1030,7 +1035,7 @@ index 4102dcf0..dd2f0e18 100644
  
          self._pending_model_switch_note = (
              f"[Note: model was just switched from {old_model} to {result.new_model} "
-@@ -4579,18 +4667,18 @@ class HermesCLI:
+@@ -4579,18 +4672,18 @@ class HermesCLI:
          )
  
          provider_label = result.provider_label or result.target_provider
@@ -1055,7 +1060,7 @@ index 4102dcf0..dd2f0e18 100644
          else:
              try:
                  from agent.model_metadata import get_model_context_length
-@@ -4600,7 +4688,7 @@ class HermesCLI:
+@@ -4600,7 +4693,7 @@ class HermesCLI:
                      api_key=result.api_key or self.api_key,
                      provider=result.target_provider,
                  )
@@ -1064,7 +1069,7 @@ index 4102dcf0..dd2f0e18 100644
              except Exception:
                  pass
  
-@@ -4609,16 +4697,16 @@ class HermesCLI:
+@@ -4609,16 +4702,16 @@ class HermesCLI:
              or result.api_mode == "anthropic_messages"
          )
          if cache_enabled:
@@ -1085,7 +1090,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _handle_model_picker_selection(self, persist_global: bool = False) -> None:
          state = self._model_picker_state
-@@ -4732,10 +4820,10 @@ class HermesCLI:
+@@ -4732,10 +4825,10 @@ class HermesCLI:
                  providers = []
  
              if not providers:
@@ -1099,7 +1104,7 @@ index 4102dcf0..dd2f0e18 100644
                  return
  
              self._open_model_picker(
-@@ -4761,7 +4849,7 @@ class HermesCLI:
+@@ -4761,7 +4854,7 @@ class HermesCLI:
          )
  
          if not result.success:
@@ -1108,7 +1113,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # Apply to CLI state.
-@@ -4791,7 +4879,7 @@ class HermesCLI:
+@@ -4791,7 +4884,7 @@ class HermesCLI:
                      api_mode=result.api_mode,
                  )
              except Exception as exc:
@@ -1117,7 +1122,7 @@ index 4102dcf0..dd2f0e18 100644
  
          # Store a note to prepend to the next user message so the model
          # knows a switch occurred (avoids injecting system messages mid-history
-@@ -4804,19 +4892,19 @@ class HermesCLI:
+@@ -4804,19 +4897,19 @@ class HermesCLI:
  
          # Display confirmation with full metadata
          provider_label = result.provider_label or result.target_provider
@@ -1143,7 +1148,7 @@ index 4102dcf0..dd2f0e18 100644
          else:
              # Fallback to old context length lookup
              try:
-@@ -4827,7 +4915,7 @@ class HermesCLI:
+@@ -4827,7 +4920,7 @@ class HermesCLI:
                      api_key=result.api_key or self.api_key,
                      provider=result.target_provider,
                  )
@@ -1152,7 +1157,7 @@ index 4102dcf0..dd2f0e18 100644
              except Exception:
                  pass
  
-@@ -4837,20 +4925,20 @@ class HermesCLI:
+@@ -4837,20 +4930,20 @@ class HermesCLI:
              or result.api_mode == "anthropic_messages"
          )
          if cache_enabled:
@@ -1177,7 +1182,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _should_handle_model_command_inline(self, text: str, has_images: bool = False) -> bool:
          """Return True when /model should be handled immediately on the UI thread."""
-@@ -4892,7 +4980,7 @@ class HermesCLI:
+@@ -4892,7 +4985,7 @@ class HermesCLI:
              current = raw_provider
          current_label = _PROVIDER_LABELS.get(current, current)
  
@@ -1186,7 +1191,7 @@ index 4102dcf0..dd2f0e18 100644
          print()
  
          # Show all authenticated providers with their models
-@@ -4901,10 +4989,10 @@ class HermesCLI:
+@@ -4901,10 +4994,10 @@ class HermesCLI:
          unauthed = [p for p in providers if not p["authenticated"]]
  
          if authed:
@@ -1199,7 +1204,7 @@ index 4102dcf0..dd2f0e18 100644
                  print(f"    [{p['id']}]{marker}")
                  curated = curated_models_for_provider(p["id"])
                  # Fetch pricing for providers that support it (openrouter, nous)
-@@ -4915,27 +5003,27 @@ class HermesCLI:
+@@ -4915,27 +5008,27 @@ class HermesCLI:
                          print(line)
                  elif curated:
                      for mid, desc in curated:
@@ -1235,7 +1240,7 @@ index 4102dcf0..dd2f0e18 100644
  
  
      
-@@ -5010,29 +5098,31 @@ class HermesCLI:
+@@ -5010,29 +5103,31 @@ class HermesCLI:
                  self.system_prompt = ""
                  self.agent = None  # Force re-init
                  if save_config_value("agent.system_prompt", ""):
@@ -1277,7 +1282,7 @@ index 4102dcf0..dd2f0e18 100644
              for name, prompt in self.personalities.items():
                  if isinstance(prompt, dict):
                      preview = prompt.get("description") or prompt.get("system_prompt", "")[:50]
-@@ -5040,7 +5130,7 @@ class HermesCLI:
+@@ -5040,7 +5135,7 @@ class HermesCLI:
                      preview = str(prompt)[:50]
                  print(f"  {name:<12} - {preview}")
              print()
@@ -1286,7 +1291,7 @@ index 4102dcf0..dd2f0e18 100644
              print()
      
      def _handle_cron_command(self, cmd: str):
-@@ -5138,19 +5228,19 @@ class HermesCLI:
+@@ -5138,19 +5233,19 @@ class HermesCLI:
              result = _cron_api(action="list")
              jobs = result.get("jobs", []) if result.get("success") else []
              if jobs:
@@ -1310,7 +1315,7 @@ index 4102dcf0..dd2f0e18 100644
              print()
              return
  
-@@ -5163,36 +5253,36 @@ class HermesCLI:
+@@ -5163,36 +5258,36 @@ class HermesCLI:
              result = _cron_api(action="list", include_disabled=opts["all"])
              jobs = result.get("jobs", []) if result.get("success") else []
              if not jobs:
@@ -1359,7 +1364,7 @@ index 4102dcf0..dd2f0e18 100644
                  return
              result = _cron_api(
                  action="create",
-@@ -5204,24 +5294,24 @@ class HermesCLI:
+@@ -5204,24 +5299,24 @@ class HermesCLI:
                  skills=skills or None,
              )
              if result.get("success"):
@@ -1391,7 +1396,7 @@ index 4102dcf0..dd2f0e18 100644
                  return
  
              final_skills = None
-@@ -5251,42 +5341,42 @@ class HermesCLI:
+@@ -5251,42 +5346,42 @@ class HermesCLI:
              )
              if result.get("success"):
                  job = result["job"]
@@ -1449,7 +1454,7 @@ index 4102dcf0..dd2f0e18 100644
      
      def _handle_skills_command(self, cmd: str):
          """Handle /skills slash command — delegates to hermes_cli.skills_hub."""
-@@ -5299,14 +5389,15 @@ class HermesCLI:
+@@ -5299,14 +5394,15 @@ class HermesCLI:
          
          print()
          print("+" + "-" * 60 + "+")
@@ -1467,7 +1472,7 @@ index 4102dcf0..dd2f0e18 100644
              print("  " + "-" * 55)
              
              platform_status = {
-@@ -5319,34 +5410,34 @@ class HermesCLI:
+@@ -5319,34 +5415,34 @@ class HermesCLI:
                  pconfig = config.platforms.get(platform)
                  if pconfig and pconfig.enabled:
                      home = config.get_home_channel(platform)
@@ -1518,7 +1523,7 @@ index 4102dcf0..dd2f0e18 100644
              print()
      
      def process_command(self, command: str) -> bool:
-@@ -5419,7 +5510,7 @@ class HermesCLI:
+@@ -5419,7 +5515,7 @@ class HermesCLI:
                          session_id=self.session_id,
                          context_length=ctx_len,
                      )
@@ -1527,7 +1532,7 @@ index 4102dcf0..dd2f0e18 100644
                  # Show a random tip on new session
                  try:
                      from hermes_cli.tips import get_random_tip
-@@ -5429,12 +5520,12 @@ class HermesCLI:
+@@ -5429,12 +5525,12 @@ class HermesCLI:
                          _tip_color = get_active_skin().get_color("banner_dim", "#B8860B")
                      except Exception:
                          _tip_color = "#B8860B"
@@ -1542,7 +1547,7 @@ index 4102dcf0..dd2f0e18 100644
                  # Show a random tip on new session
                  try:
                      from hermes_cli.tips import get_random_tip
-@@ -5444,7 +5535,7 @@ class HermesCLI:
+@@ -5444,7 +5540,7 @@ class HermesCLI:
                          _tip_color = get_active_skin().get_color("banner_dim", "#B8860B")
                      except Exception:
                          _tip_color = "#B8860B"
@@ -1551,7 +1556,7 @@ index 4102dcf0..dd2f0e18 100644
                  except Exception:
                      pass
          elif canonical == "history":
-@@ -5463,14 +5554,14 @@ class HermesCLI:
+@@ -5463,14 +5559,14 @@ class HermesCLI:
                              _cprint(f"  {e}")
                              new_title = None
                          if not new_title:
@@ -1569,7 +1574,7 @@ index 4102dcf0..dd2f0e18 100644
                              except ValueError as e:
                                  _cprint(f"  {e}")
                          else:
-@@ -5478,27 +5569,27 @@ class HermesCLI:
+@@ -5478,27 +5574,27 @@ class HermesCLI:
                              # Check uniqueness proactively with the sanitized title
                              existing = self._session_db.get_session_by_title(new_title)
                              if existing:
@@ -1606,7 +1611,7 @@ index 4102dcf0..dd2f0e18 100644
          elif canonical == "new":
              self.new_session()
          elif canonical == "resume":
-@@ -5537,8 +5628,9 @@ class HermesCLI:
+@@ -5537,8 +5633,9 @@ class HermesCLI:
              self._show_session_status()
          elif canonical == "statusbar":
              self._status_bar_visible = not self._status_bar_visible
@@ -1618,7 +1623,7 @@ index 4102dcf0..dd2f0e18 100644
          elif canonical == "verbose":
              self._toggle_verbose()
          elif canonical == "yolo":
-@@ -5562,7 +5654,7 @@ class HermesCLI:
+@@ -5562,7 +5659,7 @@ class HermesCLI:
          elif canonical == "reload":
              from hermes_cli.config import reload_env
              count = reload_env()
@@ -1627,7 +1632,7 @@ index 4102dcf0..dd2f0e18 100644
          elif canonical == "reload-mcp":
              with self._busy_command(self._slow_command_status(cmd_original)):
                  self._reload_mcp()
-@@ -5574,22 +5666,22 @@ class HermesCLI:
+@@ -5574,22 +5671,22 @@ class HermesCLI:
                  mgr = get_plugin_manager()
                  plugins = mgr.list_plugins()
                  if not plugins:
@@ -1657,7 +1662,7 @@ index 4102dcf0..dd2f0e18 100644
          elif canonical == "rollback":
              self._handle_rollback_command(cmd_original)
          elif canonical == "snapshot":
-@@ -5605,13 +5697,15 @@ class HermesCLI:
+@@ -5605,13 +5702,15 @@ class HermesCLI:
              parts = cmd_original.split(None, 1)
              payload = parts[1].strip() if len(parts) > 1 else ""
              if not payload:
@@ -1676,7 +1681,7 @@ index 4102dcf0..dd2f0e18 100644
          elif canonical == "skin":
              self._handle_skin_command(cmd_original)
          elif canonical == "voice":
-@@ -5635,13 +5729,13 @@ class HermesCLI:
+@@ -5635,13 +5734,13 @@ class HermesCLI:
                              if output:
                                  self.console.print(_rich_text_from_ansi(output))
                              else:
@@ -1694,7 +1699,7 @@ index 4102dcf0..dd2f0e18 100644
                  elif qcmd.get("type") == "alias":
                      target = qcmd.get("target", "").strip()
                      if target:
-@@ -5650,9 +5744,9 @@ class HermesCLI:
+@@ -5650,9 +5749,9 @@ class HermesCLI:
                          aliased_command = f"{target} {user_args}".strip()
                          return self.process_command(aliased_command)
                      else:
@@ -1706,7 +1711,7 @@ index 4102dcf0..dd2f0e18 100644
              # Check for plugin-registered slash commands
              elif base_cmd.lstrip("/") in _get_plugin_cmd_handler_names():
                  from hermes_cli.plugins import get_plugin_command_handler
-@@ -5664,7 +5758,7 @@ class HermesCLI:
+@@ -5664,7 +5763,7 @@ class HermesCLI:
                          if result:
                              _cprint(str(result))
                      except Exception as e:
@@ -1715,7 +1720,7 @@ index 4102dcf0..dd2f0e18 100644
              # Check for skill slash commands (/gif-search, /axolotl, etc.)
              elif base_cmd in _skill_commands:
                  user_instruction = cmd_original[len(base_cmd):].strip()
-@@ -5673,11 +5767,11 @@ class HermesCLI:
+@@ -5673,11 +5772,11 @@ class HermesCLI:
                  )
                  if msg:
                      skill_name = _skill_commands[base_cmd]["name"]
@@ -1729,7 +1734,7 @@ index 4102dcf0..dd2f0e18 100644
              else:
                  # Prefix matching: if input uniquely identifies one command, execute it.
                  # Matches against both built-in COMMANDS and installed skill commands so
-@@ -5706,18 +5800,18 @@ class HermesCLI:
+@@ -5706,18 +5805,18 @@ class HermesCLI:
                      full_name = matches[0]
                      if full_name == typed_base:
                          # Already an exact token — no expansion possible; fall through
@@ -1754,7 +1759,7 @@ index 4102dcf0..dd2f0e18 100644
          
          return True
      
-@@ -5738,14 +5832,14 @@ class HermesCLI:
+@@ -5738,14 +5837,14 @@ class HermesCLI:
          )
  
          if not msg:
@@ -1772,7 +1777,7 @@ index 4102dcf0..dd2f0e18 100644
      
      def _handle_background_command(self, cmd: str):
          """Handle /background <prompt> — run a prompt in a separate background session.
-@@ -5756,9 +5850,9 @@ class HermesCLI:
+@@ -5756,9 +5855,9 @@ class HermesCLI:
          """
          parts = cmd.strip().split(maxsplit=1)
          if len(parts) < 2 or not parts[1].strip():
@@ -1785,7 +1790,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          prompt = parts[1].strip()
-@@ -5768,12 +5862,13 @@ class HermesCLI:
+@@ -5768,12 +5867,13 @@ class HermesCLI:
  
          # Make sure we have valid credentials
          if not self._ensure_runtime_credentials():
@@ -1803,7 +1808,7 @@ index 4102dcf0..dd2f0e18 100644
  
          turn_route = self._resolve_turn_agent_config(prompt)
  
-@@ -5835,8 +5930,8 @@ class HermesCLI:
+@@ -5835,8 +5935,8 @@ class HermesCLI:
                      _tmod.sleep(0.05)  # brief pause for refresh
                  print()
                  ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
@@ -1814,7 +1819,7 @@ index 4102dcf0..dd2f0e18 100644
                  ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
                  if response:
                      try:
-@@ -5861,7 +5956,7 @@ class HermesCLI:
+@@ -5861,7 +5961,7 @@ class HermesCLI:
                          padding=(1, 4),
                      ))
                  else:
@@ -1823,7 +1828,7 @@ index 4102dcf0..dd2f0e18 100644
  
                  # Play bell if enabled
                  if self.bell_on_complete:
-@@ -5875,7 +5970,7 @@ class HermesCLI:
+@@ -5875,7 +5975,7 @@ class HermesCLI:
                      import time as _tmod
                      _tmod.sleep(0.05)
                  print()
@@ -1832,7 +1837,7 @@ index 4102dcf0..dd2f0e18 100644
              finally:
                  self._background_tasks.pop(task_id, None)
                  # Clear spinner only if no foreground agent owns it
-@@ -5897,23 +5992,23 @@ class HermesCLI:
+@@ -5897,23 +5997,23 @@ class HermesCLI:
          """
          parts = cmd.strip().split(maxsplit=1)
          if len(parts) < 2 or not parts[1].strip():
@@ -1861,7 +1866,7 @@ index 4102dcf0..dd2f0e18 100644
  
          def run_btw():
              try:
-@@ -5985,7 +6080,7 @@ class HermesCLI:
+@@ -5985,7 +6085,7 @@ class HermesCLI:
                          padding=(1, 4),
                      ))
                  else:
@@ -1870,7 +1875,7 @@ index 4102dcf0..dd2f0e18 100644
  
                  if self.bell_on_complete:
                      sys.stdout.write("\a")
-@@ -5996,7 +6091,7 @@ class HermesCLI:
+@@ -5996,7 +6096,7 @@ class HermesCLI:
                      self._app.invalidate()
                      time.sleep(0.05)
                  print()
@@ -1879,7 +1884,7 @@ index 4102dcf0..dd2f0e18 100644
              finally:
                  if self._app:
                      self._invalidate(min_interval=0)
-@@ -6086,10 +6181,10 @@ class HermesCLI:
+@@ -6086,10 +6186,10 @@ class HermesCLI:
                  pass
  
              if _already_open:
@@ -1892,7 +1897,7 @@ index 4102dcf0..dd2f0e18 100644
                  _launched = self._try_launch_chrome_debug(_port, _plat.system())
                  if _launched:
                      # Wait for the port to come up
-@@ -6105,12 +6200,12 @@ class HermesCLI:
+@@ -6105,12 +6205,12 @@ class HermesCLI:
                          except (OSError, socket.timeout):
                              _time.sleep(0.5)
                      if _already_open:
@@ -1909,7 +1914,7 @@ index 4102dcf0..dd2f0e18 100644
                      # Show manual instructions as fallback
                      _data_dir = str(_hermes_home / "chrome-debug")
                      sys_name = _plat.system()
-@@ -6133,15 +6228,15 @@ class HermesCLI:
+@@ -6133,15 +6233,15 @@ class HermesCLI:
                              f' --user-data-dir="{_data_dir}"'
                              f" --no-first-run --no-default-browser-check"
                          )
@@ -1929,7 +1934,7 @@ index 4102dcf0..dd2f0e18 100644
              print()
  
              # Inject context message so the model knows
-@@ -6165,8 +6260,8 @@ class HermesCLI:
+@@ -6165,8 +6265,8 @@ class HermesCLI:
                  except Exception:
                      pass
                  print()
@@ -1940,7 +1945,7 @@ index 4102dcf0..dd2f0e18 100644
                  print()
  
                  if hasattr(self, '_pending_input'):
-@@ -6176,14 +6271,14 @@ class HermesCLI:
+@@ -6176,14 +6276,14 @@ class HermesCLI:
                      )
              else:
                  print()
@@ -1958,7 +1963,7 @@ index 4102dcf0..dd2f0e18 100644
  
                  _port = 9222
                  try:
-@@ -6196,9 +6291,9 @@ class HermesCLI:
+@@ -6196,9 +6296,9 @@ class HermesCLI:
                      s.settimeout(1)
                      s.connect(("127.0.0.1", _port))
                      s.close()
@@ -1970,7 +1975,7 @@ index 4102dcf0..dd2f0e18 100644
              else:
                  try:
                      from tools.browser_tool import _get_cloud_provider
-@@ -6207,21 +6302,21 @@ class HermesCLI:
+@@ -6207,21 +6307,21 @@ class HermesCLI:
                      provider = None
  
                  if provider is not None:
@@ -2000,7 +2005,7 @@ index 4102dcf0..dd2f0e18 100644
              print()
  
      def _handle_skin_command(self, cmd: str):
-@@ -6229,7 +6324,7 @@ class HermesCLI:
+@@ -6229,7 +6329,7 @@ class HermesCLI:
          try:
              from hermes_cli.skin_engine import list_skins, set_active_skin, get_active_skin_name
          except ImportError:
@@ -2009,7 +2014,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          parts = cmd.strip().split(maxsplit=1)
-@@ -6237,33 +6332,33 @@ class HermesCLI:
+@@ -6237,33 +6337,33 @@ class HermesCLI:
              # Show current skin and list available
              current = get_active_skin_name()
              skins = list_skins()
@@ -2054,7 +2059,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _toggle_verbose(self):
          """Cycle tool progress mode: off → new → all → verbose → off."""
-@@ -6285,11 +6380,17 @@ class HermesCLI:
+@@ -6285,11 +6385,17 @@ class HermesCLI:
          # writes directly to stdout which patch_stdout's StdoutProxy mangles
          # into garbled sequences like '?[33mTool progress: NEW?[0m' (#2262).
          from hermes_cli.colors import Colors as _Colors
@@ -2076,7 +2081,7 @@ index 4102dcf0..dd2f0e18 100644
          }
          _cprint(labels.get(self.tool_progress_mode, ""))
  
-@@ -6301,15 +6402,23 @@ class HermesCLI:
+@@ -6301,15 +6407,23 @@ class HermesCLI:
          current = bool(os.environ.get("HERMES_YOLO_MODE"))
          if current:
              os.environ.pop("HERMES_YOLO_MODE", None)
@@ -2104,7 +2109,7 @@ index 4102dcf0..dd2f0e18 100644
              )
  
      def _handle_reasoning_command(self, cmd: str):
-@@ -6327,15 +6436,15 @@ class HermesCLI:
+@@ -6327,15 +6441,15 @@ class HermesCLI:
              # Show current state
              rc = self.reasoning_config
              if rc is None:
@@ -2126,7 +2131,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          arg = parts[1].strip().lower()
-@@ -6346,37 +6455,37 @@ class HermesCLI:
+@@ -6346,37 +6460,37 @@ class HermesCLI:
              if self.agent:
                  self.agent.reasoning_callback = self._current_reasoning_callback()
              save_config_value("display.show_reasoning", True)
@@ -2173,7 +2178,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # Determine the branding for the current model
-@@ -6390,9 +6499,9 @@ class HermesCLI:
+@@ -6390,9 +6504,9 @@ class HermesCLI:
  
          parts = cmd.strip().split(maxsplit=1)
          if len(parts) < 2 or parts[1].strip().lower() == "status":
@@ -2186,7 +2191,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          arg = parts[1].strip().lower()
-@@ -6400,21 +6509,21 @@ class HermesCLI:
+@@ -6400,21 +6514,21 @@ class HermesCLI:
          if arg in {"fast", "on"}:
              self.service_tier = "priority"
              saved_value = "fast"
@@ -2214,7 +2219,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _on_reasoning(self, reasoning_text: str):
          """Callback for intermediate reasoning display during tool-call loops."""
-@@ -6432,15 +6541,15 @@ class HermesCLI:
+@@ -6432,15 +6546,15 @@ class HermesCLI:
          Claude Code's ``/compact <focus>`` feature.
          """
          if not self.conversation_history or len(self.conversation_history) < 4:
@@ -2233,7 +2238,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # Extract optional focus topic from the command (e.g. "/compress database schema")
-@@ -6457,10 +6566,24 @@ class HermesCLI:
+@@ -6457,10 +6571,24 @@ class HermesCLI:
              original_history = list(self.conversation_history)
              approx_tokens = estimate_messages_tokens_rough(original_history)
              if focus_topic:
@@ -2261,7 +2266,7 @@ index 4102dcf0..dd2f0e18 100644
  
              compressed, _ = self.agent._compress_context(
                  original_history,
-@@ -6483,7 +6606,7 @@ class HermesCLI:
+@@ -6483,7 +6611,7 @@ class HermesCLI:
                  print(f"     {summary['note']}")
  
          except Exception as e:
@@ -2270,7 +2275,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _handle_debug_command(self):
          """Handle /debug — upload debug report + logs and print paste URLs."""
-@@ -6496,14 +6619,14 @@ class HermesCLI:
+@@ -6496,14 +6624,14 @@ class HermesCLI:
      def _show_usage(self):
          """Show rate limits (if available) and session token usage."""
          if not self.agent:
@@ -2287,7 +2292,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          # ── Rate limits (shown first when available) ────────────────
-@@ -6543,33 +6666,33 @@ class HermesCLI:
+@@ -6543,33 +6671,33 @@ class HermesCLI:
          )
          elapsed = format_duration_compact((datetime.now() - self.session_start).total_seconds())
  
@@ -2341,7 +2346,7 @@ index 4102dcf0..dd2f0e18 100644
  
          if self.verbose:
              logging.getLogger().setLevel(logging.DEBUG)
-@@ -6592,7 +6715,7 @@ class HermesCLI:
+@@ -6592,7 +6720,7 @@ class HermesCLI:
                  try:
                      days = int(parts[i + 1])
                  except ValueError:
@@ -2350,7 +2355,7 @@ index 4102dcf0..dd2f0e18 100644
                      return
                  i += 2
              elif parts[i] == "--source" and i + 1 < len(parts):
-@@ -6611,7 +6734,7 @@ class HermesCLI:
+@@ -6611,7 +6739,7 @@ class HermesCLI:
              print(engine.format_terminal(report))
              db.close()
          except Exception as e:
@@ -2359,7 +2364,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _check_config_mcp_changes(self) -> None:
          """Detect mcp_servers changes in config.yaml and auto-reload MCP connections.
-@@ -6661,14 +6784,14 @@ class HermesCLI:
+@@ -6661,14 +6789,14 @@ class HermesCLI:
          # timeout so a hung MCP server cannot block the process_loop
          # indefinitely (which would freeze the entire TUI).
          print()
@@ -2376,7 +2381,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _reload_mcp(self):
          """Reload MCP servers: disconnect all, re-read config.yaml, reconnect.
-@@ -6684,7 +6807,7 @@ class HermesCLI:
+@@ -6684,7 +6812,7 @@ class HermesCLI:
                  old_servers = set(_servers.keys())
  
              if not self._command_running:
@@ -2385,7 +2390,7 @@ index 4102dcf0..dd2f0e18 100644
  
              # Shutdown existing connections
              shutdown_mcp_servers()
-@@ -6701,15 +6824,22 @@ class HermesCLI:
+@@ -6701,15 +6829,22 @@ class HermesCLI:
              reconnected = connected_servers & old_servers
  
              if reconnected:
@@ -2413,7 +2418,7 @@ index 4102dcf0..dd2f0e18 100644
  
              # Refresh the agent's tool list so the model can call new tools
              if self.agent is not None:
-@@ -6751,10 +6881,16 @@ class HermesCLI:
+@@ -6751,10 +6886,16 @@ class HermesCLI:
                  except Exception:
                      pass  # Best-effort
  
@@ -2432,7 +2437,7 @@ index 4102dcf0..dd2f0e18 100644
  
      # ====================================================================
      # Tool-call generation indicator (shown during streaming)
-@@ -6946,7 +7082,7 @@ class HermesCLI:
+@@ -6946,7 +7087,7 @@ class HermesCLI:
              with self._voice_lock:
                  if not self._voice_recording:
                      return
@@ -2441,7 +2446,7 @@ index 4102dcf0..dd2f0e18 100644
              if hasattr(self, '_app') and self._app:
                  self._app.invalidate()
              self._voice_stop_and_transcribe()
-@@ -6970,7 +7106,7 @@ class HermesCLI:
+@@ -6970,7 +7111,7 @@ class HermesCLI:
              _recording_hint = "Termux:API capture | Ctrl+B to stop"
          else:
              _recording_hint = "Ctrl+B to stop"
@@ -2450,7 +2455,7 @@ index 4102dcf0..dd2f0e18 100644
  
          # Periodically refresh prompt to update audio level indicator
          def _refresh_level():
-@@ -7011,13 +7147,13 @@ class HermesCLI:
+@@ -7011,13 +7152,13 @@ class HermesCLI:
                  pass
  
              if wav_path is None:
@@ -2466,7 +2471,7 @@ index 4102dcf0..dd2f0e18 100644
  
              # Get STT model from config
              stt_model = None
-@@ -7039,13 +7175,13 @@ class HermesCLI:
+@@ -7039,13 +7180,13 @@ class HermesCLI:
                  self._pending_input.put(transcript)
                  submitted = True
              elif result.get("success"):
@@ -2483,7 +2488,7 @@ index 4102dcf0..dd2f0e18 100644
          finally:
              with self._voice_lock:
                  self._voice_processing = False
-@@ -7064,7 +7200,7 @@ class HermesCLI:
+@@ -7064,7 +7205,7 @@ class HermesCLI:
                  if self._no_speech_count >= 3:
                      self._voice_continuous = False
                      self._no_speech_count = 0
@@ -2492,7 +2497,7 @@ index 4102dcf0..dd2f0e18 100644
                      return
              else:
                  self._no_speech_count = 0
-@@ -7080,7 +7216,7 @@ class HermesCLI:
+@@ -7080,7 +7221,7 @@ class HermesCLI:
                          if hasattr(self, '_app') and self._app:
                              self._app.invalidate()
                      except Exception as e:
@@ -2501,7 +2506,7 @@ index 4102dcf0..dd2f0e18 100644
                  threading.Thread(target=_restart_recording, daemon=True).start()
  
      def _voice_speak_response(self, text: str):
-@@ -7132,7 +7268,7 @@ class HermesCLI:
+@@ -7132,7 +7273,7 @@ class HermesCLI:
                      pass
          except Exception as e:
              logger.warning("Voice TTS playback failed: %s", e)
@@ -2510,7 +2515,7 @@ index 4102dcf0..dd2f0e18 100644
          finally:
              self._voice_tts_done.set()
  
-@@ -7156,13 +7292,13 @@ class HermesCLI:
+@@ -7156,13 +7297,13 @@ class HermesCLI:
              else:
                  self._enable_voice_mode()
          else:
@@ -2527,7 +2532,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          from tools.voice_mode import check_voice_requirements, detect_audio_environment
-@@ -7170,14 +7306,14 @@ class HermesCLI:
+@@ -7170,14 +7311,14 @@ class HermesCLI:
          # Environment detection -- warn and block in incompatible environments
          env_check = detect_audio_environment()
          if not env_check["available"]:
@@ -2544,7 +2549,7 @@ index 4102dcf0..dd2f0e18 100644
              for line in reqs["details"].split("\n"):
                  _cprint(f"  {_DIM}{line}{_RST}")
              if reqs["missing_packages"]:
-@@ -7186,8 +7322,8 @@ class HermesCLI:
+@@ -7186,8 +7327,8 @@ class HermesCLI:
                      _cprint(f"  {_DIM}Then install/update the Termux:API Android app for microphone capture{_RST}")
                      _cprint(f"  {_BOLD}Option 2: pkg install python-numpy portaudio && python -m pip install sounddevice{_RST}")
                  else:
@@ -2555,7 +2560,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          with self._voice_lock:
-@@ -7207,7 +7343,7 @@ class HermesCLI:
+@@ -7207,7 +7348,7 @@ class HermesCLI:
          # system prompt change) to avoid invalidating the prompt cache.  See
          # _voice_message_prefix property and its usage in _process_message().
  
@@ -2564,7 +2569,7 @@ index 4102dcf0..dd2f0e18 100644
          try:
              from hermes_cli.config import load_config
              _raw_ptt = load_config().get("voice", {}).get("record_key", "ctrl+b")
-@@ -7215,10 +7351,10 @@ class HermesCLI:
+@@ -7215,10 +7356,10 @@ class HermesCLI:
          except Exception:
              _ptt_key = "c-b"
          _ptt_display = _ptt_key.replace("c-", "Ctrl+").upper()
@@ -2579,7 +2584,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _disable_voice_mode(self):
          """Disable voice mode, cancel any active recording, and stop TTS."""
-@@ -7250,12 +7386,12 @@ class HermesCLI:
+@@ -7250,12 +7391,12 @@ class HermesCLI:
              pass
          self._voice_tts_done.set()
  
@@ -2594,7 +2599,7 @@ index 4102dcf0..dd2f0e18 100644
              return
  
          with self._voice_lock:
-@@ -7265,9 +7401,9 @@ class HermesCLI:
+@@ -7265,9 +7406,9 @@ class HermesCLI:
          if self._voice_tts:
              from tools.tts_tool import check_tts_requirements
              if not check_tts_requirements():
@@ -2606,7 +2611,7 @@ index 4102dcf0..dd2f0e18 100644
  
      def _show_voice_status(self):
          """Show current voice mode status."""
-@@ -7276,14 +7412,14 @@ class HermesCLI:
+@@ -7276,14 +7417,14 @@ class HermesCLI:
  
          reqs = check_voice_requirements()
  
@@ -2627,7 +2632,7 @@ index 4102dcf0..dd2f0e18 100644
          for line in reqs["details"].split("\n"):
              _cprint(f"    {line}")
  
-@@ -7721,7 +7857,7 @@ class HermesCLI:
+@@ -7721,7 +7862,7 @@ class HermesCLI:
  
          # Initialize agent if needed
          if self.agent is None:
@@ -2636,7 +2641,7 @@ index 4102dcf0..dd2f0e18 100644
          if not self._init_agent(
              model_override=turn_route["model"],
              runtime_override=turn_route["runtime"],
-@@ -7750,8 +7886,10 @@ class HermesCLI:
+@@ -7750,8 +7891,10 @@ class HermesCLI:
                  if _ctx_result.expanded or _ctx_result.blocked:
                      if _ctx_result.references:
                          _cprint(
@@ -2649,7 +2654,7 @@ index 4102dcf0..dd2f0e18 100644
                      for w in _ctx_result.warnings:
                          _cprint(f"  {_DIM}⚠ {w}{_RST}")
                      if _ctx_result.blocked:
-@@ -8411,10 +8549,13 @@ class HermesCLI:
+@@ -8411,10 +8554,13 @@ class HermesCLI:
          try:
              from hermes_cli.skin_engine import get_active_skin
              _welcome_skin = get_active_skin()
@@ -2665,7 +2670,7 @@ index 4102dcf0..dd2f0e18 100644
              _welcome_color = "#FFF8DC"
          self.console.print(f"[{_welcome_color}]{_welcome_text}[/]")
          # Show a random tip to help users discover features
-@@ -8425,13 +8566,13 @@ class HermesCLI:
+@@ -8425,13 +8571,13 @@ class HermesCLI:
                  _tip_color = _welcome_skin.get_color("banner_dim", "#B8860B")
              except Exception:
                  _tip_color = "#B8860B"
@@ -2681,7 +2686,7 @@ index 4102dcf0..dd2f0e18 100644
              )
              self._startup_skills_line_shown = True
          self.console.print()
-@@ -8820,13 +8961,13 @@ class HermesCLI:
+@@ -8820,13 +8966,13 @@ class HermesCLI:
  
              if self._agent_running and self.agent:
                  if now - self._last_ctrl_c_time < 2.0:
@@ -2697,7 +2702,7 @@ index 4102dcf0..dd2f0e18 100644
                  self.agent.interrupt()
              else:
                  # If there's text or images, clear them (like bash).
-@@ -9156,27 +9297,27 @@ class HermesCLI:
+@@ -9156,27 +9302,27 @@ class HermesCLI:
  
          def _get_placeholder():
              if cli_ref._voice_recording:
@@ -2733,7 +2738,7 @@ index 4102dcf0..dd2f0e18 100644
              return ""
  
          input_area.control.input_processors.append(_PlaceholderProcessor(_get_placeholder))
-@@ -9190,21 +9331,21 @@ class HermesCLI:
+@@ -9190,21 +9336,21 @@ class HermesCLI:
              if cli_ref._sudo_state:
                  remaining = max(0, int(cli_ref._sudo_deadline - _time.monotonic()))
                  return [
@@ -2758,7 +2763,7 @@ index 4102dcf0..dd2f0e18 100644
                      ('class:clarify-countdown', f'  ({remaining}s)'),
                  ]
  
-@@ -9213,18 +9354,18 @@ class HermesCLI:
+@@ -9213,18 +9359,18 @@ class HermesCLI:
                  countdown = f'  ({remaining}s)' if cli_ref._clarify_deadline else ''
                  if cli_ref._clarify_freetext:
                      return [
@@ -2780,7 +2785,7 @@ index 4102dcf0..dd2f0e18 100644
                  ]
  
              return []
-@@ -9245,11 +9386,7 @@ class HermesCLI:
+@@ -9245,11 +9391,7 @@ class HermesCLI:
              if t0 > 0:
                  import time as _time
                  elapsed = _time.monotonic() - t0
@@ -2793,7 +2798,7 @@ index 4102dcf0..dd2f0e18 100644
                  return [('class:hint', f'  {txt}  ({elapsed_str})')]
              return [('class:hint', f'  {txt}')]
  
-@@ -9315,12 +9452,13 @@ class HermesCLI:
+@@ -9315,12 +9457,13 @@ class HermesCLI:
                  prefix = "❯ " if i == selected and not cli_ref._clarify_freetext else "  "
                  preview_lines.extend(_wrap_panel_text(f"{prefix}{choice}", 60, subsequent_indent="  "))
              other_label = (
@@ -2811,7 +2816,7 @@ index 4102dcf0..dd2f0e18 100644
              inner_text_width = max(8, box_width - 2)
  
              # Pre-wrap choices + Other option — these are mandatory.
-@@ -9333,16 +9471,16 @@ class HermesCLI:
+@@ -9333,16 +9476,16 @@ class HermesCLI:
                  # Trailing Other row(s)
                  other_idx = len(choices)
                  if selected == other_idx and not cli_ref._clarify_freetext:
@@ -2832,7 +2837,7 @@ index 4102dcf0..dd2f0e18 100644
                      inner_text_width,
                  )
              else:
-@@ -9378,8 +9516,8 @@ class HermesCLI:
+@@ -9378,8 +9521,8 @@ class HermesCLI:
              lines = []
              # Box top border
              lines.append(('class:clarify-border', '╭─ '))
@@ -2843,7 +2848,7 @@ index 4102dcf0..dd2f0e18 100644
              if not use_compact_chrome:
                  _append_blank_panel_line(lines, 'class:clarify-border', box_width)
  
-@@ -9431,8 +9569,8 @@ class HermesCLI:
+@@ -9431,8 +9574,8 @@ class HermesCLI:
              state = cli_ref._sudo_state
              if not state:
                  return []
@@ -2854,7 +2859,7 @@ index 4102dcf0..dd2f0e18 100644
              box_width = _panel_box_width(title, [body])
              lines = []
              lines.append(('class:sudo-border', '╭─ '))
-@@ -9457,11 +9595,11 @@ class HermesCLI:
+@@ -9457,11 +9600,11 @@ class HermesCLI:
              if not state:
                  return []
  
@@ -2868,7 +2873,7 @@ index 4102dcf0..dd2f0e18 100644
              content_lines = [prompt, body]
              if help_text:
                  content_lines.insert(1, str(help_text))
-@@ -9881,8 +10019,9 @@ class HermesCLI:
+@@ -9881,8 +10024,9 @@ class HermesCLI:
                          user_input = expanded
                      else:
                          _user_bar = f"[{_accent_hex()}]{'─' * 40}[/]"
@@ -2879,7 +2884,7 @@ index 4102dcf0..dd2f0e18 100644
                              line_count = user_input.count('\n') + 1
                              print()
                              ChatConsole().print(_user_bar)
-@@ -9893,7 +10032,7 @@ class HermesCLI:
+@@ -9893,7 +10037,7 @@ class HermesCLI:
                          else:
                              print()
                              ChatConsole().print(_user_bar)
@@ -2888,7 +2893,7 @@ index 4102dcf0..dd2f0e18 100644
                      
                      # Show image attachment count
                      if submit_images:
-@@ -10158,7 +10297,7 @@ def main(
+@@ -10158,7 +10302,7 @@ def main(
      if gateway:
          import asyncio
          from gateway.run import start_gateway
@@ -2897,7 +2902,7 @@ index 4102dcf0..dd2f0e18 100644
          asyncio.run(start_gateway())
          return
  
-@@ -10314,7 +10453,7 @@ def main(
+@@ -10314,7 +10458,7 @@ def main(
              cli.show_banner()
              _query_label = query or ("[image attached]" if single_query_images else "")
              if _query_label:
@@ -6695,22 +6700,42 @@ index aa6cb972..11a8b881 100644
  
 -
 diff --git a/tests/cli/test_cli_loading_indicator.py b/tests/cli/test_cli_loading_indicator.py
-index 6cec9eca..cc0e4155 100644
+index 6cec9eca..c36325c6 100644
 --- a/tests/cli/test_cli_loading_indicator.py
 +++ b/tests/cli/test_cli_loading_indicator.py
-@@ -1,7 +1,12 @@
+@@ -1,12 +1,31 @@
  """Regression tests for loading feedback on slow slash commands."""
  
++import os
++import subprocess
 +import sys
 +import types
++from pathlib import Path
  from unittest.mock import patch
  
+-from cli import HermesCLI
 +sys.modules.setdefault("fire", types.SimpleNamespace(Fire=lambda *a, **k: None))
 +sys.modules.setdefault("firecrawl", types.SimpleNamespace(Firecrawl=object))
 +
- from cli import HermesCLI
++
++def _cli_class():
++    from cli import HermesCLI
++
++    return HermesCLI
  
  
+ class TestCLILoadingIndicator:
++    def test_cli_module_compiles(self):
++        cli_path = Path(__file__).resolve().parents[2] / "cli.py"
++        hermes_python = Path.home() / ".hermes" / "hermes-agent" / "venv" / "bin" / "python3"
++        python_exe = str(hermes_python if hermes_python.exists() else Path(sys.executable))
++        subprocess.run([python_exe, "-m", "py_compile", str(cli_path)], check=True, env=os.environ.copy())
++
+     def _make_cli(self):
++        HermesCLI = _cli_class()
+         cli_obj = HermesCLI.__new__(HermesCLI)
+         cli_obj._app = None
+         cli_obj._last_invalidate = 0.0
 diff --git a/tests/cli/test_cli_localized_feedback.py b/tests/cli/test_cli_localized_feedback.py
 new file mode 100644
 index 00000000..c0564f1f

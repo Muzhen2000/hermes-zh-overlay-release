@@ -52,6 +52,10 @@
     {
       "file": "cli.py",
       "reason": "Use display-cell width for spinner row calculation so CJK text does not under-count terminal rows."
+    },
+    {
+      "file": "cli.py",
+      "reason": "Summarize internal skill-invocation payloads into a display-only localized preview so users see a fixed visible loading line without changing the model-facing input."
     }
   ]
 }
