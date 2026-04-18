@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 from pathlib import Path
 
 
@@ -64,3 +65,22 @@ def test_release_json_points_to_existing_release():
 
     assert release_id == release_index["latest_release"]
     assert manifest["release"] == release_id
+
+
+def test_changed_files_includes_worktree_staged_and_untracked_files(tmp_path):
+    module = _load_module()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo, check=True)
+    (repo / "tracked.txt").write_text("old\n", encoding="utf-8")
+    subprocess.run(["git", "add", "tracked.txt"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-m", "base"], cwd=repo, check=True, capture_output=True)
+
+    (repo / "tracked.txt").write_text("new\n", encoding="utf-8")
+    (repo / "staged.txt").write_text("staged\n", encoding="utf-8")
+    subprocess.run(["git", "add", "staged.txt"], cwd=repo, check=True)
+    (repo / "untracked.txt").write_text("untracked\n", encoding="utf-8")
+
+    assert module._changed_files(repo) == ["staged.txt", "tracked.txt", "untracked.txt"]

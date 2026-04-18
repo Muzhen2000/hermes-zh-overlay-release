@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import yaml
@@ -24,6 +25,41 @@ def test_manifest_lists_existing_localization_files():
 
     for name in manifest["localization_files"]:
         assert (release_dir / name).exists()
+
+
+def test_release_does_not_ship_legacy_runtime_bridge():
+    manifest = json.loads(
+        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+    )
+    release_dir = ROOT / "releases" / "31e72764" / "localization"
+
+    assert "hermes_zh_runtime.py" not in manifest["localization_files"]
+    assert not (release_dir / "hermes_zh_runtime.py").exists()
+
+
+def test_real_ui_catalog_covers_all_static_runtime_keys():
+    manifest = json.loads(
+        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+    )
+    release_dir = ROOT / "releases" / "31e72764"
+    ui_data = yaml.safe_load((release_dir / "localization" / "ui.zh-CN.yaml").read_text(encoding="utf-8"))
+    messages = set((ui_data or {}).get("messages", {}))
+    patch_text = (release_dir / manifest["patch"]).read_text(encoding="utf-8")
+    added_source = "\n".join(
+        line[1:]
+        for line in patch_text.splitlines()
+        if line.startswith("+") and not line.startswith("+++")
+    )
+
+    expected_keys = set()
+    expected_keys.update(f"cli.{match}" for match in re.findall(r"_cli_ui\(\s*[\"']([^\"']+)[\"']", added_source))
+    expected_keys.update(
+        f"gateway.runtime.{match}"
+        for match in re.findall(r"_gateway_ui\(\s*[\"']([^\"']+)[\"']", added_source)
+    )
+
+    missing = sorted(expected_keys - messages)
+    assert not missing
 
 
 def test_manifest_lists_existing_skin_files():

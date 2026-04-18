@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 
 class VerifyError(RuntimeError):
@@ -37,6 +40,17 @@ def _run(cmd: list[str], *, cwd: Path | None = None) -> str:
     return (result.stdout or "").strip()
 
 
+def _changed_files(source_dir: Path) -> list[str]:
+    names: set[str] = set()
+    for cmd in [
+        ["git", "diff", "--name-only"],
+        ["git", "diff", "--cached", "--name-only"],
+        ["git", "ls-files", "--others", "--exclude-standard"],
+    ]:
+        names.update(filter(None, _run(cmd, cwd=source_dir).splitlines()))
+    return sorted(names)
+
+
 def _load_metadata(repo_root: Path, release_id: str | None = None) -> tuple[str, dict, dict]:
     release_index = _read_json(repo_root / "release.json")
     resolved_release = release_id or str(release_index.get("latest_release") or "").strip()
@@ -58,6 +72,34 @@ def _patch_files(patch_path: Path) -> list[str]:
     return files
 
 
+def _ui_keys_from_patch(patch_path: Path) -> set[str]:
+    added_source = "\n".join(
+        line[1:]
+        for line in patch_path.read_text(encoding="utf-8").splitlines()
+        if line.startswith("+") and not line.startswith("+++")
+    )
+    keys = set()
+    keys.update(f"cli.{match}" for match in re.findall(r"_cli_ui\(\s*[\"']([^\"']+)[\"']", added_source))
+    keys.update(
+        f"gateway.runtime.{match}"
+        for match in re.findall(r"_gateway_ui\(\s*[\"']([^\"']+)[\"']", added_source)
+    )
+    return keys
+
+
+def _ui_messages(ui_path: Path) -> set[str]:
+    try:
+        data = yaml.safe_load(ui_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise VerifyError(f"missing ui catalog: {ui_path}") from exc
+    if not isinstance(data, dict):
+        raise VerifyError(f"expected object yaml: {ui_path}")
+    messages = data.get("messages")
+    if not isinstance(messages, dict):
+        raise VerifyError(f"expected messages object in: {ui_path}")
+    return set(messages)
+
+
 def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
     resolved_release, release_index, manifest = _load_metadata(repo_root, release_id)
     release_dir = repo_root / "releases" / resolved_release
@@ -68,6 +110,8 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
     localization_dir = release_dir / "localization"
     localization_files = []
     for name in manifest.get("localization_files", []):
+        if str(name).endswith(".py"):
+            raise VerifyError(f"localization_files must be read-only data, not python runtime: {name}")
         path = localization_dir / name
         if not path.exists():
             raise VerifyError(f"missing localization file: {path}")
@@ -89,6 +133,11 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
             f"{sorted(patch_files)} != {sorted(allowed)}"
         )
 
+    ui_path = localization_dir / "ui.zh-CN.yaml"
+    missing_ui_keys = sorted(_ui_keys_from_patch(patch_path) - _ui_messages(ui_path))
+    if missing_ui_keys:
+        raise VerifyError(f"ui.zh-CN.yaml is missing runtime keys: {missing_ui_keys}")
+
     return {
         "release": resolved_release,
         "official_repo": release_index.get("official_repo"),
@@ -109,7 +158,7 @@ def validate_local_source(*, repo_root: Path, source_dir: Path, release_id: str 
         raise VerifyError("manifest does not define official_commit")
 
     head = _run(["git", "rev-parse", "HEAD"], cwd=source_dir)
-    dirty = sorted(filter(None, _run(["git", "diff", "--name-only"], cwd=source_dir).splitlines()))
+    dirty = _changed_files(source_dir)
     allowed = sorted(manifest.get("allowed_source_files", []))
 
     if head != official_commit:

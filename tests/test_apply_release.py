@@ -42,11 +42,21 @@ def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):
 
     legacy_manager = hermes_home / "scripts" / "hermes_zh_overlay_manager.py"
     legacy_support = hermes_home / "localization" / "support-policy.json"
+    legacy_runtime = hermes_home / "localization" / "hermes_zh_runtime.py"
+    legacy_runtime_cache = hermes_home / "localization" / "__pycache__" / "hermes_zh_runtime.cpython-314.pyc"
     legacy_reports = hermes_home / "localization" / "reports" / "old.json"
     legacy_patch = hermes_home / "localization" / "patches" / "hermes-zh-overlay.patch"
     legacy_plist = user_home / "Library" / "LaunchAgents" / "com.muzhen.hermes-zh-overlay-maintain.plist"
 
-    for path in [legacy_manager, legacy_support, legacy_reports, legacy_patch, legacy_plist]:
+    for path in [
+        legacy_manager,
+        legacy_support,
+        legacy_runtime,
+        legacy_runtime_cache,
+        legacy_reports,
+        legacy_patch,
+        legacy_plist,
+    ]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("x", encoding="utf-8")
 
@@ -54,10 +64,14 @@ def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):
 
     assert str(legacy_manager) in removed
     assert str(legacy_support) in removed
+    assert str(legacy_runtime) in removed
+    assert str(legacy_runtime_cache.parent) in removed
     assert str(legacy_patch) in removed
     assert str(legacy_plist) in removed
     assert not legacy_manager.exists()
     assert not legacy_support.exists()
+    assert not legacy_runtime.exists()
+    assert not legacy_runtime_cache.parent.exists()
     assert not legacy_reports.exists()
     assert not legacy_patch.exists()
     assert not legacy_plist.exists()

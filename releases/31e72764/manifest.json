@@ -9,7 +9,6 @@
   "patch": "patches/hermes-zh.patch",
   "localization_files": [
     "commands.zh-CN.yaml",
-    "hermes_zh_runtime.py",
     "skills.zh-CN.yaml",
     "skins.zh-CN.yaml",
     "tips.zh-CN.yaml",

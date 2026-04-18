@@ -134,9 +134,9 @@
 
 特别注意：
 
-- 历史 release 里可能仍然存在 `localization/hermes_zh_runtime.py` 之类的遗留文件。
-- **这类历史遗留物不是未来 release 的设计范式。**
-- 如果它仍然留在旧 release 中，只能把它当作历史产物或兼容残留，不能继续扩展，更不能把它当成未来 release 的默认方案。
+- 当前 release 不应再发布 `localization/hermes_zh_runtime.py` 之类的运行时桥。
+- `scripts/verify_release.py` 必须阻止 `localization_files` 中出现 Python 运行时文件。
+- 如果维护时发现旧本地安装残留这类文件，只能在安装脚本中清理它，不能继续依赖或扩展它。
 
 ## 6. 仓库内关键文件
 
@@ -313,6 +313,8 @@
 - `manifest.json` 的 `allowed_source_files` 与真实源码 diff 一致
 - 允许列表之外的源码 diff 为 0
 - `manifest.json` 的 `localization_files` 只列真正需要的文件
+- `manifest.json` 的 `localization_files` 不包含 `.py` 运行时桥
+- `ui.zh-CN.yaml` 覆盖 patch 中所有 `_cli_ui(...)` 与 `_gateway_ui(...)` 固定文案 key
 - 历史遗留文件没有被错误当成未来标准继续带入
 - Web UI 没有被纳入本仓库处理范围
 

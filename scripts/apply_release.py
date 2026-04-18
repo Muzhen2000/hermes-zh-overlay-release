@@ -156,6 +156,8 @@ def _prune_legacy_overlay(hermes_home: Path, user_home: Path) -> list[str]:
         plist_path,
         hermes_home / "scripts" / "hermes_zh_overlay_manager.py",
         hermes_home / "localization" / "support-policy.json",
+        hermes_home / "localization" / "hermes_zh_runtime.py",
+        hermes_home / "localization" / "__pycache__",
         hermes_home / "localization" / "reports",
         hermes_home / "localization" / "patches" / "hermes-zh-overlay.patch",
     ]:

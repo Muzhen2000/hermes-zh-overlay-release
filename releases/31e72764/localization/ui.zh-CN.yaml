@@ -498,6 +498,7 @@ messages:
   cli.plugins.list_title: '插件（{count} 个）：'
   cli.plugins.tools_count: '{count} 个工具'
   cli.plugins.hooks_count: '{count} 个 hooks'
+  cli.plugins.commands: '{count} 条命令'
   cli.plugins.commands_count: '{count} 条命令'
   cli.queue.queued_now: '  已排队：{preview}'
   cli.quick_command.no_output: 命令没有输出
