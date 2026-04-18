@@ -52,6 +52,7 @@ def test_validate_release_matches_manifest_and_patch():
         "hermes_cli/tips.py",
         "tests/cli/test_cli_loading_indicator.py",
         "tests/cli/test_cli_localized_feedback.py",
+        "tests/gateway/test_localized_slash_replies.py",
         "tests/hermes_cli/test_commands.py",
         "tests/hermes_cli/test_skin_engine.py",
     ]

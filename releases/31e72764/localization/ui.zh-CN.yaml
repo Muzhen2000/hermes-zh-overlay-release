@@ -1101,6 +1101,9 @@ messages:
   gateway.runtime.approval.deny.success: '❌ 已拒绝命令{count_msg}。'
   gateway.runtime.session_info.model: '◆ 模型：`{model}`'
   gateway.runtime.session_info.provider: '◆ 提供商：{provider}'
+  gateway.runtime.session_info.context_source.config: 配置
+  gateway.runtime.session_info.context_source.default: 默认值，请在 config.yaml 中设置 model.context_length 覆盖
+  gateway.runtime.session_info.context_source.detected: 自动识别
   gateway.runtime.session_info.context: '◆ 上下文：{ctx_display} tokens（{ctx_source}）'
   gateway.runtime.session_info.endpoint: '◆ 端点：{base_url}'
   gateway.runtime.reset.reset_started: ✨ 会话已重置，重新开始。

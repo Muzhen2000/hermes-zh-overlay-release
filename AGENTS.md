@@ -225,8 +225,9 @@
 
 - 启动页：版本行、更新提示、可用工具、MCP、可用技能、欢迎语、底部提示。
 - slash 命令元数据：`/help`、补全菜单、命令注释、命令分类。
-- slash 命令执行反馈：`/yolo`、`/snapshot`、`/skills`、skill slash command、`/reload-mcp`、`/browser`、`/queue`、`/background`、`/btw`、`/stop`、`/image`、插件/快捷命令等固定输出。
-- 二级/空状态提示：没有快照、没有插件、没有后台进程、缺少参数、未知子命令、最近项提示。
+- slash 命令执行反馈：必须按“固定回复 + 回复中的固定词”完整检查，不只检查命令注释。终端侧至少覆盖 `/new`、`/reset`、`/status`、`/profile`、`/config`、`/history`、`/resume`、`/branch`、`/save`、`/retry`、`/undo`、`/model`、`/provider`、`/personality`、`/yolo`、`/snapshot`、`/skills`、skill slash command、`/reload-mcp`、`/browser`、`/queue`、`/background`、`/btw`、`/stop`、`/image`、`/paste`、`/reasoning`、`/fast`、`/compress`、`/usage`、`/insights`、`/voice`、插件/快捷命令等固定输出。
+- Telegram slash 命令执行反馈：至少覆盖 `/new`、`/reset`、`/status`、`/commands`、`/help`、`/model`、`/provider`、`/personality`、`/retry`、`/undo`、`/sethome`、`/voice`、`/rollback`、`/background`、`/btw`、`/reasoning`、`/fast`、`/yolo`、`/verbose`、`/compress`、`/title`、`/resume`、`/branch`、`/usage`、`/insights`、`/reload-mcp`、`/approve`、`/deny`、`/update`、`/debug` 等固定输出。
+- 二级/空状态提示：没有快照、没有插件、没有后台进程、没有会话数据库、没有历史消息、没有可分叉对话、没有已认证 provider、缺少参数、未知子命令、最近项提示、命令成功后的确认行、命令失败后的固定前缀。
 - 用户输入后到 LLM 回复前：agent 初始化、busy command status、spinner thinking verbs、记忆/检索短状态行。
 - 皮肤：全部内置皮肤和本仓库自建皮肤的 welcome、goodbye、help header、thinking verbs。
 - Telegram：命令菜单描述、slash 命令执行反馈、按钮/确认提示、非 LLM 生成的状态消息。
