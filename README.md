@@ -41,6 +41,12 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 
 三者已经对应到同一版。
 
+如果第一条命令报：
+
+- `curl: (6) Could not resolve host: raw.githubusercontent.com`
+
+这说明当时是本机网络或 DNS 解析问题，不是中文包本身失败。先重试，或切换网络后再执行安装命令。
+
 ## LLM Agent 入口
 
 后续更新、继续汉化、校验一致性，先看：

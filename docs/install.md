@@ -75,6 +75,10 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
 ```
 
+## 常见问题
+
+- 如果安装命令报 `curl: (6) Could not resolve host: raw.githubusercontent.com`，这是本机网络或 DNS 解析问题，不是中文包本身失败。先重试，或切换网络后再执行同一条命令。
+
 ## 注意
 
 - 这个仓库不处理 Web UI
