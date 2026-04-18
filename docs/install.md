@@ -56,7 +56,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 1. 更新 `~/.hermes/hermes-zh-overlay-release`
 2. 读取当前 release 的 `manifest.json`
 3. 将 `~/.hermes/hermes-agent` 强制对齐到该官方 commit
-4. 清理旧版中文自动维护残留
+4. 清理旧版自动维护残留（仅为迁移收尾，不属于当前系统）
 5. 写入 `~/.hermes/localization/*.yaml`
 6. 如果该 release 附带皮肤，则写入 `~/.hermes/skins/*.yaml`
 7. 应用 `releases/<release>/patches/hermes-zh.patch`
