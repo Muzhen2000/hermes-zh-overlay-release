@@ -52,6 +52,29 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
 ```
 
+## 运行完这一条命令后，你会得到什么
+
+如果应用成功，你得到的是：
+
+- 官方 Hermes 的某个固定版本
+- 这一版本对应的终端 + Telegram 最小中文包
+- 如该 release 附带皮肤，则同步得到同版本皮肤文件
+
+你通常会直接看到这些中文结果：
+
+- 终端启动页中的固定说明文字
+- 终端欢迎语
+- 斜杠命令注释
+- 斜杠命令触发后的固定提示语
+- 固定的二级选项提示语
+- 用户发出消息后、LLM 回复前的固定状态提示语
+- Telegram 中对应的固定命令说明与提示语
+
+不会变化的部分：
+
+- Web UI 仍保持官方原样
+- LLM 真正生成的回答内容不属于这个仓库的汉化范围
+
 ## 这条命令实际在做什么
 
 它会：
@@ -94,6 +117,19 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 1. 先按官方方式安装 Hermes
 2. 再运行上面的同一条命令
 3. 如果你们都应用同一个 release，就会得到同一套 Hermes 源码版本和同一套中文包
+
+她不需要你的 `~/.hermes/hermes-agent` 源码仓库副本。
+
+她需要的只有两件事：
+
+- 本机已经按官方方式安装 Hermes
+- 运行这个公开仓库提供的一行命令
+
+原因是：
+
+- 这个仓库已经包含该 release 对应的最小 patch
+- 命令会先把她本地 Hermes 对齐到指定官方 commit
+- 然后再自动应用这版中文包
 
 不同机器之间不会共享这些个人内容：
 

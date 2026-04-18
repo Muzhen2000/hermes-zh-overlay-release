@@ -24,6 +24,33 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 31e72764
 ```
 
+## 给家人的最短说明
+
+如果她已经按官方方式安装过 Hermes，她只需要执行这一条命令：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 -
+```
+
+她不需要：
+
+- 你的 `~/.hermes/hermes-agent` 源码仓库
+- 手工打 patch
+- 自己判断要先更新哪个仓库
+
+这条命令会自动完成：
+
+- 拉取这个公开仓库的当前 release
+- 把她本地 Hermes 对齐到该 release 绑定的官方 commit
+- 应用这一版最小中文包
+- 同步这一版附带的皮肤文件
+
+她运行后，预期体验是：
+
+- 终端与 Telegram 中属于本仓库范围的固定文案变为中文
+- Web UI 保持官方原样
+- 她自己的会话、记忆、配置和登录态不被覆盖
+
 ## 这条命令具体会做什么
 
 1. 更新 `~/.hermes/hermes-zh-overlay-release`
@@ -53,3 +80,4 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 - 发布了新 release 后，再运行同一条命令更新
 - release 附带的同名皮肤文件会被同步更新，但不会删除你额外自建的其他皮肤
 - 不建议在应用中文包后再直接运行 `hermes update`；应等待这里发布对应版本再更新
+- 如果你手动更新过 Hermes 到官方新版本，但这里还没有发布对应 release，请先不要应用不匹配的中文包
