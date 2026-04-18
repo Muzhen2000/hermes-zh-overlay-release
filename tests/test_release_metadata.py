@@ -22,3 +22,13 @@ def test_manifest_lists_existing_localization_files():
 
     for name in manifest["localization_files"]:
         assert (release_dir / name).exists()
+
+
+def test_manifest_lists_existing_skin_files():
+    manifest = json.loads(
+        (ROOT / "releases" / "31e72764" / "manifest.json").read_text(encoding="utf-8")
+    )
+    skins_dir = ROOT / "releases" / "31e72764" / "skins"
+
+    for name in manifest["skin_files"]:
+        assert (skins_dir / name).exists()

@@ -99,6 +99,7 @@ def _load_release_metadata(repo_root: Path, release_id: str | None = None) -> tu
 def _copy_release_assets(*, repo_root: Path, hermes_home: Path, release_id: str, manifest: dict) -> dict:
     release_dir = repo_root / "releases" / release_id
     localization_dir = hermes_home / "localization"
+    skins_dir = hermes_home / "skins"
     patch_dir = localization_dir / "patches"
     changed: dict[str, bool] = {}
 
@@ -108,6 +109,13 @@ def _copy_release_assets(*, repo_root: Path, hermes_home: Path, release_id: str,
             raise ReleaseError(f"missing localization asset: {source}")
         destination = localization_dir / name
         changed[name] = _write_bytes_if_changed(source.read_bytes(), destination)
+
+    for name in manifest.get("skin_files", []):
+        source = release_dir / "skins" / name
+        if not source.exists():
+            raise ReleaseError(f"missing skin asset: {source}")
+        destination = skins_dir / name
+        changed[f"skins/{name}"] = _write_bytes_if_changed(source.read_bytes(), destination)
 
     patch_rel = str(manifest.get("patch") or "").strip()
     if not patch_rel:

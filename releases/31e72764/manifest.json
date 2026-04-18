@@ -15,6 +15,19 @@
     "tips.zh-CN.yaml",
     "ui.zh-CN.yaml"
   ],
+  "skin_files": [
+    "bubblegum-80s.yaml",
+    "lain.yaml",
+    "mother.yaml",
+    "mythos.yaml",
+    "neonwave.yaml",
+    "netrunner.yaml",
+    "nous.yaml",
+    "pirate.yaml",
+    "sakura.yaml",
+    "skynet.yaml",
+    "vault-tec.yaml"
+  ],
   "allowed_source_files": [
     "agent/display.py",
     "agent/manual_compression_feedback.py",

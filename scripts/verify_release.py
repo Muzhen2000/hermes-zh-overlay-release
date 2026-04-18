@@ -73,6 +73,14 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
             raise VerifyError(f"missing localization file: {path}")
         localization_files.append(str(path.relative_to(repo_root)))
 
+    skins_dir = release_dir / "skins"
+    skin_files = []
+    for name in manifest.get("skin_files", []):
+        path = skins_dir / name
+        if not path.exists():
+            raise VerifyError(f"missing skin file: {path}")
+        skin_files.append(str(path.relative_to(repo_root)))
+
     patch_files = _patch_files(patch_path)
     allowed = list(manifest.get("allowed_source_files", []))
     if sorted(patch_files) != sorted(allowed):
@@ -88,6 +96,7 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
         "patch_path": str(patch_path.relative_to(repo_root)),
         "patch_files": patch_files,
         "localization_files": localization_files,
+        "skin_files": skin_files,
     }
 
 

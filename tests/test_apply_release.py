@@ -31,6 +31,8 @@ def test_copy_release_assets_materializes_expected_files(tmp_path):
     assert Path(result["patch_path"]).exists()
     for name in manifest["localization_files"]:
         assert (hermes_home / "localization" / name).exists()
+    for name in manifest["skin_files"]:
+        assert (hermes_home / "skins" / name).exists()
 
 
 def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):

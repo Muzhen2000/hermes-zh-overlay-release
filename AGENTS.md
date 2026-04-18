@@ -50,6 +50,8 @@
   该版本的元数据、允许修改的源码文件列表、词条文件列表。
 - `releases/<release>/localization/*`
   外置词条与运行时辅助文件。
+- `releases/<release>/skins/*`
+  该版本要随 release 一起分发的自建皮肤 YAML。
 - `releases/<release>/patches/hermes-zh.patch`
   该官方 commit 对应的最小源码 patch。
 - `scripts/apply_release.py`
@@ -67,11 +69,12 @@
 2. 将本地 Hermes 源码检出到该官方 commit，确保它是官方基线。
 3. 对比旧官方 commit 与新官方 commit，找出是否有新的“终端 / Telegram 固定可见文案”进入可汉化范围。
 4. 优先更新外置词条文件。
-5. 只有外置词条无法覆盖时，才做最小源码替换。
-6. 从该官方 commit 重新生成新的 `hermes-zh.patch`。
-7. 创建新的 `releases/<new_commit>/` 目录。
-8. 运行校验与 smoke test。
-9. 通过后，再更新 `release.json` 的 `latest_release`，并推送仓库。
+5. 若此版本需要分发自建皮肤，同步整理 `releases/<new_commit>/skins/*.yaml`。
+6. 只有外置词条无法覆盖时，才做最小源码替换。
+7. 从该官方 commit 重新生成新的 `hermes-zh.patch`。
+8. 创建新的 `releases/<new_commit>/` 目录。
+9. 运行校验与 smoke test。
+10. 通过后，再更新 `release.json` 的 `latest_release`，并推送仓库。
 
 不要这样做：
 
@@ -124,8 +127,9 @@
 4. 只保留真正必要的源码改动。
 5. 生成 `releases/<new_commit>/manifest.json`。
 6. 生成 `releases/<new_commit>/localization/*`。
-7. 生成 `releases/<new_commit>/patches/hermes-zh.patch`。
-8. 校验通过后，更新 `release.json`。
+7. 若要随 release 分发自建皮肤，生成 `releases/<new_commit>/skins/*`。
+8. 生成 `releases/<new_commit>/patches/hermes-zh.patch`。
+9. 校验通过后，更新 `release.json`。
 
 ## 8. 验收标准
 

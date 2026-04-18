@@ -6,6 +6,12 @@
 - 本地 Hermes 源码目录是 `~/.hermes/hermes-agent`
 - 个人配置、记忆、会话仍保存在 `~/.hermes` 下
 
+把这个仓库理解成：
+
+- 官方 Hermes 某个版本
+- 对应一份这个版本的最小中文包
+- 如果 release 附带了自建皮肤，也会一并同步到 `~/.hermes/skins/`
+
 ## 一行应用最新中文包
 
 ```bash
@@ -25,7 +31,8 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 3. 将 `~/.hermes/hermes-agent` 强制对齐到该官方 commit
 4. 清理旧版中文自动维护残留
 5. 写入 `~/.hermes/localization/*.yaml`
-6. 应用 `releases/<release>/patches/hermes-zh.patch`
+6. 如果该 release 附带皮肤，则写入 `~/.hermes/skins/*.yaml`
+7. 应用 `releases/<release>/patches/hermes-zh.patch`
 
 ## 不会动的内容
 
@@ -44,4 +51,5 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 
 - 这个仓库不处理 Web UI
 - 发布了新 release 后，再运行同一条命令更新
+- release 附带的同名皮肤文件会被同步更新，但不会删除你额外自建的其他皮肤
 - 不建议在应用中文包后再直接运行 `hermes update`；应等待这里发布对应版本再更新

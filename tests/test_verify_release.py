@@ -22,6 +22,19 @@ def test_validate_release_matches_manifest_and_patch():
 
     assert result["release"] == "31e72764"
     assert result["official_commit"] == "31e7276474976cd752d73de7701229eefd1b37ad"
+    assert sorted(Path(path).name for path in result["skin_files"]) == [
+        "bubblegum-80s.yaml",
+        "lain.yaml",
+        "mother.yaml",
+        "mythos.yaml",
+        "neonwave.yaml",
+        "netrunner.yaml",
+        "nous.yaml",
+        "pirate.yaml",
+        "sakura.yaml",
+        "skynet.yaml",
+        "vault-tec.yaml",
+    ]
     assert sorted(result["patch_files"]) == [
         "agent/display.py",
         "agent/manual_compression_feedback.py",

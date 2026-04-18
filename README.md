@@ -61,6 +61,7 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 - 将 `~/.hermes/hermes-agent` 对齐到该官方 commit
 - 清理旧版中文自动维护残留
 - 写入当前 release 的词条文件
+- 如果该 release 附带皮肤，则同步写入 `~/.hermes/skins/*.yaml`
 - 应用当前 release 的最小 patch
 
 它不会：
@@ -117,6 +118,10 @@ releases/31e72764/
     skins.zh-CN.yaml
     tips.zh-CN.yaml
     ui.zh-CN.yaml
+  skins/
+    bubblegum-80s.yaml
+    mythos.yaml
+    ...
 ```
 
 ## 维护说明
