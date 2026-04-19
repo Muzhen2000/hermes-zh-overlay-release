@@ -137,12 +137,14 @@
 12. 用 `scripts/apply_release.py` 把新 release 真正应用到本地 Hermes，一次实测完整升级路径
 13. 确认 `scripts/apply_release.py` 已清掉默认 profile 和所有 named profiles 下的 `.update_check`
 14. 再运行 `zsh -lc 'hermes --version'`，确认 banner / update notice 与真实 git 状态一致
+15. 如果用户反馈的是终端显示层 bug，例如输入框漏字、spinner 包裹高度异常、状态行错位，先检查目标官版是否已经修复；如果上游已经修复，优先通过升级 release 吸收官修，不要先加本地显示层补丁
 
 不要这样做：
 
 - 不要先改中文包仓库，再倒推 Hermes
 - 不要在旧 patch 或旧脏树上继续叠补丁
 - 不要直接复制旧 patch 当成新 patch 而不重新生成
+- 不要把已被上游吸收的终端显示 bug 又重新在本地做一次私有修补
 
 ### 4.4 如果 Hermes 本地已经坏了
 
