@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3
+
+- Publish `releases/fc8e4ebf-skilldesc1/` as the current latest release.
+- Route dynamic skill slash-command descriptions through `skills.zh-CN.yaml` when a localized entry exists, so terminal help, completion annotations, and gateway skill menus stop mixing Chinese and English.
+- Add a regression test for localized skill command descriptions.
+
 ## 0.5.2
 
 - Publish `releases/fc8e4ebf-gateway1/` as the current latest release.
