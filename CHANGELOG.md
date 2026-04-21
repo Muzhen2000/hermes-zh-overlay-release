@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+- Upgrade the versioned Chinese package from official Hermes `6af04474` to `fc8e4ebf`.
+- Publish `releases/fc8e4ebf-kimi1/` as the current latest release.
+- Carry the minimal terminal and Telegram overlay forward to the new official baseline.
+- Keep the declared small compatibility patches, including the Kimi `thinking` bridge and display-layer fixes.
+- Refresh README and install docs so the public repo entry points match the current release.
+
+## 0.3.1
+
+- Publish `releases/6af04474-kimi1/` as a versioned follow-up to `6af04474`.
+- Add the declared Moonshot/Kimi `thinking` compatibility patch and matching regression test to the overlay release.
+
 ## 0.3.0
 
 - Upgrade the versioned Chinese package from official Hermes `31e72764` to `a828daa7`.

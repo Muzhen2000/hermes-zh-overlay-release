@@ -10,6 +10,7 @@
 
 - 官方 Hermes 某个版本
 - 对应一份这个版本的最小中文包
+- release 里允许带少量经过 manifest 声明的小补丁
 - 如果 release 附带了自建皮肤，也会一并同步到 `~/.hermes/skins/`
 
 ## 一行应用最新中文包
@@ -21,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 ## 一行应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 6af04474
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release fc8e4ebf-kimi1
 ```
 
 ## 给家人的最短说明
