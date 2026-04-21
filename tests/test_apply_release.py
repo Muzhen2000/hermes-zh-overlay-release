@@ -44,7 +44,7 @@ def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):
     legacy_support = hermes_home / "localization" / "support-policy.json"
     legacy_runtime = hermes_home / "localization" / "hermes_zh_runtime.py"
     legacy_runtime_cache = hermes_home / "localization" / "__pycache__" / "hermes_zh_runtime.cpython-314.pyc"
-    legacy_reports = hermes_home / "localization" / "reports" / "old.json"
+    baseline_report = hermes_home / "localization" / "reports" / "hermes-zh-baseline.json"
     legacy_patch = hermes_home / "localization" / "patches" / "hermes-zh-overlay.patch"
     legacy_plist = user_home / "Library" / "LaunchAgents" / "com.muzhen.hermes-zh-overlay-maintain.plist"
 
@@ -53,7 +53,7 @@ def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):
         legacy_support,
         legacy_runtime,
         legacy_runtime_cache,
-        legacy_reports,
+        baseline_report,
         legacy_patch,
         legacy_plist,
     ]:
@@ -72,7 +72,7 @@ def test_prune_legacy_overlay_removes_old_runtime_files(tmp_path):
     assert not legacy_support.exists()
     assert not legacy_runtime.exists()
     assert not legacy_runtime_cache.parent.exists()
-    assert not legacy_reports.exists()
+    assert baseline_report.exists()
     assert not legacy_patch.exists()
     assert not legacy_plist.exists()
 

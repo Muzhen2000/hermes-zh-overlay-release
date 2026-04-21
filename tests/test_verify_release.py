@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,3 +68,61 @@ def test_changed_files_includes_worktree_staged_and_untracked_files(tmp_path):
     (repo / "untracked.txt").write_text("untracked\n", encoding="utf-8")
 
     assert module._changed_files(repo) == ["staged.txt", "tracked.txt", "untracked.txt"]
+
+
+def test_validate_release_rejects_missing_installed_skill_localization(tmp_path):
+    module = _load_module()
+    hermes_home = tmp_path / ".hermes"
+    repo_root = hermes_home / "hermes-zh-overlay-release"
+    release_dir = repo_root / "releases" / "r1"
+    (release_dir / "localization").mkdir(parents=True, exist_ok=True)
+    (release_dir / "patches").mkdir(parents=True, exist_ok=True)
+
+    (repo_root / "release.json").write_text(
+        json.dumps(
+            {
+                "official_repo": "https://github.com/example/hermes-agent.git",
+                "latest_release": "r1",
+                "web_ui_policy": "upstream-only",
+                "scope": ["terminal", "telegram", "feishu"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (release_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "release": "r1",
+                "official_commit": "deadbeef",
+                "scope": ["terminal", "telegram", "feishu"],
+                "web_ui_policy": "upstream-only",
+                "patch": "patches/hermes-zh.patch",
+                "localization_files": ["skills.zh-CN.yaml", "ui.zh-CN.yaml"],
+                "skin_files": [],
+                "allowed_source_files": ["agent/skill_commands.py"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (release_dir / "patches" / "hermes-zh.patch").write_text(
+        "diff --git a/agent/skill_commands.py b/agent/skill_commands.py\n",
+        encoding="utf-8",
+    )
+    (release_dir / "localization" / "ui.zh-CN.yaml").write_text(
+        "messages: {}\n",
+        encoding="utf-8",
+    )
+    (release_dir / "localization" / "skills.zh-CN.yaml").write_text(
+        "skills: {}\ncategories: {}\n",
+        encoding="utf-8",
+    )
+
+    skill_dir = hermes_home / "skills" / "codex"
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: codex\ndescription: English description.\n---\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(module.VerifyError, match="skills.zh-CN.yaml is missing installed skill descriptions"):
+        module.validate_release(repo_root)

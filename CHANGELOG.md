@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.4
+
+- Publish `releases/fc8e4ebf-skilldesc2/` as the current latest release.
+- Make the skill slash-command cache refresh when `skills.zh-CN.yaml` changes or when skill install/reset flows clear the skills prompt cache, so newly installed skills and localized annotations no longer require a Hermes restart.
+- Extend `scripts/verify_release.py` to reject releases whose `skills.zh-CN.yaml` does not cover installed skills.
+- Keep `scripts/apply_release.py` from pruning `~/.hermes/localization/reports/`, so localization audit baselines survive real release applies.
+
 ## 0.5.3
 
 - Publish `releases/fc8e4ebf-skilldesc1/` as the current latest release.

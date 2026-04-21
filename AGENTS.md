@@ -340,6 +340,8 @@
 - `localization_files` 只列当前 release 真正需要的词条文件
 - `justified_non_text_logic` 只列真正必要的显示层例外
 - `scripts/apply_release.py` 如果把 Hermes 对齐到新的官方 commit，必须同步失效默认 profile 与所有 named profiles 的 `.update_check`
+- `scripts/verify_release.py` 如果 release 包含 `skills.zh-CN.yaml`，必须校验它覆盖当前已安装 skills 的描述键
+- `scripts/apply_release.py` 不得清掉 `~/.hermes/localization/reports/`，审计 baseline 必须在真实 apply 后保留
 
 如果某个历史 release 的 manifest 里还有旧实现痕迹：
 
@@ -359,6 +361,7 @@
 - `manifest.json` 的 `localization_files` 只列真正需要的文件
 - `manifest.json` 的 `localization_files` 不包含 `.py` 运行时桥
 - `ui.zh-CN.yaml` 覆盖 patch 中所有 `_cli_ui(...)` 与 `_gateway_ui(...)` 固定文案 key
+- 如果当前 release 包含 `skills.zh-CN.yaml`，它必须覆盖当前已安装 skills 的描述键
 - 历史遗留文件没有被错误当成未来标准继续带入
 - Web UI 没有被纳入本仓库处理范围
 
@@ -394,6 +397,7 @@
 - 本地中文包仓库 `HEAD` 与远端 `origin/main` 一致
 - `verify_release.py --source-dir ~/.hermes/hermes-agent` 通过
 - 用 `scripts/apply_release.py` 真实应用当前 release 后，`~/.hermes/.update_check` 不再保留旧的 behind 结果
+- 用 `scripts/apply_release.py` 真实应用当前 release 后，`~/.hermes/localization/reports/` 与审计 baseline 不被误删
 - 如果存在 `~/.hermes/profiles/*`，这些 profile 下的 `.update_check` 也必须一并失效
 - `zsh -lc 'hermes --version'` 的 update notice 与真实 git 状态一致；当 `HEAD == origin/main` 时，不得再显示旧的 “commits behind”
 
