@@ -9,11 +9,11 @@
 当前 release：
 
 - 官方 Hermes commit：`fc8e4ebf8e18593d56096cb317a46037781937f5`
-- 中文包 release：`fc8e4ebf-kimi1`
+- 中文包 release：`fc8e4ebf-feishu1`
 
 范围说明：
 
-- 终端与 Telegram 中用户可见、非 LLM 生成的固定文案
+- 终端、Telegram、Feishu 中用户可见、非 LLM 生成的固定文案
 - 少量经过 manifest 声明的稳定显示层/兼容性小补丁
 - 不处理 Web UI
 
@@ -25,6 +25,7 @@
 - 固定二级选项提示语
 - LLM 回复前的固定状态提示语
 - Telegram 中对应的固定命令说明与固定提示语
+- Feishu / Lark 设置向导、审批卡片、固定回退标签与摘要前缀
 - 已声明的小补丁，例如 CJK spinner 行高修正、display-only skill 预览摘要、Kimi `thinking` 兼容桥接
 
 ## 使用
@@ -32,7 +33,7 @@
 1. 应用这一版中文包
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release fc8e4ebf-kimi1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release fc8e4ebf-feishu1
 ```
 
 2. 校验本机 Hermes 与这版中文包是否一致

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0
+
+- Publish `releases/fc8e4ebf-feishu1/` as the current latest release.
+- Expand the declared overlay scope from terminal + Telegram to terminal + Telegram + Feishu fixed UI text.
+- Add Feishu / Lark setup-copy localization, approval-card labels, resolved-card text, fallback labels, summary prefixes, and reaction badges.
+- Extend release verification and localization-audit tooling so Feishu UI hooks are tracked under the same release contract as terminal and Telegram.
+
 ## 0.4.0
 
 - Upgrade the versioned Chinese package from official Hermes `6af04474` to `fc8e4ebf`.

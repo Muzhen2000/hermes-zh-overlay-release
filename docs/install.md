@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 ## 一行应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release fc8e4ebf-kimi1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release fc8e4ebf-feishu1
 ```
 
 ## 给家人的最短说明
@@ -48,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 
 她运行后，预期体验是：
 
-- 终端与 Telegram 中属于本仓库范围的固定文案变为中文
+- 终端、Telegram、Feishu 中属于本仓库范围的固定文案变为中文
 - Web UI 保持官方原样
 - 她自己的会话、记忆、配置和登录态不被覆盖
 

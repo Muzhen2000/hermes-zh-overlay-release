@@ -73,17 +73,31 @@ def _patch_files(patch_path: Path) -> list[str]:
 
 
 def _ui_keys_from_patch(patch_path: Path) -> set[str]:
-    added_source = "\n".join(
-        line[1:]
-        for line in patch_path.read_text(encoding="utf-8").splitlines()
-        if line.startswith("+") and not line.startswith("+++")
-    )
+    helper_prefixes: dict[str, tuple[tuple[str, str], ...]] = {
+        "cli.py": (("_cli_ui", "cli."),),
+        "gateway/run.py": (("_gateway_ui", "gateway.runtime."),),
+        "gateway/platforms/telegram.py": (("_tg_ui", "gateway.telegram."),),
+        "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
+        "hermes_cli/gateway.py": (("_ui", "gateway."),),
+        "hermes_cli/auth.py": (("_auth_ui", "auth."),),
+        "hermes_cli/debug.py": (("_debug_ui", "debug."),),
+        "hermes_cli/status.py": (("_ui", "status."),),
+        "hermes_cli/banner.py": (("_ui", "banner."),),
+    }
     keys = set()
-    keys.update(f"cli.{match}" for match in re.findall(r"_cli_ui\(\s*[\"']([^\"']+)[\"']", added_source))
-    keys.update(
-        f"gateway.runtime.{match}"
-        for match in re.findall(r"_gateway_ui\(\s*[\"']([^\"']+)[\"']", added_source)
-    )
+    current_file = ""
+    for line in patch_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("diff --git a/"):
+            parts = line.split()
+            current_file = parts[3][2:] if len(parts) >= 4 and parts[3].startswith("b/") else ""
+            continue
+        if not line.startswith("+") or line.startswith("+++"):
+            continue
+        added_line = line[1:]
+        for helper, prefix in helper_prefixes.get(current_file, ()):
+            pattern = rf"{re.escape(helper)}\(\s*[\"']([^\"']+)[\"']"
+            for match in re.findall(pattern, added_line):
+                keys.add(f"{prefix}{match}")
     return keys
 
 

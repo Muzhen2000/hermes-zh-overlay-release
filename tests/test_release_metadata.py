@@ -15,10 +15,10 @@ def _latest_release() -> str:
     return str(release_index["latest_release"])
 
 
-def test_release_index_scope_is_terminal_and_telegram_only():
+def test_release_index_scope_includes_feishu():
     release_index = json.loads((ROOT / "release.json").read_text(encoding="utf-8"))
 
-    assert release_index["scope"] == ["terminal", "telegram"]
+    assert release_index["scope"] == ["terminal", "telegram", "feishu"]
     assert release_index["web_ui_policy"] == "upstream-only"
 
 
@@ -59,12 +59,32 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
         if line.startswith("+") and not line.startswith("+++")
     )
 
+    helper_prefixes = {
+        "cli.py": (("_cli_ui", "cli."),),
+        "gateway/run.py": (("_gateway_ui", "gateway.runtime."),),
+        "gateway/platforms/telegram.py": (("_tg_ui", "gateway.telegram."),),
+        "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
+        "hermes_cli/gateway.py": (("_ui", "gateway."),),
+        "hermes_cli/auth.py": (("_auth_ui", "auth."),),
+        "hermes_cli/debug.py": (("_debug_ui", "debug."),),
+        "hermes_cli/status.py": (("_ui", "status."),),
+        "hermes_cli/banner.py": (("_ui", "banner."),),
+    }
+
     expected_keys = set()
-    expected_keys.update(f"cli.{match}" for match in re.findall(r"_cli_ui\(\s*[\"']([^\"']+)[\"']", added_source))
-    expected_keys.update(
-        f"gateway.runtime.{match}"
-        for match in re.findall(r"_gateway_ui\(\s*[\"']([^\"']+)[\"']", added_source)
-    )
+    current_file = ""
+    for line in patch_text.splitlines():
+        if line.startswith("diff --git a/"):
+            parts = line.split()
+            current_file = parts[3][2:] if len(parts) >= 4 and parts[3].startswith("b/") else ""
+            continue
+        if not line.startswith("+") or line.startswith("+++"):
+            continue
+        added_line = line[1:]
+        for helper, prefix in helper_prefixes.get(current_file, ()):
+            pattern = rf"{re.escape(helper)}\(\s*[\"']([^\"']+)[\"']"
+            for match in re.findall(pattern, added_line):
+                expected_keys.add(f"{prefix}{match}")
 
     missing = sorted(expected_keys - messages)
     assert not missing

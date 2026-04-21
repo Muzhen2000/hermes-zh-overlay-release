@@ -44,10 +44,11 @@
 
 ## 2. 这个仓库负责什么
 
-仓库只负责两类内容：
+仓库只负责三类内容：
 
 - 终端中用户可见、非 LLM 生成的固定文案
 - Telegram 中用户可见、非 LLM 生成的固定文案
+- Feishu / Lark 中用户可见、非 LLM 生成的固定文案
 
 这包括但不限于：
 
@@ -59,6 +60,9 @@
 - 固定二级选项提示语
 - 用户发出消息后、LLM 回复前的固定状态提示语，包括 agent 初始化提示、busy 状态、spinner face + verb 组合、工具/记忆检索短状态行
 - Telegram 中对应的固定命令说明与固定提示语
+- Feishu setup 向导固定文案
+- Feishu approval 卡片标题、按钮、原因标签、已处理状态卡片
+- Feishu 固定回退标签与消息摘要前缀，例如 shared chat / actions / attachment / interactive message
 
 明确不包括：
 
@@ -126,7 +130,7 @@
 1. 确定目标官方 commit
 2. 准备一棵干净的 Hermes 官方基线树
 3. 比对旧官方 commit 与新官方 commit
-4. 只检查终端和 Telegram 范围内的固定可见文案是否新增、变更或删除
+4. 只检查终端、Telegram、Feishu 范围内的固定可见文案是否新增、变更或删除
 5. 先复用旧 release 的词条与皮肤，再逐项核对是否仍然适用
 6. 优先更新外置词条文件
 7. 外置词条无法覆盖时，才做最小源码接线或字符替换
@@ -169,6 +173,9 @@
 - terminal slash command fixed replies
 - Telegram slash command descriptions
 - Telegram slash command fixed replies
+- Feishu setup fixed copy
+- Feishu approval cards and resolved-card copy
+- Feishu fixed fallback labels / summaries / reactions
 - empty-state / usage / success / failure 固定消息
 - 用户发消息后到 LLM 回复前的固定状态行
 - release patch / manifest / validation scripts / release-localization YAML
