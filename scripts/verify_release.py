@@ -115,78 +115,6 @@ def _ui_messages(ui_path: Path) -> set[str]:
     return set(messages)
 
 
-def _normalize_skill_slug(name: str) -> str:
-    text = str(name or "").strip().lower().replace(" ", "-").replace("_", "-")
-    text = re.sub(r"[^a-z0-9-]", "", text)
-    text = re.sub(r"-{2,}", "-", text)
-    return text.strip("-")
-
-
-def _skills_catalog_keys(skills_path: Path) -> set[str]:
-    try:
-        data = yaml.safe_load(skills_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise VerifyError(f"missing skills catalog: {skills_path}") from exc
-    if not isinstance(data, dict):
-        raise VerifyError(f"expected object yaml: {skills_path}")
-    skills = data.get("skills")
-    if not isinstance(skills, dict):
-        raise VerifyError(f"expected skills object in: {skills_path}")
-    return {str(key).strip() for key in skills if str(key).strip()}
-
-
-def _skill_name_from_frontmatter(skill_md: Path) -> str:
-    content = skill_md.read_text(encoding="utf-8")
-    match = re.match(r"^---\s*\n(.*?)\n---(?:\s*\n|$)", content, re.DOTALL)
-    if not match:
-        return skill_md.parent.name
-    frontmatter = yaml.safe_load(match.group(1)) or {}
-    if not isinstance(frontmatter, dict):
-        return skill_md.parent.name
-    name = str(frontmatter.get("name") or "").strip()
-    return name or skill_md.parent.name
-
-
-def _installed_skill_entries(skills_dir: Path) -> list[dict[str, str]]:
-    entries: list[dict[str, str]] = []
-    for skill_md in sorted(skills_dir.rglob("SKILL.md")):
-        if any(part in {".git", ".github", ".hub"} for part in skill_md.parts):
-            continue
-        name = _skill_name_from_frontmatter(skill_md)
-        entries.append(
-            {
-                "name": name,
-                "directory_name": skill_md.parent.name,
-                "slug": _normalize_skill_slug(name),
-            }
-        )
-    return entries
-
-
-def _validate_installed_skill_localizations(*, repo_root: Path, skills_path: Path) -> None:
-    skills_dir = repo_root.parent / "skills"
-    if not skills_dir.exists():
-        return
-    catalog_keys = _skills_catalog_keys(skills_path)
-    missing: list[str] = []
-    for entry in _installed_skill_entries(skills_dir):
-        candidates = {
-            entry["slug"],
-            entry["directory_name"],
-            entry["directory_name"].lower(),
-            _normalize_skill_slug(entry["name"]),
-            entry["name"].strip(),
-            entry["name"].strip().lower(),
-        }
-        if not any(candidate for candidate in candidates if candidate in catalog_keys):
-            missing.append(entry["name"] or entry["directory_name"])
-    if missing:
-        raise VerifyError(
-            "skills.zh-CN.yaml is missing installed skill descriptions: "
-            + ", ".join(sorted(dict.fromkeys(missing)))
-        )
-
-
 def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
     resolved_release, release_index, manifest = _load_metadata(repo_root, release_id)
     release_dir = repo_root / "releases" / resolved_release
@@ -224,11 +152,6 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
     missing_ui_keys = sorted(_ui_keys_from_patch(patch_path) - _ui_messages(ui_path))
     if missing_ui_keys:
         raise VerifyError(f"ui.zh-CN.yaml is missing runtime keys: {missing_ui_keys}")
-    if "skills.zh-CN.yaml" in manifest.get("localization_files", []):
-        _validate_installed_skill_localizations(
-            repo_root=repo_root,
-            skills_path=localization_dir / "skills.zh-CN.yaml",
-        )
 
     return {
         "release": resolved_release,

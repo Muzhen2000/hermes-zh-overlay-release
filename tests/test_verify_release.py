@@ -70,7 +70,7 @@ def test_changed_files_includes_worktree_staged_and_untracked_files(tmp_path):
     assert module._changed_files(repo) == ["staged.txt", "tracked.txt", "untracked.txt"]
 
 
-def test_validate_release_rejects_missing_installed_skill_localization(tmp_path):
+def test_validate_release_does_not_depend_on_installed_skill_localization(tmp_path):
     module = _load_module()
     hermes_home = tmp_path / ".hermes"
     repo_root = hermes_home / "hermes-zh-overlay-release"
@@ -124,5 +124,6 @@ def test_validate_release_rejects_missing_installed_skill_localization(tmp_path)
         encoding="utf-8",
     )
 
-    with pytest.raises(module.VerifyError, match="skills.zh-CN.yaml is missing installed skill descriptions"):
-        module.validate_release(repo_root)
+    result = module.validate_release(repo_root)
+
+    assert result["release"] == "r1"
