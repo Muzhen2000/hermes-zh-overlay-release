@@ -9,7 +9,7 @@
 当前 release：
 
 - 官方 Hermes commit：`ce98e1ef1122194f35e94cdf5901e1f1ed5e5f6d`
-- 中文包 release：`ce98e1ef-gateway1`
+- 中文包 release：`ce98e1ef-gateway2`
 
 范围说明：
 
@@ -26,14 +26,14 @@
 - LLM 回复前的固定状态提示语
 - Telegram 中对应的固定命令说明与固定提示语
 - Feishu / Lark 设置向导、审批卡片、固定回退标签与摘要前缀
-- 已声明的小补丁，例如 CJK spinner 行高修正、display-only skill 预览摘要、Kimi `thinking` 兼容桥接，以及 release apply 对审计 baseline 的保留
+- 已声明的小补丁，例如 CJK spinner 行高修正、display-only skill 预览摘要，以及 release apply 对审计 baseline 的保留
 
 ## 使用
 
 1. 应用这一版中文包
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release ce98e1ef-gateway1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release ce98e1ef-gateway2
 ```
 
 2. 校验本机 Hermes 与这版中文包是否一致
