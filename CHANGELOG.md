@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+- Upgrade the versioned Chinese package from official Hermes `fc8e4ebf` to `ce98e1ef`.
+- Publish `releases/ce98e1ef-gateway1/` as the current latest release.
+- Rebase the existing terminal + Telegram + Feishu minimal overlay onto the latest official baseline through a clean official checkout, instead of stacking new patch-on-patch drift.
+- Carry forward the declared display-only compatibility hooks, including CJK spinner row handling, display-only skill preview summarization, and the Kimi `thinking` bridge.
+- Add the newly required gateway usage localization keys and adapt numbered clarify-panel “Other” rows to the latest upstream terminal layout.
+
 ## 0.5.4
 
 - Publish `releases/fc8e4ebf-gateway2/` as the current latest release.
