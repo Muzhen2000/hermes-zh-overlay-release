@@ -63,6 +63,8 @@
 - Feishu setup 向导固定文案
 - Feishu approval 卡片标题、按钮、原因标签、已处理状态卡片
 - Feishu 固定回退标签与消息摘要前缀，例如 shared chat / actions / attachment / interactive message
+- Feishu platform 配置列表中的固定说明、字段 prompt、help 文案
+- Feishu 二维码 onboarding 的固定提示语
 
 明确不包括：
 
@@ -70,6 +72,7 @@
 - LLM 回答正文
 - 发给模型的 system prompt、tool summary、内部控制文本
 - 用户不可见的内部日志或运行时控制信息
+- API 枚举值、callback token、protocol identifier、provider 约定的字段常量
 - 与中文化无关的顺手修复、重构、格式化
 
 注意：
@@ -175,7 +178,8 @@
 - Telegram slash command fixed replies
 - Feishu setup fixed copy
 - Feishu approval cards and resolved-card copy
-- Feishu fixed fallback labels / summaries / reactions
+- Feishu fixed fallback labels / summaries
+- Feishu gateway platform metadata and QR onboarding copy
 - empty-state / usage / success / failure 固定消息
 - 用户发消息后到 LLM 回复前的固定状态行
 - release patch / manifest / validation scripts / release-localization YAML
@@ -186,6 +190,7 @@
 - model answer rewriting
 - system prompt rewriting for translation purposes
 - runtime translation bridges in `~/.hermes/localization/*.py`
+- localizing protocol constants such as reaction codes, callback action names, or webhook event types
 - unrelated refactors
 - “while I am here” cleanup outside localization scope
 
@@ -205,6 +210,7 @@
 - 改命令分发逻辑
 - 改会话状态流
 - 改 Telegram callback 协议或内部 token
+- 改 Feishu reaction / callback / webhook 等协议字段常量
 - 改模型交互文本
 - 为了“统一优雅”而抽大层、搬大模块、重构结构
 - 在一个问题上只修一个皮肤、一个提示语、一个截图症状，而不检查同类范围
@@ -220,7 +226,8 @@
 3. 这处不同能不能外置到数据层？
 4. 如果不能外置，是否已经是最薄钩子？
 5. 是否改变了控制流、运行路径、状态机或模型交互？
-6. 这条改动是否是“整类问题”的解决，而不是某个表面症状的补丁？
+6. 它是不是 API enum / callback token / protocol constant，如果是就根本不该进汉化面？
+7. 这条改动是否是“整类问题”的解决，而不是某个表面症状的补丁？
 
 如果答不清楚，就说明改动还不够收口。
 

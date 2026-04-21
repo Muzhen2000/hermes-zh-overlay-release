@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1
+
+- Publish `releases/fc8e4ebf-feishu2/` as the current latest release.
+- Fix the Feishu reaction regression by keeping provider protocol tokens (`Typing` / `CrossMark`) out of localization data.
+- Add the remaining Feishu fixed-copy coverage for gateway platform setup metadata and QR onboarding prompts.
+- Tighten the release policy so API enums, callback tokens, and other protocol identifiers are never treated as localizable UI text.
+
 ## 0.5.0
 
 - Publish `releases/fc8e4ebf-feishu1/` as the current latest release.
