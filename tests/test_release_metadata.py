@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+import importlib.util
+import sys
 
 import yaml
 
@@ -65,8 +67,9 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
         "gateway/platforms/telegram.py": (("_tg_ui", "gateway.telegram."),),
         "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
         "hermes_cli/gateway.py": (("_ui", "gateway."),),
-        "hermes_cli/auth.py": (("_auth_ui", "auth."),),
-        "hermes_cli/debug.py": (("_debug_ui", "debug."),),
+        "hermes_cli/auth.py": (("_ui", "auth."),),
+        "hermes_cli/debug.py": (("_ui", "debug."),),
+        "hermes_cli/main.py": (("_ui", "main."),),
         "hermes_cli/status.py": (("_ui", "status."),),
         "hermes_cli/banner.py": (("_ui", "banner."),),
     }
@@ -140,3 +143,39 @@ def test_skin_localization_covers_builtins_and_release_custom_skins():
         skin = skins_data["skins"][skin_name]
         verbs = (skin.get("spinner") or {}).get("thinking_verbs") or []
         assert verbs, f"{skin_name} must define localized thinking_verbs"
+
+
+def test_latest_ui_catalog_covers_banner_toolset_aliases():
+    release_id = _latest_release()
+    ui_data = yaml.safe_load(
+        (ROOT / "releases" / release_id / "localization" / "ui.zh-CN.yaml").read_text(encoding="utf-8")
+    )
+    messages = (ui_data or {}).get("messages", {})
+
+    for key in (
+        "banner.toolset.discord",
+        "banner.toolset.feishu_doc",
+        "banner.toolset.feishu_drive",
+    ):
+        assert key in messages
+
+
+def test_local_scan_script_tracks_current_runtime_helpers():
+    scan_script = ROOT.parent / "scripts" / "scan_hermes_localization.py"
+    spec = importlib.util.spec_from_file_location("scan_hermes_localization", scan_script)
+    assert spec is not None and spec.loader is not None
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    ui_hooks = {(Path(hook.path).name, hook.helper, hook.prefix) for hook in module.UI_HOOKS}
+    assert ("auth.py", "_ui", "auth.") in ui_hooks
+    assert ("debug.py", "_ui", "debug.") in ui_hooks
+    assert ("main.py", "_ui", "main.") in ui_hooks
+
+    hermes_root = ROOT.parent / "hermes-agent"
+    allowlist = module.CONTROL_AUDIT_ALLOWLIST
+    assert "_ui" in allowlist[str(hermes_root / "hermes_cli" / "auth.py")]
+    assert "_ui" in allowlist[str(hermes_root / "hermes_cli" / "debug.py")]
+    assert "_ui" in allowlist[str(hermes_root / "hermes_cli" / "main.py")]

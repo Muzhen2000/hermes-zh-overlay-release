@@ -79,8 +79,9 @@ def _ui_keys_from_patch(patch_path: Path) -> set[str]:
         "gateway/platforms/telegram.py": (("_tg_ui", "gateway.telegram."),),
         "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
         "hermes_cli/gateway.py": (("_ui", "gateway."),),
-        "hermes_cli/auth.py": (("_auth_ui", "auth."),),
-        "hermes_cli/debug.py": (("_debug_ui", "debug."),),
+        "hermes_cli/auth.py": (("_ui", "auth."),),
+        "hermes_cli/debug.py": (("_ui", "debug."),),
+        "hermes_cli/main.py": (("_ui", "main."),),
         "hermes_cli/status.py": (("_ui", "status."),),
         "hermes_cli/banner.py": (("_ui", "banner."),),
     }

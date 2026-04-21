@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2
+
+- Publish `releases/fc8e4ebf-gateway1/` as the current latest release.
+- Finish the remaining terminal gateway fixed-copy coverage for setup banners, service-status prompts, process/service mismatch warnings, and Telegram platform metadata.
+- Add the missing banner toolset aliases for Discord, Feishu Docs, and Feishu Drive.
+- Refresh the local localization-audit helper maps so `auth.py`, `debug.py`, and `main.py` are tracked under their current `_ui` entrypoints instead of stale helper names.
+
 ## 0.5.1
 
 - Publish `releases/fc8e4ebf-feishu2/` as the current latest release.
