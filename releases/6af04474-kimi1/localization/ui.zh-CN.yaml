@@ -1,0 +1,1545 @@
+messages:
+  auth.model_menu.title: 选择默认模型：
+  auth.model_menu.custom: 手动输入模型名
+  auth.model_menu.skip: 跳过（保留当前设置）
+  auth.model_menu.current_marker: '  <- 当前使用中'
+  auth.model_menu.price_in: 输入
+  auth.model_menu.price_out: 输出
+  auth.model_menu.price_cache: 缓存
+  auth.model_menu.price_unit: /百万 token
+  auth.model_menu.upgrade_banner: 升级到付费模型请访问 {url}
+  auth.model_menu.free_title: 可用免费模型：
+  auth.model_menu.enter_name: 输入模型名：
+  auth.model_menu.unavailable_banner: 以下模型不可用（需要付费套餐，升级地址：{url}）
+  auth.model_menu.choice_prompt: 选择 [1-{max_choice}]（默认：跳过）：
+  auth.model_menu.choice_range_error: 请输入 1-{max_choice}
+  auth.model_menu.number_error: 请输入数字
+  auth.login.removed: 命令 `hermes login` 已移除。
+  auth.login.removed_line2: 请使用 `hermes auth` 管理凭证，
+  auth.login.removed_line3: 使用 `hermes model` 选择服务商，或运行 `hermes setup` 完成完整配置。
+  auth.login.success: 登录成功！
+  auth.login.auth_state: '  认证状态：{path}'
+  auth.login.cancelled: '
+
+    已取消登录。'
+  auth.login.config_updated: '  配置已更新：{path}（model.provider={provider}）'
+  auth.login.failed: 登录失败：{error}
+  auth.login.no_provider_change: 未切换当前 provider。Nous 凭证已保存，供后续使用。
+  auth.login.run_model_again: '  之后运行 `hermes model` 即可切换到 Nous Portal。'
+  auth.codex.existing_credentials: 发现 Hermes 已保存的 Codex 凭证。
+  auth.codex.reuse_prompt: 继续使用现有凭证？[Y/n]：
+  auth.codex.existing_expired: 现有 Codex 凭证已过期，正在重新登录……
+  auth.codex.found_cli_credentials: 发现现有 Codex CLI 凭证：~/.codex/auth.json
+  auth.codex.separate_session: Hermes 会创建自己的独立会话，避免与 Codex CLI / VS Code 冲突。
+  auth.codex.import_prompt: 要导入这些凭证吗？（更推荐单独登录）[y/N]：
+  auth.codex.imported_line1: 凭证已导入。注意：如果 Codex CLI 后续刷新令牌，
+  auth.codex.imported_line2: Hermes 仍会使用自己的独立会话继续工作。
+  auth.codex.signing_in: 正在登录 OpenAI Codex……
+  auth.codex.signing_in_note: （Hermes 会创建自己的独立会话，不会影响 Codex CLI 或 VS Code）
+  auth.codex.device_steps_intro: '继续前请按以下步骤操作：
+
+    '
+  auth.codex.device_step_open: '  1. 在浏览器中打开这个地址：'
+  auth.codex.device_step_code: '  2. 输入这段代码：'
+  auth.codex.device_waiting: 正在等待登录确认……（按 Ctrl+C 取消）
+  auth.nous.starting_login: 正在通过 {provider} 登录 Hermes……
+  auth.nous.portal: 门户地址：{url}
+  auth.nous.tls_disabled: TLS 校验：已关闭（--insecure）
+  auth.nous.tls_custom_ca: TLS 校验：使用自定义 CA 证书（{path}）
+  auth.nous.continue: 继续前请：
+  auth.nous.step_open: '  1. 打开：{url}'
+  auth.nous.step_code: '  2. 如有提示，输入代码：{code}'
+  auth.nous.browser_opened: '  （已自动打开浏览器进行验证）'
+  auth.nous.browser_failed: '  无法自动打开浏览器，请直接使用上面的 URL。'
+  auth.nous.waiting: 正在等待授权……（每 {seconds}s 轮询一次）
+  auth.nous.portal_inference_url: 正在使用门户返回的推理地址：{url}
+  auth.nous.subscription_missing: 你的 Nous Portal 账户当前没有有效订阅。
+  auth.nous.subscribe_here: '  订阅地址：{url}/billing'
+  auth.nous.after_subscribe: 订阅完成后，再运行 `hermes model` 完成配置。
+  auth.nous.showing_models: 正在显示 {count} 个精选模型，其他模型可手动输入名称。
+  auth.nous.no_free_models: 当前没有可用的免费模型。
+  auth.nous.upgrade_paid: 升级后可访问付费模型：{url}
+  auth.nous.no_curated_models: Nous Portal 当前没有可展示的精选模型。
+  auth.nous.fetch_models_failed: 登录成功，但获取可用模型失败。原因：{message}
+  auth.nous.default_model_set: 默认模型已设置为：{model}
+  auth.logout.unknown_provider: 未知服务商：{provider}
+  auth.logout.none_logged_in: 当前没有任何已登录的服务商。
+  auth.logout.logged_out: 已退出 {provider}。
+  auth.logout.use_openrouter: Hermes 将回退为使用 OpenRouter 推理。
+  auth.logout.run_model: 请运行 `hermes model`，或配置 API key 后再使用 Hermes。
+  auth.logout.no_auth_state: '{provider} 没有可清除的登录状态。'
+  main.require_tty.message: "错误：`hermes {command_name}` 需要交互式终端。\n它不能通过管道或非交互子进程运行。\n请直接在终端中执行。"
+  main.copilot_acp.delegates: '  GitHub Copilot ACP 会把 Hermes 的回合委托给 `copilot --acp`。'
+  main.copilot_acp.subprocess: '  Hermes 当前会为每次请求启动独立的 ACP 子进程。'
+  main.copilot_acp.model_hint: '  Hermes 会把你当前选择的模型作为 Copilot ACP 会话的提示。'
+  main.copilot_acp.command: '  命令：{command}'
+  main.copilot_acp.backend: '  后端标记：{backend}'
+  main.copilot_acp.configure_hint: '  如果 Copilot CLI 安装在其他位置，请设置 HERMES_COPILOT_ACP_COMMAND 或 COPILOT_CLI_PATH。'
+  main.version.update_available: "有更新可用：落后 {count} 个提交 —— 运行 '{command}'"
+  main.version.up_to_date: 已是最新
+  status.banner.title: ⚕ Hermes 状态
+  status.sections.environment: ◆ 环境
+  status.sections.api_keys: ◆ API 密钥
+  status.sections.auth_providers: ◆ 登录服务
+  status.sections.nous_features: ◆ Nous 订阅功能
+  status.sections.api_key_providers: ◆ API Key 服务商
+  status.sections.terminal_backend: ◆ 终端后端
+  status.sections.messaging_platforms: ◆ 消息平台
+  status.sections.gateway_service: ◆ 网关服务
+  status.sections.scheduled_jobs: ◆ 定时任务
+  status.sections.sessions: ◆ 会话
+  status.sections.deep_checks: ◆ 深度检查
+  status.env_file.exists: 存在
+  status.env_file.missing: 未找到
+  status.labels.env_file: .env 文件：
+  status.labels.project: 项目：
+  status.labels.python: Python：
+  status.labels.model: 模型：
+  status.labels.provider: 服务商：
+  status.labels.auth_file: 凭证文件：
+  status.labels.refreshed: 最近刷新：
+  status.labels.error: 错误：
+  status.labels.access_expires: Access 过期：
+  status.labels.key_expires: Key 过期：
+  status.labels.portal_url: 门户地址：
+  status.labels.refresh: Refresh：
+  status.labels.status: 状态：
+  status.labels.pids: PID：
+  status.labels.backend: 后端：
+  status.labels.sudo: Sudo：
+  status.labels.jobs: 任务：
+  status.labels.active: 启用中
+  status.labels.total: 总计
+  status.labels.active_sessions: 活动会话：
+  status.labels.ssh_host: SSH Host：
+  status.labels.ssh_user: SSH 用户：
+  status.labels.docker_image: Docker 镜像：
+  status.labels.daytona_image: Daytona 镜像：
+  status.labels.na: 不适用
+  status.labels.not_set: （未设置）
+  status.labels.unknown: （未知）
+  status.labels.configured: 已配置
+  status.labels.not_configured: 未配置
+  status.labels.not_configured_run_model: 未配置（运行：hermes model）
+  status.labels.enabled: 已启用
+  status.labels.disabled: 已禁用
+  status.auth.logged_in: 已登录
+  status.auth.not_logged_in_run_model: 未登录（运行：hermes model）
+  status.auth.qwen_not_logged_in: 未登录（运行：qwen auth qwen-oauth）
+  status.nous.not_logged_in: '  Nous Portal   ✗ 未登录'
+  status.nous.active_subscription: 通过 Nous 订阅启用
+  status.nous.active_via_provider: 通过 {provider} 启用
+  status.nous.included_not_selected: 订阅已包含，但当前未选择
+  status.nous.available_optional: 订阅可用（可选）
+  status.nous.managed_tools_available: '  Nous Portal   ✓ 托管工具可用'
+  status.nous.free_tier_notice: '  你的 Nous 免费套餐暂不包含 Tool Gateway 访问权限。'
+  status.nous.upgrade_notice: '  升级订阅后可解锁托管网页、图像、TTS 与浏览器工具。'
+  status.nous.upgrade_link: '  升级地址：{url}'
+  status.gateway.running: 运行中
+  status.gateway.stopped: 已停止
+  status.gateway.loaded: 已加载
+  status.gateway.not_loaded: 未加载
+  status.gateway.manager_line: '  管理器：      {manager}'
+  status.gateway.docker_manager: '  管理器：      docker（前台）'
+  status.gateway.termux_manager: '  管理器：      Termux / 手动进程'
+  status.gateway.termux_start: '  启动方式：    hermes gateway'
+  status.gateway.termux_note: '  说明：        当 Termux 被挂起时，Android 可能会停止后台任务'
+  status.gateway.systemd_manager: '  管理器：      systemd（用户级）'
+  status.gateway.systemd_manual_manager: '  管理器：      systemd / 手动进程'
+  status.gateway.launchd_manager: '  管理器：      launchd'
+  status.gateway.unsupported_manager: '  管理器：      （当前平台不支持）'
+  status.gateway.service_mismatch: '  服务状态：    已安装，但当前运行中的 gateway 不是由该服务管理'
+  status.gateway.service_stopped: '  服务状态：    已安装，但服务未运行'
+  status.jobs.read_error: '  Jobs:         （读取任务文件出错）'
+  status.sessions.read_error: '  Active:       （读取会话文件出错）'
+  status.deep.openrouter_reachable: 可达
+  status.deep.openrouter_error: 错误（{code}）
+  status.deep.openrouter_exception: '  OpenRouter:   ✗ 错误：{error}'
+  status.deep.port_in_use: 已被占用
+  status.deep.port_available: 可用
+  status.footer.doctor: '  运行 `hermes doctor` 查看详细诊断'
+  status.footer.setup: '  运行 `hermes setup` 继续配置'
+  gateway.launchd.updated_definition: ↻ 已更新 launchd 服务定义，使其与当前 Hermes 安装一致
+  gateway.launchd.repairing: ↻ 正在修复过期的 launchd 服务：{path}
+  gateway.launchd.definition_updated: ✓ 服务定义已更新
+  gateway.launchd.already_installed: 服务已安装：{path}
+  gateway.launchd.use_force: 使用 --force 可重新安装
+  gateway.launchd.installing: 正在安装 launchd 服务到：{path}
+  gateway.command.kill_permission_denied: ⚠ 无权限结束 PID {pid}
+  gateway.command.kill_failed: '结束 PID {pid} 失败：{error}'
+  gateway.command.stopped_all_profiles: ✓ 已停止所有 profile 下的 {count} 个 gateway 进程
+  gateway.command.starting_gateway: 正在启动 gateway……
+  gateway.run.banner_title: '           ⚕ Hermes Gateway 正在启动……                 '
+  gateway.run.banner_subtitle: '  消息平台 + cron 调度器                            '
+  gateway.run.banner_stop_hint: '  按 Ctrl+C 可停止                                   '
+  gateway.systemd.next_steps_start: '  {prefix}hermes gateway start{scope_flag}              # 启动服务'
+  gateway.systemd.next_steps_status: '  {prefix}hermes gateway status{scope_flag}             # 查看状态'
+  gateway.systemd.next_steps_logs: '  {journalctl} -u {service_name} -f  # 查看日志'
+  gateway.launchd.installed_loaded: ✓ 服务已安装并加载！
+  gateway.launchd.next_steps: 下一步：
+  gateway.launchd.removed: ✓ 已删除 {path}
+  gateway.launchd.uninstalled: ✓ 服务已卸载
+  gateway.launchd.plist_missing: ↻ launchd plist 缺失，正在重新生成服务定义
+  gateway.launchd.service_started: ✓ 服务已启动
+  gateway.launchd.reloading_definition: ↻ launchd 任务已卸载，正在重新加载服务定义
+  gateway.launchd.service_stopped: ✓ 服务已停止
+  gateway.launchd.force_kill: ⚠ 网关进程 {pid} 未正常退出，已发送 SIGKILL
+  gateway.launchd.still_running: ⚠ 网关进程 {pid} 在 {seconds}s 后仍未退出，重启可能失败
+  gateway.launchd.restart_requested: ✓ 已请求重启服务
+  gateway.launchd.drain_timeout: ⚠ 网关优雅退出在 {seconds:.0f}s 后超时，已强制重启 launchd
+  gateway.launchd.service_restarted: ✓ 服务已重启
+  gateway.launchd.reloading: ↻ launchd 任务已卸载，正在重新加载
+  gateway.launchd.plist: Launchd 配置：{path}
+  gateway.launchd.definition_current: ✓ 服务定义与当前 Hermes 安装一致
+  gateway.launchd.definition_stale: ⚠ 服务定义已过期，与当前 Hermes 安装不一致
+  gateway.launchd.run_start: '  运行：hermes gateway start'
+  gateway.launchd.loaded: ✓ 网关服务已加载
+  gateway.launchd.not_loaded: ✗ 网关服务未加载
+  gateway.launchd.not_loaded_detail: '  服务定义文件存在，但 launchd 还没有把它加载起来。'
+  gateway.launchd.recent_logs: 最近日志：
+  gateway.setup.title: ⚕ Gateway 设置
+  gateway.setup.subtitle: │  配置消息平台和网关服务。                             │
+  gateway.setup.exit_hint: │  任意时刻按 Ctrl+C 退出。                             │
+  gateway.setup.installed_running: 网关服务已安装并正在运行。
+  gateway.setup.installed_not_running: 网关服务已安装，但当前未运行。
+  gateway.setup.start_now: '  现在启动吗？'
+  gateway.setup.failed_start: '  启动失败：{error}'
+  gateway.setup.not_installed: 网关服务尚未安装。
+  gateway.setup.offer_install_later: 配置完平台后，会继续提示你是否安装服务。
+  gateway.setup.messaging_platforms: 消息平台
+  gateway.setup.done: 完成
+  gateway.setup.select_platform: 选择一个要配置的平台：
+  gateway.setup.restart_gateway: '  重启网关以载入新配置吗？'
+  gateway.setup.restart_failed: '  重启失败：{error}'
+  gateway.setup.start_service: '  启动网关服务吗？'
+  gateway.setup.start_failed: '  启动失败：{error}'
+  gateway.setup.install_failed: '  安装失败：{error}'
+  gateway.setup.try_manual_install: '  你也可以稍后手动运行：hermes gateway install'
+  gateway.setup.install_later: '  你可以稍后安装：hermes gateway install'
+  gateway.setup.install_system: '  或作为开机服务安装：sudo hermes gateway install --system'
+  gateway.setup.run_foreground: '  或以前台方式运行：hermes gateway run'
+  gateway.setup.wsl_no_systemd: '  检测到 WSL，但 systemd 当前未运行。'
+  gateway.setup.wsl_foreground: '  以前台方式运行：hermes gateway run'
+  gateway.setup.wsl_tmux: '  需要常驻可运行：tmux new -s hermes ''hermes gateway run'''
+  gateway.setup.wsl_enable_systemd: '  如需启用 systemd：在 /etc/wsl.conf 中添加 systemd=true，然后执行
+    ''wsl --shutdown'''
+  gateway.setup.termux_no_service: '  Termux 不使用 systemd/launchd 服务。'
+  gateway.setup.termux_foreground: '  以前台方式运行：hermes gateway run'
+  gateway.setup.service_unsupported: '  当前平台不支持安装服务。'
+  gateway.setup.no_platforms: 当前未配置任何平台。准备好后请运行 'hermes gateway setup'。
+  gateway.systemd.scope_conflict: 两个 gateway 服务都已安装（用户级 + 系统级：{scopes}）。
+  gateway.systemd.scope_conflict_detail: '  这会让 start/stop/status 的行为变得混乱。'
+  gateway.systemd.scope_conflict_default: '  默认 gateway 命令会操作用户级服务，除非你显式传 --system。'
+  gateway.systemd.scope_conflict_keep: '  建议只保留其中一套：'
+  gateway.systemd.root_required: 系统级 gateway {action} 需要 root，请使用 sudo 重试。
+  gateway.systemd.install_as_root: 正在把 gateway 服务配置为 root 身份运行。
+  gateway.systemd.install_as_root_note: '  这在 LXC/容器环境中可以接受，但不建议在裸机上这样做。'
+  gateway.systemd.system_service_requires_sudo: '  安装系统级服务需要 sudo，所以 Hermes 不能在当前用户会话里直接创建它。'
+  gateway.systemd.after_setup_run: '  配置完成后，请运行：sudo hermes gateway install --system --run-as-user {user}'
+  gateway.systemd.after_setup_run_generic: '  配置完成后，请运行：sudo hermes gateway install --system --run-as-user <your-user>'
+  gateway.systemd.after_setup_start: '  然后运行：sudo hermes gateway start --system'
+  gateway.systemd.enter_username: '  请输入用户名。'
+  gateway.systemd.linger_enabled: ✓ Systemd linger 已启用（注销后服务仍会继续运行）
+  gateway.systemd.linger_disabled: ⚠ Systemd linger 未启用（登出后 gateway 可能停止）
+  gateway.systemd.linger_run: '  运行：sudo loginctl enable-linger $USER'
+  gateway.systemd.linger_verify_failed: ⚠ 无法确认 systemd linger 状态（{detail}）
+  gateway.systemd.linger_survive_logout: '  如果你希望用户级 gateway 在登出后继续运行，请执行：'
+  gateway.systemd.linger_run_plain: '  sudo loginctl enable-linger $USER'
+  gateway.systemd.updated_definition: ↻ 已更新 gateway 的 {scope} systemd 服务定义，使其与当前 Hermes 安装一致
+  gateway.systemd.linger_not_enabled: ⚠ 未启用 linger，关闭当前终端后 gateway 可能会停止。
+  gateway.systemd.auto_enable_failed: '  自动启用失败：{detail}'
+  gateway.systemd.headless_servers: '  在无头服务器（VPS / 云主机）上，请执行：'
+  gateway.systemd.headless_run: '    sudo loginctl enable-linger {user}'
+  gateway.systemd.then_restart: '  然后重启 gateway：'
+  gateway.systemd.restart_user_service: '    systemctl --user restart {service}.service'
+  gateway.systemd.enabling_linger: 正在启用 linger，使 gateway 在 SSH 断开后继续运行……
+  gateway.systemd.linger_enabled_after: ✓ Linger 已启用，登出后 gateway 仍会继续运行
+  gateway.systemd.repairing: ↻ 正在修复过期的 {scope} systemd 服务：{path}
+  gateway.telegram.update_prompt.default_hint: （默认：{default}）
+  gateway.telegram.update_prompt.text: '⚕ *更新需要你确认：*
+
+    {prompt}{default_hint}'
+  gateway.telegram.update_prompt.yes: ✓ 是
+  gateway.telegram.update_prompt.no: ✗ 否
+  gateway.telegram.update_prompt.unauthorized: ⛔ 你没有权限回答更新提示。
+  gateway.telegram.update_prompt.sent: 已把“{answer}”发送给更新进程。
+  gateway.telegram.update_prompt.yes_label: 是
+  gateway.telegram.update_prompt.no_label: 否
+  gateway.telegram.update_prompt.answered: '⚕ 更新提示已回答：*{label}*'
+  gateway.telegram.approval.default_description: 危险命令
+  gateway.telegram.approval.title: 需要批准命令
+  gateway.telegram.approval.reason_label: 原因
+  gateway.telegram.approval.text: '⚠️ *需要批准命令*
+
+    `{command}`
+
+    原因：{description}'
+  gateway.telegram.approval.allow_once: ✅ 仅本次允许
+  gateway.telegram.approval.session: ✅ 本会话允许
+  gateway.telegram.approval.always: ✅ 永久允许
+  gateway.telegram.approval.deny: ❌ 拒绝
+  gateway.telegram.approval.invalid_data: 无效的批准数据。
+  gateway.telegram.approval.unauthorized: ⛔ 你没有权限批准命令。
+  gateway.telegram.approval.already_resolved: 这条批准请求已经处理过。
+  gateway.telegram.approval.approved_once: ✅ 已批准一次
+  gateway.telegram.approval.approved_session: ✅ 已批准本会话
+  gateway.telegram.approval.approved_always: ✅ 已永久批准
+  gateway.telegram.approval.denied: ❌ 已拒绝
+  gateway.telegram.approval.resolved: 已处理
+  gateway.telegram.approval.edit: '{label}，操作人：{user}'
+  gateway.telegram.model.cancel: ✗ 取消
+  gateway.telegram.model.title: ⚙ *模型配置*
+  gateway.telegram.model.current_model: 当前模型：`{model}`
+  gateway.telegram.model.provider: 服务商：{provider}
+  gateway.telegram.model.select_provider: 请选择服务商：
+  gateway.telegram.model.unknown: 未知
+  gateway.telegram.model.prev: ◀ 上一页
+  gateway.telegram.model.next: 下一页 ▶
+  gateway.telegram.model.back: ◀ 返回
+  gateway.telegram.model.page_info: （第 {start}-{end} 个，共 {total} 个）
+  gateway.telegram.model.expired: 选择器已过期，请重新使用 /model。
+  gateway.telegram.model.expired_short: 选择器已过期。
+  gateway.telegram.model.provider_not_found: 未找到服务商。
+  gateway.telegram.model.invalid_page: 无效页码。
+  gateway.telegram.model.invalid_selection: 无效选择。
+  gateway.telegram.model.invalid_model_index: 无效模型序号。
+  gateway.telegram.model.select_model: 请选择模型：{extra}
+  gateway.telegram.model.more_available: '还有 {remaining} 个可用模型；也可直接输入 `/model <name>`。'
+  gateway.telegram.model.switch_error: 切换模型失败：{error}
+  gateway.telegram.model.switched: 模型已切换！
+  gateway.telegram.model.cancelled: 已取消模型选择。
+  gateway.systemd.definition_updated: ✓ {scope} 服务定义已更新
+  gateway.systemd.already_installed: 服务已安装：{path}
+  gateway.systemd.use_force: 使用 --force 可重新安装
+  gateway.systemd.installing: 正在安装 {scope} systemd 服务到：{path}
+  gateway.systemd.installed_enabled: ✓ {scope} 服务已安装并启用！
+  gateway.systemd.next_steps: 下一步：
+  gateway.systemd.configured_user: '配置为以下用户运行：{user}'
+  gateway.systemd.removed: ✓ 已删除 {path}
+  gateway.systemd.uninstalled: ✓ {scope} 服务已卸载
+  gateway.systemd.started: ✓ {scope} 服务已启动
+  gateway.systemd.stopped: ✓ {scope} 服务已停止
+  gateway.systemd.draining: ⏳ {scope} 服务正在等待当前任务优雅退出……
+  gateway.systemd.old_process_alive: ⚠ 旧进程（PID {pid}）在 90s 后仍未退出
+  gateway.systemd.waiting_restart: ⏳ 正在等待 {service} 重启……
+  gateway.systemd.restarted_pid: ✓ {scope} 服务已重启（PID {pid}）
+  gateway.systemd.restarted: ✓ {scope} 服务已重启
+  gateway.systemd.not_active_timeout: '⚠ {scope} 服务在 60s 内仍未恢复 active 状态。
+
+    检查状态：{status_cmd}
+    检查日志：{logs_cmd}'
+  gateway.systemd.not_installed: ✗ Gateway 服务尚未安装
+  gateway.systemd.run_install: '  运行：{command}'
+  gateway.systemd.definition_outdated: ⚠ 当前安装的 gateway 服务定义已过期
+  gateway.systemd.run_restart: '  运行：{command}  # 会自动刷新 unit'
+  gateway.systemd.gateway_running: ✓ {scope} gateway 服务正在运行
+  gateway.systemd.gateway_stopped: ✗ {scope} gateway 服务已停止
+  gateway.systemd.run_start: '  运行：{command}'
+  gateway.systemd.recent_health: 最近日志健康信息：
+  gateway.systemd.system_service_boot: ✓ 系统级服务会随系统启动，不依赖 systemd linger
+  gateway.systemd.recent_logs: 最近日志：
+  gateway.command.install_termux_unsupported: Termux 不支持安装 gateway 服务。
+  gateway.command.run_manually: 手动运行：hermes gateway
+  gateway.command.wsl_warn_restart: ⚠ 检测到 WSL，systemd 服务在 WSL 重启后可能不会自动恢复。
+  gateway.command.consider_foreground: '  建议改用前台运行：hermes gateway run'
+  gateway.command.use_tmux: '  或者使用 tmux/screen 保持常驻：tmux new -s hermes ''hermes gateway run'''
+  gateway.command.wsl_not_running: 检测到 WSL，但 systemd 当前未运行。
+  gateway.command.enable_systemd_or_foreground: 在 `/etc/wsl.conf` 中启用 systemd，或者改用前台模式运行。
+  gateway.command.run_foreground_instead: 请改用前台运行：
+  gateway.command.direct_foreground: '  hermes gateway run                              # 直接前台运行'
+  gateway.command.tmux_persistent: '  tmux new -s hermes ''hermes gateway run''         # 用 tmux 常驻'
+  gateway.command.nohup_background: '  nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &  # 后台运行'
+  gateway.command.container_install_not_needed: 在 Docker 容器里不需要安装服务。
+  gateway.command.container_runtime_manager: 容器运行时就是你的服务管理器，请改用 Docker 的重启策略：
+  gateway.command.docker_run_restart: '  docker run --restart unless-stopped ...   # 崩溃/重启后自动恢复'
+  gateway.command.docker_restart: '  docker restart <container>                # 手动重启'
+  gateway.command.to_run_gateway: 运行 gateway：hermes gateway run
+  gateway.command.install_not_supported: 当前平台不支持安装服务。
+  gateway.command.run_manually_foreground: 手动运行：hermes gateway run
+  gateway.command.uninstall_termux_unsupported: Termux 不支持卸载 gateway 服务，因为这里没有系统服务管理器。
+  gateway.command.stop_manual_runs: 手动运行的进程请用 `hermes gateway stop` 停止
+  gateway.command.container_uninstall_not_applicable: Docker 容器里没有“卸载服务”这个概念。
+  gateway.command.stop_or_remove_container: 如需停止 gateway，请停止或删除容器：
+  gateway.command.docker_stop: '  docker stop <container>'
+  gateway.command.docker_rm: '  docker rm <container>'
+  gateway.command.not_supported: 当前平台不支持这个操作。
+  gateway.command.start_termux_unsupported: Termux 不支持启动 gateway 服务，因为这里没有系统服务管理器。
+  gateway.command.wsl_not_available: 检测到 WSL，但 systemd 当前不可用。
+  gateway.command.enable_systemd_powershell: '如需启用 systemd，请在 /etc/wsl.conf 中加上 systemd=true，然后在 PowerShell 执行 ''wsl --shutdown''。'
+  gateway.command.container_start_not_applicable: Docker 容器里没有“启动服务”这个概念。
+  gateway.command.container_main_process: Gateway 本身就是容器的主进程。
+  gateway.command.docker_start: '  docker start <container>     # 启动已停止的容器'
+  gateway.command.docker_restart_running: '  docker restart <container>   # 重启正在运行的容器'
+  gateway.command.or_run_direct: 或者直接运行：hermes gateway run
+  gateway.command.stopped_all_profiles: ✓ 已停止所有 profile 下的 {count} 个 gateway 进程
+  gateway.command.no_processes_found: ✗ 没有找到正在运行的 gateway 进程
+  gateway.command.stopped_this_profile: ✓ 已停止当前 profile 的 gateway
+  gateway.command.no_gateway_this_profile: ✗ 当前 profile 没有正在运行的 gateway
+  gateway.command.stopped_service: ✓ 已停止 {service} 服务
+  gateway.command.restart_linger_disabled: ⚠ 无法以服务方式重启 gateway，因为 linger 尚未启用。
+  gateway.command.restart_linger_headless: '  在无头服务器场景下，用户级 gateway 服务依赖 linger 才能正常工作。'
+  gateway.command.restart_linger_run: '  运行：sudo loginctl enable-linger {user}'
+  gateway.command.restart_linger_then: '  然后重启 gateway：'
+  gateway.command.restart_failed: ✗ Gateway 服务重启失败。
+  gateway.command.restart_failed_detail: '  服务定义仍然存在，但服务管理器没有把它正确恢复起来。'
+  gateway.command.restart_failed_retry: '  请先修复服务，再重新执行：hermes gateway start'
+  gateway.command.starting_gateway: 正在启动 gateway……
+  gateway.command.manual_running: '✓ Gateway 正在运行（PID: {pids}）'
+  gateway.command.manual_running_detail: '  （当前是手动/前台运行，不是系统服务）'
+  gateway.command.recent_health: 最近 gateway 健康信息：
+  gateway.command.termux_note_title: Termux 提示：
+  gateway.command.termux_note_body: '  当 Termux 被挂起时，Android 可能会停止后台任务。'
+  gateway.command.wsl_note_title: WSL 提示：
+  gateway.command.wsl_note_body: '  当前 gateway 以手动/前台模式运行（这也是 WSL 下更推荐的方式）。'
+  gateway.command.wsl_note_body2: '  如果需要在关闭终端后继续运行，请使用 tmux 或 screen。'
+  gateway.command.to_install_service: 如需安装成服务：
+  gateway.command.user_install: '  hermes gateway install'
+  gateway.command.system_install: '  sudo hermes gateway install --system'
+  gateway.command.not_running: ✗ Gateway 当前未运行
+  gateway.command.to_start: 启动方式：
+  gateway.command.direct_foreground_short: '  hermes gateway run      # 前台运行'
+  gateway.command.nohup_best_effort: '  nohup hermes gateway run > ~/.hermes/logs/gateway.log 2>&1 &  # 尽力后台运行'
+  gateway.command.user_install_hint: '  hermes gateway install  # 安装为用户级服务'
+  gateway.command.system_install_hint: '  sudo hermes gateway install --system  # 安装为开机系统服务'
+  cli.placeholder.transcribing: 正在转写……
+  cli.placeholder.recording: 录音中……按 Ctrl+B 停止，按 Ctrl+C 取消
+  cli.placeholder.password: 输入密码（隐藏），回车可跳过
+  cli.placeholder.secret: 输入密钥（隐藏），回车可跳过
+  cli.placeholder.answer: 在这里输入你的回答，然后按 Enter
+  cli.placeholder.processing_command: 正在处理命令……
+  cli.placeholder.interrupt: 输入消息后回车即可打断，按 Ctrl+C 取消
+  cli.placeholder.voice: 输入文本，或按 Ctrl+B 录音
+  cli.hint.password: '  密码隐藏输入 · 回车可跳过'
+  cli.hint.secret: '  密钥隐藏输入 · 回车可跳过'
+  cli.hint.select_confirm: '  ↑/↓ 选择，Enter 确认'
+  cli.hint.answer: '  输入你的回答后按 Enter'
+  cli.hint.command_in_progress: '  {frame} 命令执行中 · 暂时不能输入'
+  cli.panel.input_needed_title: Hermes 需要你的输入
+  cli.panel.type_answer_below: 请在下方输入你的回答，然后按 Enter。
+  cli.panel.other_type_answer: '  其他（手动输入回答）'
+  cli.panel.other_type_answer_selected: ❯ 其他（手动输入回答）
+  cli.panel.other_type_below_selected: ❯ 其他（在下方输入）
+  cli.sudo.title: 🔐 需要 sudo 密码
+  cli.sudo.body: 请在下方输入密码（隐藏），或直接回车跳过
+  cli.secret.title: 🔑 需要补充 Skill 配置
+  cli.secret.body: 请在下方输入密钥（隐藏），或直接回车跳过
+  cli.model_picker.select_provider: ⚙ 选择模型服务商
+  cli.model_picker.provider_option: '{name}（{count} 个模型{plural}）'
+  cli.model_picker.current_suffix: '  <- 当前'
+  cli.model_picker.cancel: 取消
+  cli.model_picker.current_hint: 当前：{provider} / {model}
+  cli.model_picker.provider_title: ⚙ 选择模型 - {provider}
+  cli.model_picker.back: <- 返回
+  cli.model_picker.select_model: 选择一个模型（共 {count} 个）
+  cli.model_picker.no_models: 这个服务商没有可列出的模型，请返回或取消。
+  banner.available_tools: 可用工具
+  banner.available_skills: 可用技能
+  banner.mcp_servers: MCP 服务器
+  banner.session_label: 会话：{session_id}
+  banner.and_more_toolsets: （另有 {count} 个工具分组……）
+  banner.no_skills: 未安装任何技能
+  banner.summary.tools: '{count} 个工具'
+  banner.summary.skills: '{count} 个技能'
+  banner.summary.mcp_servers: '{count} 个 MCP 服务器'
+  banner.summary.commands_hint: 输入 /help 查看命令
+  banner.profile_label: 配置档案：
+  banner.skills.more_suffix: 另有 {count} 个
+  banner.version.upstream: 上游 {hash}
+  banner.version.local: 本地 {hash}
+  banner.version.carried: (+{count} 个自带提交)
+  banner.updates.behind: ⚠ 落后 {count} 个提交
+  banner.updates.hint: ' — 运行 {command} 完成更新'
+  banner.toolset.browser: 浏览器
+  banner.toolset.clarify: 澄清
+  banner.toolset.code_execution: 代码执行
+  banner.toolset.cronjob: 定时任务
+  banner.toolset.delegation: 委派
+  banner.toolset.file: 文件
+  banner.toolset.homeassistant: Home Assistant
+  banner.toolset.image_gen: 图像生成
+  banner.toolset.memory: 记忆
+  banner.toolset.messaging: 消息
+  banner.toolset.moa: 协作代理
+  banner.toolset.other: 其他
+  banner.toolset.rl: 强化学习
+  banner.toolset.session_search: 会话搜索
+  banner.toolset.skills: 技能
+  banner.toolset.terminal: 终端
+  banner.toolset.todo: 待办
+  banner.toolset.tts: 语音播报
+  banner.toolset.unknown: 未知
+  banner.toolset.vision: 视觉
+  banner.toolset.web: 网络
+  cli.startup.welcome: 欢迎使用 Hermes！输入消息，或输入 /help 查看命令。
+  cli.startup.tip_prefix: 提示：
+  cli.startup.skills_activated: 已启用技能
+  cli.session.new_started: (^_^)v 新会话已开始！
+  cli.session.tool_reset_active: 会话已重置，新的工具配置已生效。
+  cli.session.resume_usage: '  用法：/resume <session_id_or_title>'
+  cli.session.resume_tip: '  提示：可用 /history 或 `hermes sessions list` 查找会话。'
+  cli.session.db_unavailable: '  会话数据库不可用。'
+  cli.session.not_found: '  未找到会话：{target}'
+  cli.session.list_hint: '  可用 /history 或 `hermes sessions list` 查看可用会话。'
+  cli.session.already_active: '  已经就在这个会话里。'
+  cli.session.reset_cleared: |-
+      ✨ (◕‿◕)✨ 全新开始！屏幕已清空，会话已重置。
+
+  cli.session.title_empty: '  清理后标题为空，请使用可打印字符。'
+  cli.session.title_set: '  会话标题已设置：{title}'
+  cli.session.title_not_found: '  数据库里没有找到这个会话。'
+  cli.session.title_in_use: "  标题“{title}”已被会话 {session_id} 占用"
+  cli.session.title_queued: '  会话标题已排队：{title}（首条消息发送后保存）'
+  cli.session.title_usage: '  用法：/title <你的会话标题>'
+  cli.session.id_label: '  会话 ID：{session_id}'
+  cli.session.title_label: '  标题：{title}'
+  cli.session.title_pending: '  标题（待保存）：{title}'
+  cli.session.title_none: '  当前还没有标题。用法：/title <你的会话标题>'
+  cli.status_bar.context_unknown: 上下文 --
+  cli.status_bar.model_unknown: 未知模型
+  cli.status_bar.visible: 已显示
+  cli.status_bar.hidden: 已隐藏
+  cli.status_bar.toggled: '  状态栏{state}'
+  cli.reload.env_reloaded: '  已重载 .env（更新了 {count} 个变量）'
+  cli.plugins.none_installed: 当前没有安装任何插件。
+  cli.plugins.drop_hint: 将插件目录放进 {home}/plugins/ 即可开始使用。
+  cli.plugins.list_title: '插件（{count} 个）：'
+  cli.plugins.tools_count: '{count} 个工具'
+  cli.plugins.hooks_count: '{count} 个 hooks'
+  cli.plugins.commands: '{count} 条命令'
+  cli.plugins.commands_count: '{count} 条命令'
+  cli.queue.queued_now: '  已排队：{preview}'
+  cli.agents.running_processes: '  运行中的进程：{count}'
+  cli.agents.recently_finished: '  最近完成：{count}'
+  cli.agents.agent_state: '  Agent：{state}'
+  cli.agents.state_running: 运行中
+  cli.agents.state_idle: 空闲
+  cli.copy.none_yet: '  现在还没有可复制的内容。'
+  cli.copy.usage: '  用法：/copy [number]'
+  cli.copy.invalid_number: '  回复编号无效。请输入 1-{max}。'
+  cli.copy.none_in_responses: '  目前助手回复里没有可复制的文本。'
+  cli.copy.none_in_response: '  这条助手回复里没有可复制的文本。'
+  cli.copy.copied: '  已复制助手回复 #{index} 到剪贴板'
+  cli.copy.failed: '  复制到剪贴板失败：{error}'
+  cli.steer.usage: '  用法：/steer <prompt>'
+  cli.steer.failed: '  Steer 失败：{error}'
+  cli.steer.queued_after_tool: '  ⏩ Steer 已排队，将在下一次工具调用后送达：{preview}'
+  cli.steer.rejected: '  Steer 被拒绝（内容为空）。'
+  cli.steer.queued_next_turn: '  当前没有运行中的 agent，已作为下一轮消息排队：{preview}'
+  cli.quick_command.no_output: 命令没有输出
+  cli.quick_command.timeout: 快捷命令执行超时（30 秒）
+  cli.quick_command.error: '快捷命令错误：{error}'
+  cli.quick_command.no_command: "快捷命令“{command}”没有定义 command"
+  cli.quick_command.no_target: "快捷命令“{command}”没有定义 target"
+  cli.quick_command.unsupported_type: "快捷命令“{command}”的类型不受支持（仅支持 exec、alias）"
+  cli.plugin.command_error: '插件命令错误：{error}'
+  cli.commands.unknown: '未知命令：{command}'
+  cli.commands.help_hint: 输入 /help 查看可用命令
+  cli.commands.ambiguous: '命令有歧义：{command}'
+  cli.commands.did_you_mean: '你是不是想输入：{matches}？'
+  cli.config.title: (^_^) 配置
+  cli.config.section_model: -- 模型 --
+  cli.config.model: 模型
+  cli.config.base_url: 基础 URL
+  cli.config.api_key: API Key
+  cli.config.section_terminal: -- 终端 --
+  cli.config.environment: 环境
+  cli.config.ssh_target: SSH 目标
+  cli.config.working_dir: 工作目录
+  cli.config.timeout: 超时
+  cli.config.section_agent: -- Agent --
+  cli.config.max_turns: 最大轮数
+  cli.config.toolsets: 工具集
+  cli.config.toolsets_all: 全部
+  cli.config.verbose: 详细模式
+  cli.config.section_session: -- 会话 --
+  cli.config.started: 开始时间
+  cli.config.config_file: 配置文件
+  cli.config.status.loaded: (已加载)
+  cli.config.status.missing: (未找到)
+  cli.config.not_set: 未设置
+  cli.config.not_set_short: 未设置
+  cli.yolo.off: '  ⚠ YOLO 模式 [bold red]关闭[/] — 危险命令仍需批准。'
+  cli.yolo.on: '  ⚡ YOLO 模式 [bold green]开启[/] — 所有命令都会自动批准，请谨慎使用。'
+  cli.yolo.state_off: 关闭
+  cli.yolo.state_on: 开启
+  cli.yolo.off_ansi: '  ⚠ YOLO 模式 {state} — 危险命令仍需批准。'
+  cli.yolo.on_ansi: '  ⚡ YOLO 模式 {state} — 所有命令都会自动批准，请谨慎使用。'
+  cli.browser.connect.already_listening: '   ✓ Chrome 已在端口 {port} 上监听'
+  cli.browser.connect.launch_attempt: '   Chrome 当前未以远程调试模式运行，正在尝试启动……'
+  cli.browser.connect.launched_ok: '   ✓ Chrome 已启动，并正在端口 {port} 上监听'
+  cli.browser.connect.launched_not_ready: '   ⚠ Chrome 已启动，但端口 {port} 暂时还没有响应'
+  cli.browser.connect.try_again: '     请过几秒再试，调试实例可能仍在启动。'
+  cli.browser.connect.launch_failed: '   ⚠ 无法自动启动 Chrome'
+  cli.browser.connect.launch_manually: '     请手动启动 Chrome：'
+  cli.browser.connect.port_unreachable: '   ⚠ 端口 {port} 无法通过 {url} 访问'
+  cli.browser.status.connected: 🌐 浏览器已通过 CDP 连接到你的 Chrome
+  cli.browser.status.connected_mode: 🌐 浏览器：已通过 CDP 连接到你的 Chrome
+  cli.browser.endpoint: '   端点：{url}'
+  cli.browser.disconnect.done: 🌐 浏览器已断开与 Chrome 的连接
+  cli.browser.disconnect.reverted: '   浏览器工具已恢复为默认模式（本地无头或云端服务商）'
+  cli.browser.disconnect.not_connected: 浏览器当前没有连接到 Chrome（已经在使用默认模式）
+  cli.browser.status.reachable: '   状态：✓ 可访问'
+  cli.browser.status.not_reachable: '   状态：⚠ 无法访问（Chrome 可能尚未运行）'
+  cli.browser.status.cloud: 🌐 浏览器：{name}（云端）
+  cli.browser.status.local: 🌐 浏览器：本地无头 Chromium（agent-browser）
+  cli.browser.hint.connect: '   /browser connect      — 连接到你正在使用的 Chrome'
+  cli.browser.hint.disconnect: '   /browser disconnect   — 恢复默认浏览器模式'
+  cli.browser.usage: 用法：/browser connect|disconnect|status
+  cli.browser.usage.connect: '   connect      将浏览器工具连接到你正在使用的 Chrome 会话'
+  cli.browser.usage.disconnect: '   disconnect   恢复默认浏览器后端'
+  cli.browser.usage.status: '   status       显示当前浏览器模式'
+  cli.help.header: (^_^)? 可用命令
+  cli.help.category.Session: 会话
+  cli.help.category.Configuration: 配置
+  cli.help.category.ToolsSkills: 工具与技能
+  cli.help.category.Info: 信息
+  cli.help.category.Exit: 退出
+  cli.help.skill_commands: Skill 命令
+  cli.help.skill_commands_count: '{count} 个已安装'
+  cli.help.tip.chat: 直接输入消息即可和 Hermes 对话！
+  cli.help.tip.multi_line: 多行输入：Alt+Enter 可换行
+  cli.help.tip.attach_image: 输入 /image {path}，或在提示词开头直接写本地图片路径
+  cli.help.tip.paste_image: 粘贴图片：Alt+V（或 /paste）
+  cli.tools.title: (^_^)/ 可用工具
+  cli.tools.none: (;_;) 没有可用工具
+  cli.tools.total: 共 {count} 个工具  ヽ(^o^)ノ
+  cli.startup.status.tools: '{count} 个工具'
+  cli.startup.status.toolsets_label: 工具集
+  cli.startup.status.provider_label: 服务商
+  cli.startup.status.auth_label: 认证
+  cli.toolsets.title: (^_^)b 可用工具集
+  cli.toolsets.current_enabled: (*) = 当前已启用
+  cli.toolsets.tip_enable_all: 提示：使用 'all' 或 '*' 启用全部工具集
+  cli.toolsets.example: 示例：python cli.py --toolsets web,terminal
+  cli.toolsets.unknown_warning: '警告：未知工具集：{names}'
+  cli.gateway.title: (✿◠‿◠) 网关状态
+  cli.gateway.section_platforms: '  消息平台配置：'
+  cli.gateway.platform_enabled: '    ✓ {name:<12} 已启用{home_suffix}'
+  cli.gateway.platform_not_configured: '    ○ {name:<12} 未配置（{env_var}）'
+  cli.gateway.home_suffix: ' → {name}'
+  cli.gateway.section_reset_policy: '  会话重置策略：'
+  cli.gateway.policy_mode: '    模式：{mode}'
+  cli.gateway.policy_daily_reset: '    每日重置时间：{hour}:00'
+  cli.gateway.policy_idle_timeout: '    空闲超时：{minutes} 分钟'
+  cli.gateway.start_hint: '  启动网关：'
+  cli.gateway.start_command: '    python cli.py --gateway'
+  cli.gateway.config_file: '  配置文件：{path}'
+  cli.gateway.error_loading: '  加载网关配置失败：{error}'
+  cli.gateway.configure_hint: '  配置网关：'
+  cli.gateway.configure_step_env: '    1. 设置环境变量：'
+  cli.gateway.configure_telegram: '       TELEGRAM_BOT_TOKEN=your_token'
+  cli.gateway.configure_discord: '       DISCORD_BOT_TOKEN=your_token'
+  cli.gateway.configure_step_config: '    2. 或在 {path} 中配置设置'
+  cli.profile.label: 配置档案
+  cli.profile.default: 默认
+  cli.profile.home: 主目录
+  cli.resume.usage: '  用法：/resume <session_id_or_title>'
+  cli.resume.tip_find: '  提示：使用 /history 或 `hermes sessions list` 查找会话。'
+  cli.resume.db_unavailable: '  会话数据库不可用。'
+  cli.resume.not_found: '  未找到会话：{target}'
+  cli.resume.tip_available: '  使用 /history 或 `hermes sessions list` 查看可用会话。'
+  cli.resume.already_on: '  当前已经在这个会话中。'
+  cli.resume.resumed: '  ↻ 已恢复会话 {session_id}{title_part}（{user_count} 条用户消息，共 {total_count}
+    条）'
+  cli.resume.resumed_fresh: '  ↻ 已恢复会话 {session_id}，当前没有消息，将从新开始。'
+  cli.clear.fresh_start: '  ✨ 全新开始！已清屏并重置当前对话。
+
+    '
+  cli.title.session_id: '  会话 ID：{session_id}'
+  cli.title.current: '  标题：{title}'
+  cli.title.pending: '  标题（待保存）：{title}'
+  cli.title.none: '  还没有设置标题。用法：/title <你的会话标题>'
+  cli.title.usage: '  用法：/title <你的会话标题>'
+  cli.title.set: '  会话标题已设置：{title}'
+  cli.title.queued: '  会话标题已排队：{title}（首条消息发送后保存）'
+  cli.title.empty: '  清理后标题为空，请使用可见字符。'
+  cli.title.db_unavailable: '  会话数据库不可用。'
+  cli.title.not_found: '  数据库中没有找到当前会话。'
+  cli.title.already_used: '  标题“{title}”已经被会话 {session_id} 使用。'
+  cli.skin.unavailable: 皮肤引擎不可用。
+  cli.skin.current: "\n  当前皮肤：{name}"
+  cli.skin.available: '  可用皮肤：'
+  cli.skin.usage: "\n  用法：/skin <name>"
+  cli.skin.custom_path: '  自定义皮肤：把 YAML 文件放到 {path}/skins/
+
+    '
+  cli.skin.unknown: '  未知皮肤：{name}'
+  cli.skin.available_list: '  可用项：{names}'
+  cli.skin.set_saved: '  皮肤已切换为：{name}（已保存）'
+  cli.skin.set: '  皮肤已切换为：{name}'
+  cli.skin.note_restart: '  提示：banner 颜色会在下次启动会话时更新。'
+  cli.skin.tui_updated: '  输入区和 TUI 颜色已更新。'
+  cli.reasoning.level: 推理强度：{level}
+  cli.reasoning.display: 推理展示：{state}
+  cli.reasoning.usage: 用法：/reasoning <none|minimal|low|medium|high|xhigh|show|hide>
+  cli.reasoning.display_on_saved: ✓ 推理展示：开启（已保存）
+  cli.reasoning.display_on_hint: '  后续回复中会显示模型思考内容。'
+  cli.reasoning.display_off_saved: ✓ 推理展示：关闭（已保存）
+  cli.reasoning.invalid_arg: (._.) 未知参数：{arg}
+  cli.reasoning.valid_levels: 可用强度：none, minimal, low, medium, high, xhigh
+  cli.reasoning.valid_display: 显示控制：show, hide
+  cli.reasoning.effort_saved: ✓ 推理强度已切换为“{arg}”（已保存到配置）
+  cli.reasoning.effort_session: ✓ 推理强度已切换为“{arg}”（仅当前会话）
+  cli.voice.unknown_subcommand: 未知语音子命令：{subcommand}
+  cli.voice.usage: 用法：/voice [on|off|tts|status]
+  cli.voice.status.title: 语音模式状态
+  cli.voice.status.mode: '  模式：{state}'
+  cli.voice.status.tts: '  语音播报：{state}'
+  cli.voice.status.recording: '  正在录音：{state}'
+  cli.voice.state_on: 开启
+  cli.voice.state_off: 关闭
+  cli.voice.state_yes: 是
+  cli.voice.state_no: 否
+  cli.voice.state_enabled: 开启
+  cli.voice.state_disabled: 关闭
+  cli.voice.status.record_key: '  录音快捷键：{shortcut}'
+  cli.voice.status.requirements: "\n  依赖要求："
+  cli.branch.no_conversation: '  还没有可分叉的对话，请先发一条消息。'
+  cli.provider.current: "\n  当前：{model} · {provider}"
+  cli.provider.authenticated: '  已登录的服务商与模型：'
+  cli.provider.active_marker: ' ← 当前使用中'
+  cli.provider.current_model_marker: ' ← 当前模型'
+  cli.provider.change_hint: '      （运行 hermes model 进行切换）'
+  cli.provider.endpoint: '      端点：{value}'
+  cli.provider.current_custom_model: '      模型：{model} ← 当前'
+  cli.provider.not_configured: '  未配置：{names}'
+  cli.provider.run_setup: '  运行：hermes setup'
+  cli.provider.change_model_or_provider: '  要切换模型或服务商，请运行：hermes model'
+  cli.status.title: Hermes CLI 状态
+  cli.status.session_id: 会话 ID：{value}
+  cli.status.path: 路径：{value}
+  cli.status.title_label: 标题：{value}
+  cli.status.model: 模型：{model}（{provider}）
+  cli.status.created: 创建于：{value}
+  cli.status.last_activity: 最近活动：{value}
+  cli.status.tokens: Tokens：{value}
+  cli.status.agent_running: Agent 运行中：{value}
+  cli.status.state_yes: 是
+  cli.status.state_no: 否
+  cli.history.no_current_messages: 当前聊天还没有消息；下面是你可以恢复的最近会话：
+  cli.history.recent_sessions: 最近会话：
+  cli.history.column_title: 标题
+  cli.history.column_preview: 预览
+  cli.history.column_last_active: 最近活跃
+  cli.history.column_id: 会话 ID
+  cli.history.resume_hint: 使用 /resume <会话 ID 或标题> 继续之前的对话。
+  cli.history.none: 还没有对话历史。
+  cli.history.header: (^_^) 对话历史
+  cli.history.tools_heading: '[工具]'
+  cli.history.tools_hidden: （隐藏了 {count} 条工具{noun}）
+  cli.history.tool_noun_singular: 消息
+  cli.history.tool_noun_plural: 消息
+  cli.history.you: '[你 #{index}]'
+  cli.history.hermes: '[Hermes #{index}]'
+  cli.history.call_noun_singular: 次
+  cli.history.call_noun_plural: 次
+  cli.history.requested_tool_calls: （请求了 {count} {noun}工具调用）
+  cli.history.no_text_response: （没有文本回复）
+  cli.save.none: (;_;) 当前没有可保存的对话。
+  cli.save.saved: (^_^)v 对话已保存到：{filename}
+  cli.save.failed: (x_x) 保存失败：{error}
+  cli.retry.none: (._.) 当前没有可重试的消息。
+  cli.retry.no_user: (._.) 没找到可以重试的用户消息。
+  cli.retry.retrying: (^_^)b 正在重试："{message}"
+  cli.undo.none: (._.) 当前没有可撤销的消息。
+  cli.undo.no_user: (._.) 没找到可以撤销的用户消息。
+  cli.undo.done: (^_^)b 已撤销 {count} 条消息。移除内容："{message}"
+  cli.undo.remaining: '  历史中还剩 {count} 条消息。'
+  cli.stop.none: '  当前没有正在运行的后台进程。'
+  cli.stop.stopping: '  正在停止 {count} 个后台进程……'
+  cli.stop.stopped: '  ✅ 已停止 {count} 个进程。'
+  cli.statusbar.visible: 状态栏已显示
+  cli.statusbar.hidden: 状态栏已隐藏
+  cli.queue.usage: '  用法：/queue <prompt>'
+  cli.queue.queued_next_turn: '  已加入下一轮队列：{preview}'
+  cli.queue.queued: '  已排队：{prompt}'
+  cli.model.no_authenticated: '  当前没有已认证的服务商。'
+  cli.model.hint.switch_model: '  /model <name>                        切换模型'
+  cli.model.hint.switch_provider: '  /model --provider <slug>             切换服务商'
+  cli.model.switched: '  ✓ 模型已切换：{model}'
+  cli.model.provider: '    服务商：{provider}'
+  cli.model.error: '  ✗ {error}'
+  cli.model.agent_swap_failed: '  ⚠ 代理热切换失败（{error}）；改动会在下个会话生效。'
+  cli.model.context: '    上下文：{tokens} tokens'
+  cli.model.max_output: '    最大输出：{tokens} tokens'
+  cli.model.cost: '    成本：{value}'
+  cli.model.capabilities: '    能力：{value}'
+  cli.model.prompt_caching: '    Prompt caching：已启用'
+  cli.model.warning: '    ⚠ {message}'
+  cli.model.saved_global: '    已保存到 config.yaml（--global）'
+  cli.model.session_only: '    （仅当前会话；加 --global 可持久化）'
+  cli.model.current: "\n  当前：{model} via {provider}"
+  cli.model.authenticated_title: '  已认证的服务商与模型：'
+  cli.model.active_marker: ' ← 当前服务商'
+  cli.model.current_marker: ' ← 当前模型'
+  cli.model.custom_endpoint: '      接入点：{url}'
+  cli.model.custom_current: '      模型：{model}{marker}'
+  cli.model.use_change: '      （使用 hermes model 进行切换）'
+  cli.model.not_configured: '  未配置：{names}'
+  cli.model.run_setup: '  运行：hermes setup'
+  cli.model.change_hint: '  切换模型或服务商：hermes model'
+  cli.background.usage: '  用法：/background <prompt>'
+  cli.background.example: '  示例：/background 总结今天的 HN 热门'
+  cli.background.hint: '  任务会在独立会话中运行，完成后会在这里显示结果。'
+  cli.background.credentials_missing: '  (>_<) 无法启动后台任务：当前没有可用凭证。'
+  cli.background.started: '  🔄 后台任务 #{task_num} 已启动："{prompt}"'
+  cli.background.task_id: '  任务 ID：{task_id}'
+  cli.background.continue_hint: '  你可以继续聊天；任务完成后结果会自动出现。
+
+    '
+  cli.background.complete: '  ✅ 后台任务 #{task_num} 已完成'
+  cli.background.prompt: '  提示词："{prompt}"'
+  cli.background.no_response: '  （没有生成回复）'
+  cli.background.failed: '  ❌ 后台任务 #{task_num} 失败：{error}'
+  cli.btw.usage: '  用法：/btw <question>'
+  cli.btw.example: '  示例：/btw 会话标题清理逻辑在哪个模块？'
+  cli.btw.hint: '  它会使用当前会话上下文回答；不调用工具，也不会写入历史。'
+  cli.btw.credentials_missing: '  (>_<) 无法启动 /btw：当前没有可用凭证。'
+  cli.btw.started: '  💬 /btw："{prompt}"'
+  cli.btw.no_response: '  💬 /btw：（没有回复）'
+  cli.btw.failed: '  ❌ /btw 失败：{error}'
+  cli.tool_progress.off: 工具进度：关闭 — 只显示最终回复。
+  cli.tool_progress.new: 工具进度：新工具 — 仅显示新的工具调用。
+  cli.tool_progress.all: 工具进度：全部 — 显示每一次工具调用。
+  cli.tool_progress.verbose: 工具进度：详细 — 显示参数、结果、思考和调试日志。
+  cli.voice.already_enabled: 语音模式已经开启。
+  cli.voice.unavailable_title: '
+
+    语音模式在当前环境不可用：'
+  cli.voice.requirements_missing_title: '
+
+    语音模式依赖未满足：'
+  cli.voice.install: "\n  安装：pip install {packages}"
+  cli.voice.install_extra: 或者：pip install hermes-agent[voice]
+  cli.voice.enabled_tts_suffix: （语音播报已开启）
+  cli.voice.enabled: 语音模式已开启{tts_status}
+  cli.voice.record_hint: '{shortcut} 开始或停止录音'
+  cli.voice.recording: ● 正在录音……（{hint}）
+  cli.voice.silence_autostop: 检测到静音，正在自动停止……
+  cli.voice.no_speech: 未检测到语音。
+  cli.voice.transcribing: 正在转写……
+  cli.voice.transcription_failed: 转写失败：{error}
+  cli.voice.processing_error: 语音处理出错：{error}
+  cli.voice.no_speech_stopped: 连续 3 次未检测到语音，连续录音已停止。
+  cli.voice.autorestart_failed: 语音自动重启失败：{error}
+  cli.voice.tts_playback_failed: TTS 播放失败：{error}
+  cli.voice.tts_hint: /voice tts  切换语音播报
+  cli.voice.off_hint: /voice off  关闭语音模式
+  cli.voice.disabled: 语音模式已关闭。
+  cli.voice.enable_first: 请先启用语音模式：/voice on
+  cli.voice.tts_warning: 警告：当前没有可用的 TTS 服务，请安装 edge-tts 或配置 API key。
+  cli.voice.tts_status: 语音播报已{status}。
+  cli.voice.install_command: '  安装：{command}'
+  cli.tools.manage.usage: (._.) 用法：/tools {subcommand} <name> [name ...]
+  cli.tools.manage.builtin: '  内置工具集：/tools {subcommand} web'
+  cli.tools.manage.mcp: '  MCP 工具：/tools {subcommand} github:create_issue'
+  cli.tools.manage.disabling: 正在禁用 {label}……
+  cli.tools.manage.enabling: 正在启用 {label}……
+  cli.tools.manage.session_reset: 会话已重置，新的工具配置已生效。
+  cli.toolsets.tools_label: '{count} 个工具'
+  cli.branch.create_failed: '  创建分叉会话失败：{error}'
+  cli.branch.created: '  ⑂ 已创建分叉会话“{title}”（{count} 条用户消息{s_suffix}）'
+  cli.branch.original: '  原会话：{session_id}'
+  cli.branch.current: '  当前分叉：{session_id}'
+  cli.personality.cleared_saved: (^_^)b 人格设定已清除（已保存到配置）
+  cli.personality.cleared_session: (^_^) 人格设定已清除（仅当前会话）
+  cli.personality.base_behavior: '  不再叠加人格，恢复基础代理行为。'
+  cli.personality.set_saved: (^_^)b 人格已切换为“{name}”（已保存到配置）
+  cli.personality.set_session: (^_^) 人格已切换为“{name}”（仅当前会话）
+  cli.personality.preview: '  预览：{preview}'
+  cli.personality.unknown: (._.) 未知人格：{name}
+  cli.personality.available: '  可用项：{names}'
+  cli.personality.title: (^o^)/ 人格列表
+  cli.personality.none: '  {name:<12} - （不叠加人格）'
+  cli.personality.usage: '  用法：/personality <name>'
+  cli.cron.title: (^_^) 定时任务
+  cli.cron.commands_title: '  命令：'
+  cli.cron.cmd.list: '    /cron list'
+  cli.cron.cmd.add: '    /cron add "每 2 小时" "检查服务器状态" [--skill blogwatcher]'
+  cli.cron.cmd.edit_schedule: '    /cron edit <job_id> --schedule "每 4 小时" --prompt "新任务"'
+  cli.cron.cmd.edit_skills: '    /cron edit <job_id> --skill blogwatcher --skill find-nearby'
+  cli.cron.cmd.remove_skill: '    /cron edit <job_id> --remove-skill blogwatcher'
+  cli.cron.cmd.clear_skills: '    /cron edit <job_id> --clear-skills'
+  cli.cron.cmd.pause: '    /cron pause <job_id>'
+  cli.cron.cmd.resume: '    /cron resume <job_id>'
+  cli.cron.cmd.run: '    /cron run <job_id>'
+  cli.cron.cmd.remove: '    /cron remove <job_id>'
+  cli.cron.current_jobs: '  当前任务：'
+  cli.cron.skills_label: '  技能：{skills}'
+  cli.cron.next_label: '  下次运行：{value}'
+  cli.cron.no_jobs_create: "  还没有定时任务。使用 '/cron add' 创建一个。"
+  cli.cron.repeat_int: '(._.) --repeat 必须是整数'
+  cli.cron.no_jobs: '(._.) 当前没有定时任务。'
+  cli.cron.list_title: 定时任务列表：
+  cli.cron.list.id: '  ID：{value}'
+  cli.cron.list.name: '  名称：{value}'
+  cli.cron.list.state: '  状态：{value}'
+  cli.cron.list.schedule: '  调度：{schedule}（{repeat}）'
+  cli.cron.list.next_run: '  下次运行：{value}'
+  cli.cron.list.skills: '  技能：{skills}'
+  cli.cron.list.prompt: '  提示词：{value}'
+  cli.cron.list.last_run: '  上次运行：{time}（{status}）'
+  cli.cron.usage.add: '(._.) 用法：/cron add <schedule> <prompt>'
+  cli.cron.prompt_or_skill: '(._.) 请提供提示词，或至少指定一个 skill'
+  cli.cron.created: '(^_^)b 已创建任务：{job_id}'
+  cli.cron.schedule_label: '  调度：{value}'
+  cli.cron.next_run_label: '  下次运行：{value}'
+  cli.cron.failed_create: '(x_x) 创建任务失败：{error}'
+  cli.cron.usage.edit: '(._.) 用法：/cron edit <job_id> [--schedule ...] [--prompt ...] [--skill ...]'
+  cli.cron.job_not_found: '(._.) 未找到任务：{job_id}'
+  cli.cron.updated: '(^_^)b 已更新任务：{job_id}'
+  cli.cron.skills_none: '  技能：无'
+  cli.cron.failed_update: '(x_x) 更新任务失败：{error}'
+  cli.cron.usage.action: '(._.) 用法：/cron {action} <job_id>'
+  cli.cron.failed_action: '(x_x) {action} 任务失败：{error}'
+  cli.cron.paused: '(^_^)b 已暂停任务：{name}（{job_id}）'
+  cli.cron.resumed: '(^_^)b 已恢复任务：{name}（{job_id}）'
+  cli.cron.triggered: '(^_^)b 已触发任务：{name}（{job_id}）'
+  cli.cron.triggered_hint: '  它会在下一次调度轮询时执行。'
+  cli.cron.removed: '(^_^)b 已移除任务：{name}（{job_id}）'
+  cli.cron.unknown: '(._.) 未知 cron 子命令：{subcommand}'
+  cli.cron.available: '  可用项：list, add, edit, pause, resume, run, remove'
+  cli.plugins.none: 当前没有安装任何插件。
+  cli.plugins.hint_dir: 把插件目录放进 {path}/plugins/ 就能开始使用。
+  cli.plugins.title: 插件（{count}）：
+  cli.plugins.tools: '{count} 个工具'
+  cli.plugins.hooks: '{count} 个钩子'
+  cli.plugins.error: 插件系统错误：{error}
+  cli.plan.load_failed: 加载内置 /plan skill 失败。
+  cli.plan.queued: '  📝 计划模式已排队，Markdown 计划目标：{path}'
+  cli.plan.unavailable: 计划模式不可用：输入队列尚未初始化。
+  cli.fast.unavailable: '  (._.) /fast 仅适用于支持快速模式的模型。'
+  cli.fast.status: '  {feature_name}：{status}'
+  cli.fast.mode_fast: 快速
+  cli.fast.mode_normal: 普通
+  cli.fast.usage: '  用法：/fast [normal|fast|status]'
+  cli.fast.set_saved: '  ✓ {feature_name} 已切换为 {label}（已保存到配置）'
+  cli.fast.set_session: '  ✓ {feature_name} 已切换为 {label}（仅当前会话）'
+  cli.fast.invalid_arg: (._.) 未知参数：{arg}
+  cli.rollback.no_agent: '  当前没有活跃的代理会话。'
+  cli.rollback.disabled: '  检查点功能未启用。'
+  cli.rollback.enable_cli: '  可用 hermes --checkpoints 启用。'
+  cli.rollback.enable_config: '  或在 config.yaml 中设置：checkpoints: { enabled: true }'
+  cli.rollback.diff_usage: '  用法：/rollback diff <N>'
+  cli.rollback.no_checkpoints: '  在 {cwd} 中没有找到检查点。'
+  cli.rollback.no_changes: '  从该检查点以来没有变化。'
+  cli.rollback.diff_truncated: "\n  ...（还有 {count} 行，仅显示前 80 行）"
+  cli.rollback.error: '  ❌ {error}'
+  cli.rollback.restored_file: '  ✅ 已从检查点 {checkpoint} 恢复 {file_path}：{reason}'
+  cli.rollback.restored_all: '  ✅ 已恢复到检查点 {checkpoint}：{reason}'
+  cli.rollback.snapshot_saved: '  已自动保存回滚前快照。'
+  cli.rollback.chat_undone: '  已撤销聊天回合，使上下文与文件状态一致。'
+  cli.rollback.invalid_number: '  检查点编号无效，请使用 1-{count}。'
+  cli.paste.termux_unavailable: Termux 暂不支持剪贴板图片粘贴，请使用 /image <path> 或直接粘贴本地图片路径，例如
+    {path}
+  cli.paste.attached: '  📎 已从剪贴板附加图片 #{count}'
+  cli.paste.extract_failed: (>_<) 剪贴板里有图片，但提取失败了
+  cli.paste.none: (._.) 剪贴板里没有找到图片
+  cli.image.usage: 用法：/image <path>  例如：/image {hint}
+  cli.image.not_found: (>_<) 找不到文件：{path}
+  cli.image.unsupported: (._.) 这不是支持的图片文件：{name}
+  cli.image.attached: '  📎 已附加图片：{name}'
+  cli.image.prompt_hint: 现在输入你的提示词（单次查询模式可用 --image）：{remainder}
+  cli.image.termux_hint: 提示：现在输入下一条消息，或运行 hermes chat -q --image {path} "你看到了什么？"
+  cli.vision.analyzing: 👁️  正在分析 {name}（{size_kb}KB）……
+  cli.vision.analyzed: ✓ 图片分析完成
+  cli.vision.failed: ⚠ 视觉分析失败，已保留路径供后续重试
+  cli.vision.error: ⚠ 视觉分析报错，已保留路径供后续重试
+  cli.skill.loading: '
+
+    ⚡ 正在加载技能：{name}'
+  cli.skill.preview: ⚡ 正在加载技能：{name}
+  cli.skill.load_failed: 无法为 {command} 加载 skill
+  cli.command.unknown: 未知命令：{command}
+  cli.command.help_hint: 输入 /help 查看可用命令
+  cli.command.ambiguous: 命令不明确：{command}
+  cli.command.did_you_mean: 你是想输入：{matches} 吗？
+  cli.command_status.skills_search: 正在搜索技能……
+  cli.command_status.skills_browse: 正在加载技能列表……
+  cli.command_status.skills_inspect: 正在查看技能详情……
+  cli.command_status.skills_install: 正在安装技能……
+  cli.command_status.skills_generic: 正在处理技能命令……
+  cli.command_status.reload_mcp: 正在重载 MCP 服务器……
+  cli.command_status.browser: 正在配置浏览器……
+  cli.command_status.generic: 正在处理命令……
+  cli.usage.no_agent: (._.) 当前没有活跃代理，请先发一条消息。
+  cli.usage.no_calls: (._.) 当前会话还没有 API 调用。
+  cli.usage.title: '  📊 会话 Token 使用情况'
+  cli.usage.label.model: 模型：
+  cli.usage.label.input_tokens: 输入 tokens：
+  cli.usage.label.cache_read_tokens: 缓存读取 tokens：
+  cli.usage.label.cache_write_tokens: 缓存写入 tokens：
+  cli.usage.label.output_tokens: 输出 tokens：
+  cli.usage.label.prompt_tokens_total: Prompt tokens（总计）：
+  cli.usage.label.completion_tokens: Completion tokens：
+  cli.usage.label.total_tokens: 总 tokens：
+  cli.usage.label.api_calls: API 调用数：
+  cli.usage.label.session_duration: 会话时长：
+  cli.usage.label.cost_status: 费用状态：
+  cli.usage.label.cost_source: 费用来源：
+  cli.usage.label.total_cost: 总费用：
+  cli.usage.value.included: 已包含
+  cli.usage.value.na: 未知
+  cli.usage.current_context: '  当前上下文：{used} / {total} ({percent}%)'
+  cli.usage.messages: '  消息数：{count}'
+  cli.usage.compressions: '  压缩次数：{count}'
+  cli.usage.pricing_unknown: '  说明：{model} 的定价未知。'
+  cli.insights.invalid_days: '  --days 参数无效：{value}'
+  cli.insights.error: '  生成 insights 失败：{error}'
+  cli.mcp.config_changed: 🔄 MCP 服务器配置已变更，正在重载连接……
+  cli.mcp.timeout: '  ⚠️  MCP 重载超时（30s），部分服务器可能尚未重新连接。'
+  cli.mcp.reloading: 🔄 正在重载 MCP 服务器……
+  cli.mcp.reconnected: '  ♻️  已重新连接：{names}'
+  cli.mcp.added: '  ➕ 新增：{names}'
+  cli.mcp.removed: '  ➖ 移除：{names}'
+  cli.mcp.none_connected: '  当前没有已连接的 MCP 服务器。'
+  cli.mcp.available: '  🔧 现有 {tool_count} 个工具，来自 {server_count} 个服务器'
+  cli.mcp.agent_updated: '  ✅ 代理已更新，当前可用 {tool_count} 个工具'
+  cli.mcp.failed: '  ❌ MCP 重载失败：{error}'
+  cli.tools.disabled_missing_keys: '[yellow]⚠️  有些工具已被禁用（缺少 API Key）：[/]'
+  cli.tools.more_suffix: ', 另有 {count} 个'
+  cli.tools.setup_hint: '[dim]   运行 ''hermes setup'' 完成配置[/]'
+  cli.startup.context_warning: '[yellow]⚠️ 上下文长度只有 {count} tokens，可能不足以支撑带工具的 agent 工作流。[/]'
+  cli.startup.context_hint: '[dim]   Hermes 至少需要 16k–32k；仅工具 schema 和 system prompt 就会占用约 4k–8k。[/]'
+  cli.startup.context_fix_ollama: '[dim]   Ollama 修复：OLLAMA_CONTEXT_LENGTH=32768 ollama serve[/]'
+  cli.startup.context_fix_lmstudio: '[dim]   LM Studio 修复：在模型设置里提高 context length，然后重新加载模型[/]'
+  cli.startup.context_fix_generic: '[dim]   解决方式：在 config.yaml 中设置 model.context_length，或提高服务端上下文配置。[/]'
+  cli.startup.nous_warning: '[bold yellow]⚠  Nous Research Hermes 3/4 模型不是 agentic 模型，不适合 Hermes Agent。[/]'
+  cli.startup.nous_hint: '[dim]   它们缺少 agent 工作流所需的工具调用能力。建议改用 Claude、GPT、Gemini、DeepSeek 等 agentic 模型。[/]'
+  cli.startup.nous_switch: '[dim]   可用 /model sonnet 或 /model gpt5 切换。[/]'
+  compression.noop_headline: 压缩后没有变化：{count} 条消息
+  compression.tokens_unchanged: 粗略转写估算：约 {tokens} tokens（未变化）
+  compression.tokens_changed: 粗略转写估算：约 {before} → 约 {after} tokens
+  compression.done_headline: 已压缩：{before} → {after} 条消息
+  compression.dense_note: 注意：即使消息条数变少，只要压缩把内容改写成更密集的摘要，粗略 token 估算仍可能上升。
+  gateway.runtime.compress.not_enough: 当前对话不足以压缩（至少需要 4 条消息）。
+  gateway.runtime.compress.no_provider: 当前未配置服务商，无法压缩。
+  gateway.runtime.compress.nothing: 现在还没有可压缩的内容（当前转写仍全部属于受保护上下文）。
+  gateway.runtime.compress.focus: 聚焦："{focus}"
+  gateway.runtime.compress.failed: 压缩失败：{error}
+  gateway.runtime.title.db_unavailable: 会话数据库不可用。
+  gateway.runtime.title.empty: ⚠️ 清理后标题为空，请使用可打印字符。
+  gateway.runtime.title.set: ✏️ 会话标题已设置：**{title}**
+  gateway.runtime.title.not_found: 数据库中没有找到该会话。
+  gateway.runtime.title.show: '📌 会话：`{session_id}`
+
+    标题：**{title}**'
+  gateway.runtime.title.none: '📌 会话：`{session_id}`
+
+    还没有标题。用法：`/title 你的会话标题`'
+  gateway.runtime.resume.db_unavailable: 会话数据库不可用。
+  gateway.runtime.resume.none_found: 没有找到已命名的会话。
+  gateway.runtime.resume.usage_hint: 先用 `/title 我的会话` 给当前会话命名，之后再用 `/resume 我的会话`
+    回来。
+  gateway.runtime.resume.list_title: 📋 **已命名会话**
+  gateway.runtime.resume.list_item: • **{title}**{preview_part}
+  gateway.runtime.resume.list_usage: 用法：`/resume <会话名>`
+  gateway.runtime.resume.list_failed: 列出会话失败：{error}
+  gateway.runtime.resume.not_found: 没有找到匹配 **{name}** 的会话。
+  gateway.runtime.resume.use_no_args: 直接输入 `/resume` 可以查看可用会话。
+  gateway.runtime.resume.already_on: 📌 当前已经在会话 **{name}** 中。
+  gateway.runtime.resume.switch_failed: 切换会话失败。
+  gateway.runtime.resume.message_count: （{count} 条消息）
+  gateway.runtime.resume.resumed: ↻ 已恢复会话 **{title}**{msg_part}。对话已还原。
+  gateway.runtime.branch.db_unavailable: 会话数据库不可用。
+  gateway.runtime.branch.no_conversation: 还没有可分叉的对话，请先发一条消息。
+  gateway.runtime.branch.create_failed: 创建分叉失败：{error}
+  gateway.runtime.branch.switch_failed: 分叉已创建，但切换失败。
+  gateway.runtime.branch.message_count: （已复制 {count} 条消息）
+  gateway.runtime.branch.created: ⑂ 已分叉到 **{title}**{msg_part}
+  gateway.runtime.branch.original: 原会话：`{session_id}`
+  gateway.runtime.branch.branch: 分叉：`{session_id}`
+  gateway.runtime.branch.resume_hint: 使用 `/resume` 可以切回原会话。
+  gateway.runtime.usage.rate_limits: ⏱️ **速率限制：** {value}
+  gateway.runtime.usage.title: 📊 **会话 Token 使用情况**
+  gateway.runtime.usage.model: 模型：`{model}`
+  gateway.runtime.usage.input: 输入 tokens：{count}
+  gateway.runtime.usage.cache_read: 缓存读取 tokens：{count}
+  gateway.runtime.usage.cache_write: 缓存写入 tokens：{count}
+  gateway.runtime.usage.output: 输出 tokens：{count}
+  gateway.runtime.usage.total: 总计：{count}
+  gateway.runtime.usage.api_calls: API 调用数：{count}
+  gateway.runtime.usage.cost: 费用：{value}
+  gateway.runtime.usage.cost_included: 费用：已包含
+  gateway.runtime.usage.context: 上下文：{used} / {total} ({percent}%)
+  gateway.runtime.usage.compressions: 压缩次数：{count}
+  gateway.runtime.usage.info_title: 📊 **会话信息**
+  gateway.runtime.usage.info_messages: 消息数：{count}
+  gateway.runtime.usage.info_context: 预估上下文：约 {tokens} tokens
+  gateway.runtime.usage.info_hint: （详细用量会在第一次代理回复后可见）
+  gateway.runtime.usage.no_data: 当前会话还没有可用的用量数据。
+  gateway.runtime.insights.invalid_days: --days 参数无效：{value}
+  gateway.runtime.insights.error: 生成 insights 失败：{error}
+  gateway.runtime.reasoning.settings_title: 🧠 **推理设置**
+  gateway.runtime.reasoning.effort_label: '**强度：** `{level}`'
+  gateway.runtime.reasoning.display_label: '**显示：** {state}'
+  gateway.runtime.reasoning.usage: '_用法：_ `/reasoning <none|minimal|low|medium|high|xhigh|show|hide>`'
+  gateway.runtime.reasoning.display_on: 开启 ✓
+  gateway.runtime.reasoning.display_off: 关闭
+  gateway.runtime.reasoning.show_on: '🧠 ✓ 推理展示：**开启**'
+  gateway.runtime.reasoning.show_on_detail: '模型思考内容会在 **{platform_key}** 的每次回复前显示。'
+  gateway.runtime.reasoning.show_off: '🧠 ✓ 推理展示：**关闭**（平台：**{platform_key}**）'
+  gateway.runtime.reasoning.invalid_arg: '⚠️ 未知参数：`{effort}`'
+  gateway.runtime.reasoning.valid_levels: '**可用强度：** none, minimal, low, medium, high, xhigh'
+  gateway.runtime.reasoning.display_options: '**显示选项：** show, hide'
+  gateway.runtime.reasoning.saved: |-
+    🧠 ✓ 推理强度已设置为 `{effort}`（已保存到配置）
+    _(下一条消息生效)_
+  gateway.runtime.reasoning.session_only: '🧠 ✓ 推理强度已设置为 `{effort}`（仅当前会话）'
+  gateway.runtime.fast.unsupported: ⚡ /fast 仅适用于支持 Priority Processing 的 OpenAI 模型。
+  gateway.runtime.fast.title: ⚡ 优先处理
+  gateway.runtime.fast.current_mode: '当前模式：`{status}`'
+  gateway.runtime.fast.usage: '_用法：_ `/fast <normal|fast|status>`'
+  gateway.runtime.fast.mode_fast: 快速
+  gateway.runtime.fast.mode_normal: 普通
+  gateway.runtime.fast.label_fast: 快速
+  gateway.runtime.fast.label_normal: 普通
+  gateway.runtime.fast.invalid_arg: '⚠️ 未知参数：`{args}`'
+  gateway.runtime.fast.valid_options: '**可用选项：** normal, fast, status'
+  gateway.runtime.fast.saved: |-
+    ⚡ ✓ 优先处理：**{label}**（已保存到配置）
+    _(下一条消息生效)_
+  gateway.runtime.fast.session_only: '⚡ ✓ 优先处理：**{label}**（仅当前会话）'
+  gateway.runtime.yolo.on: ⚡ YOLO 模式 **开启**（仅当前会话）—— 所有命令都会自动批准，请谨慎使用。
+  gateway.runtime.yolo.off: ⚠️ YOLO 模式 **关闭**（仅当前会话）—— 危险命令将重新需要批准。
+  gateway.runtime.tool_progress.disabled: |-
+    消息平台上尚未启用 `/verbose` 命令。
+
+    请在 `config.yaml` 中启用：
+    ```yaml
+    display:
+      tool_progress_command: true
+    ```
+  gateway.runtime.tool_progress.off: '⚙️ 工具进度：**关闭** —— 不显示任何工具活动。'
+  gateway.runtime.tool_progress.new: '⚙️ 工具进度：**变化时显示** —— 仅在工具切换时显示（预览长度：`display.tool_preview_length`，默认 40）。'
+  gateway.runtime.tool_progress.all: '⚙️ 工具进度：**全部** —— 每次工具调用都显示（预览长度：`display.tool_preview_length`，默认 40）。'
+  gateway.runtime.tool_progress.verbose: '⚙️ 工具进度：**详细** —— 每次工具调用都显示完整参数。'
+  gateway.runtime.tool_progress.saved: '_（已为 **{platform_key}** 保存，下一条消息生效）_'
+  gateway.runtime.tool_progress.save_failed: '_（保存到配置失败：{error}）_'
+  gateway.runtime.approval.scope_session: '（该模式已在本会话中批准）'
+  gateway.runtime.approval.scope_permanent: '（该模式已被永久批准）'
+  gateway.runtime.approval.count_many: '（{count} 条命令）'
+  gateway.runtime.approval.approve.expired: ⚠️ 批准已过期（agent 已不再等待）。请让 agent 重新尝试。
+  gateway.runtime.approval.approve.no_pending: 没有等待批准的命令。
+  gateway.runtime.approval.approve.success: '✅ 已批准命令{scope_msg}{count_msg}。代理继续执行中……'
+  gateway.runtime.approval.deny.stale: ❌ 命令已拒绝（批准已过期）。
+  gateway.runtime.approval.deny.no_pending: 没有等待拒绝的命令。
+  gateway.runtime.approval.deny.success: '❌ 已拒绝命令{count_msg}。'
+  gateway.runtime.session_info.model: '◆ 模型：`{model}`'
+  gateway.runtime.session_info.provider: '◆ 提供商：{provider}'
+  gateway.runtime.session_info.context_source.config: 配置
+  gateway.runtime.session_info.context_source.default: 默认值，请在 config.yaml 中设置 model.context_length 覆盖
+  gateway.runtime.session_info.context_source.detected: 自动识别
+  gateway.runtime.session_info.context: '◆ 上下文：{ctx_display} tokens（{ctx_source}）'
+  gateway.runtime.session_info.endpoint: '◆ 端点：{base_url}'
+  gateway.runtime.reset.reset_started: ✨ 会话已重置，重新开始。
+  gateway.runtime.reset.new_started: ✨ 已开始新会话。
+  gateway.runtime.reset.tip: |-
+    ✦ 提示：{tip}
+  gateway.runtime.profile.line.profile: '👤 **配置档：** `{profile_name}`'
+  gateway.runtime.profile.line.home: '📂 **Home：** `{display}`'
+  gateway.runtime.status.title: 📊 **Hermes 网关状态**
+  gateway.runtime.status.session_id: '**会话 ID：** `{session_id}`'
+  gateway.runtime.status.title_label: '**标题：** {title}'
+  gateway.runtime.status.created: '**创建时间：** {created}'
+  gateway.runtime.status.updated: '**最近活动：** {updated}'
+  gateway.runtime.status.tokens: '**Tokens：** {count}'
+  gateway.runtime.status.agent_running: '**Agent 运行中：** {state}'
+  gateway.runtime.status.connected_platforms: '**已连接平台：** {platforms}'
+  gateway.runtime.status.agent_running_yes: 是 ⚡
+  gateway.runtime.status.agent_running_no: 否
+  gateway.runtime.stop.pending: ⚡ 已停止。Agent 还没真正启动，你现在可以继续这个会话。
+  gateway.runtime.stop.running: ⚡ 已停止。你可以继续这个会话。
+  gateway.runtime.stop.none: 当前没有可以停止的任务。
+  gateway.runtime.restart.draining: ⏳ 重启前正在排空 {count} 个活跃 agent……
+  gateway.runtime.restart.in_progress: ⏳ Gateway 重启已在进行中……
+  gateway.runtime.restart.started: ♻ 正在重启 Gateway。如果 60 秒内没有收到恢复通知，请在控制台执行 `hermes gateway restart`。
+  gateway.runtime.restart.complete: ♻ Gateway 已重启成功，当前会话继续可用。
+  gateway.runtime.help.title: '📖 **Hermes 命令**
+
+    '
+  gateway.runtime.help.skills_title: '
+
+    ⚡ **技能命令**（{count} 个已激活）：'
+  gateway.runtime.help.more_skills: '
+
+    ……还有 {count} 个。用 `/commands` 查看完整分页列表。'
+  gateway.runtime.commands.usage: 用法：`/commands [page]`
+  gateway.runtime.commands.skills_title: ⚡ **技能命令：**
+  gateway.runtime.commands.skill_default_desc: 技能命令
+  gateway.runtime.commands.none: 当前没有可用命令。
+  gateway.runtime.commands.title: '📚 **命令列表**（共 {total} 条，第 {page}/{total_pages} 页）'
+  gateway.runtime.commands.prev: '`/commands {page}` ← 上一页'
+  gateway.runtime.commands.next: '下一页 → `/commands {page}`'
+  gateway.runtime.commands.page_clamped: '_(请求的第 {requested_page} 页超出范围，已显示第 {page} 页。)_'
+  gateway.runtime.provider.current: '🔌 **当前 provider：** {label} (`{provider}`)'
+  gateway.runtime.provider.available: '**可用 providers：**'
+  gateway.runtime.provider.entry_aliases: '  _(别名：{aliases})_'
+  gateway.runtime.provider.entry_active: ' ← 当前'
+  gateway.runtime.provider.entry: '{auth} `{id}` — {label}{aliases}{marker}'
+  gateway.runtime.provider.switch_hint: '切换：`/model provider:model-name`'
+  gateway.runtime.provider.setup_hint: '配置：`hermes setup`'
+  gateway.runtime.model.error: '错误：{error}'
+  gateway.runtime.model.current: '当前：`{model}`（provider：{provider_label}）'
+  gateway.runtime.model.provider_entry: '**{name}** `--provider {slug}`{tag}：'
+  gateway.runtime.model.provider_current_tag: '（当前）'
+  gateway.runtime.model.provider_more: '（另外还有 {count} 个）'
+  gateway.runtime.model.switch_model: '`/model <name>` —— 切换模型'
+  gateway.runtime.model.switch_provider: '`/model <name> --provider <slug>` —— 切换 provider'
+  gateway.runtime.model.persist: '`/model <name> --global` —— 持久化保存'
+  gateway.runtime.model.switched: '已切换到模型 `{model}`'
+  gateway.runtime.model.provider: 'Provider：{provider_label}'
+  gateway.runtime.model.context: '上下文：{count} tokens'
+  gateway.runtime.model.max_output: '最大输出：{count} tokens'
+  gateway.runtime.model.cost: '费用：{value}'
+  gateway.runtime.model.capabilities: '能力：{value}'
+  gateway.runtime.model.session_only_hint: '_(仅当前会话 —— 用 `/model <name> --global` 持久化)_'
+  gateway.runtime.model.prompt_caching: 已启用 prompt caching
+  gateway.runtime.model.warning: '警告：{warning}'
+  gateway.runtime.model.saved_global: 已写入 config.yaml（`--global`）
+  gateway.runtime.model.saved_session_only: '_(仅当前会话 —— 添加 `--global` 可持久化)_'
+  gateway.runtime.personality.none_configured: '`{home}/config.yaml` 里还没有配置 personalities。'
+  gateway.runtime.personality.list_title: '🎭 **可用人格**
+
+    '
+  gateway.runtime.personality.none_option: '• `none` — （不叠加人格）'
+  gateway.runtime.personality.usage: '
+
+    用法：`/personality <name>`'
+  gateway.runtime.personality.save_failed: '⚠️ 保存人格切换失败：{error}'
+  gateway.runtime.personality.cleared: |-
+    🎭 已清除人格，恢复基础 agent 行为。
+    _(下一条消息生效)_
+  gateway.runtime.personality.set: |-
+    🎭 已切换到人格 **{name}**
+    _(下一条消息生效)_
+  gateway.runtime.personality.unknown: '未知人格：`{name}`'
+  gateway.runtime.personality.available: '可用：{available}'
+  gateway.runtime.retry.none: 没有可以重试的上一条消息。
+  gateway.runtime.undo.none: 没有可以撤销的消息。
+  gateway.runtime.undo.removed: '↩️ 已撤销 {count} 条消息。
+
+    移除内容："{preview}"'
+  gateway.runtime.steer.usage: 用法：/steer <prompt>
+  gateway.runtime.steer.pending_agent: Agent 仍在启动，/steer 已加入下一轮队列。
+  gateway.runtime.steer.failed: '⚠️ Steer 失败：{error}'
+  gateway.runtime.steer.queued_after_tool: "⏩ Steer 已排队，将在下一次工具调用后送达：'{preview}'"
+  gateway.runtime.steer.rejected: Steer 被拒绝（内容为空）。
+  gateway.runtime.steer.queued_next_turn: 当前没有活跃 agent，/steer 已加入下一轮队列。
+  gateway.runtime.steer.usage_no_agent: 用法：/steer <prompt>（当前没有运行中的 agent，将作为普通消息发送）
+  gateway.runtime.agents.title: 🤖 **活跃 Agents 与任务**
+  gateway.runtime.agents.count: '**活跃 agents：** {count}'
+  gateway.runtime.agents.current_chat: · 当前聊天
+  gateway.runtime.agents.state.starting: 启动中
+  gateway.runtime.agents.state.running: 运行中
+  gateway.runtime.agents.more: ……以及另外 {count} 个
+  gateway.runtime.agents.background_processes: '**运行中的后台进程：** {count}'
+  gateway.runtime.agents.async_jobs: '**Gateway 异步任务：** {count}'
+  gateway.runtime.agents.none: 当前没有活跃 agent 或运行中的任务。
+  gateway.runtime.sethome.save_failed: '保存 Home 频道失败：{error}'
+  gateway.runtime.sethome.saved: '✅ 已将 **{chat_name}** 设为 Home 频道（ID: {chat_id}）。
+
+    定时任务和跨平台消息会投递到这里。'
+  gateway.runtime.voice.enabled: |-
+    语音模式已开启。
+    当你发送语音消息时，我会用语音回复。
+    使用 /voice tts 可让所有回复都附带语音。
+  gateway.runtime.voice.disabled: 语音模式已关闭，仅文本回复。
+  gateway.runtime.voice.auto_tts: |-
+    自动 TTS 已开启。
+    所有回复都会附带语音。
+  gateway.runtime.voice.status: '语音模式：{mode}'
+  gateway.runtime.voice.status_off: 关闭（仅文本）
+  gateway.runtime.voice.status_voice_only: 开启（仅对语音消息回语音）
+  gateway.runtime.voice.status_all: TTS（所有消息都回语音）
+  gateway.runtime.voice.toggle_on: 语音模式已开启。
+  gateway.runtime.voice.toggle_off: 语音模式已关闭。
+  gateway.runtime.voice.unsupported: 当前平台不支持语音频道。
+  gateway.runtime.voice.server_only: 这个命令只能在 Discord 服务器里使用。
+  gateway.runtime.voice.join_needed: 你需要先进入一个语音频道。
+  gateway.runtime.voice.deps_missing: 缺少语音依赖（PyNaCl / davey）。请安装或重装 Hermes 的 messaging extra，例如 `pip install hermes-agent[messaging]`。
+  gateway.runtime.voice.join_failed_error: '加入语音频道失败：{error}'
+  gateway.runtime.voice.joined: '已加入语音频道 **{channel_name}**。
+
+    我会说出回复并听你讲话。使用 /voice leave 断开连接。'
+  gateway.runtime.voice.join_failed: 加入语音频道失败，请检查 bot 权限（Connect + Speak）。
+  gateway.runtime.voice.leave_none: 当前不在语音频道中。
+  gateway.runtime.voice.left: 已离开语音频道。
+  gateway.runtime.voice.channel_label: '语音频道：#{channel_name}'
+  gateway.runtime.voice.participants_label: '参与者：{count}'
+  gateway.runtime.voice.member_speaking: '（正在说话）'
+  gateway.runtime.rollback.disabled: |-
+    当前未启用 checkpoints。
+    请在 config.yaml 中开启：
+    ```
+    checkpoints:
+      enabled: true
+    ```
+  gateway.runtime.reload.title: '🔄 **MCP 服务已重载**
+
+    '
+  gateway.runtime.reload.reconnected: '♻️ 已重连：{servers}'
+  gateway.runtime.reload.added: '➕ 已新增：{servers}'
+  gateway.runtime.reload.removed: '➖ 已移除：{servers}'
+  gateway.runtime.reload.none_connected: 当前没有已连接的 MCP 服务。
+  gateway.runtime.reload.summary: '
+
+    🔧 现有 {tool_count} 个工具，来自 {server_count} 个服务'
+  gateway.runtime.reload.failed: '❌ MCP 重载失败：{error}'
+  gateway.runtime.background.usage: |-
+    用法：/background <prompt>
+    示例：/background Summarize the top HN stories today
+
+    它会在独立会话里运行，你可以继续聊天；结果完成后会回到这里。
+  gateway.runtime.background.started: '🔄 后台任务已启动："{preview}"
+
+    Task ID: {task_id}
+    你可以继续聊天，结果完成后会回到这里。'
+  gateway.runtime.background.no_credentials: '❌ 后台任务 {task_id} 失败：当前没有可用的 provider 凭证。'
+  gateway.runtime.background.error_prefix: '错误：{error}'
+  gateway.runtime.background.complete: '✅ 后台任务已完成
+
+    Prompt: "{preview}"
+
+    '
+  gateway.runtime.background.no_response: （没有生成回复）
+  gateway.runtime.background.failed: '❌ 后台任务 {task_id} 失败：{error}'
+  gateway.runtime.btw.usage: |-
+    用法：/btw <question>
+    示例：/btw what module owns session title sanitization?
+
+    它会使用当前会话上下文回答，不调用工具，也不会写回历史。
+  gateway.runtime.btw.running: 当前聊天里已经有一个 /btw 在运行，请等它结束。
+  gateway.runtime.btw.started: '💬 /btw: "{preview}"
+
+    回复很快会出现在这里。'
+  gateway.runtime.btw.no_credentials: ❌ /btw 失败：当前没有可用的 provider 凭证。
+  gateway.runtime.btw.error_prefix: '错误：{error}'
+  gateway.runtime.btw.answer_header: '💬 /btw: "{preview}"
+
+    '
+  gateway.runtime.btw.no_response: （没有生成回复）
+  gateway.runtime.btw.failed: '❌ /btw 失败：{error}'
+  gateway.runtime.debug.upload_failed: '✗ 调试报告上传失败：{error}'
+  gateway.runtime.debug.title: '**调试报告已上传：**'
+  gateway.runtime.debug.failed_logs: '
+
+    _(以下日志上传失败：{items})_'
+  gateway.runtime.debug.privacy_notice: '⚠️ **隐私提示：** 这会把系统信息和最近的日志尾部（可能包含对话片段）上传到公开粘贴服务。网关端**不会**上传完整日志；如需完整日志，请在 CLI 里使用 `hermes debug share`。'
+  gateway.runtime.debug.auto_delete_hint: '
+
+    ⏱ 粘贴内容会在 1 小时后自动删除。'
+  gateway.runtime.debug.cli_share_hint: 使用 CLI 的 `hermes debug share` 可上传完整日志。
+  gateway.runtime.debug.share_hint: '
+
+    把这些链接发给 Hermes 团队以便支持。'
+  gateway.runtime.update.only_messaging: ✗ /update 只能从消息平台使用；请在终端执行 `hermes update`。
+  gateway.runtime.update.managed: '✗ {message}'
+  gateway.runtime.update.not_git: ✗ 当前不是 git 仓库，无法更新。
+  gateway.runtime.update.no_binary: ✗ 找不到 `hermes` 命令。Hermes 正在运行，但更新命令无法从 PATH 或当前 Python 解释器定位到可执行入口。请尝试在终端手动执行 `hermes update`。
+  gateway.runtime.update.start_failed: '✗ 启动更新失败：{error}'
+  gateway.runtime.update.start: ⚕ 正在启动 Hermes 更新……我会在这里持续同步进度。
+  gateway.runtime.update.finished: ✅ Hermes 更新已完成。
+  gateway.runtime.update.failed_exit: '❌ Hermes 更新失败（退出码 {exit_code}）。'
+  gateway.runtime.update.prompt_needed: |-
+    ⚕ **更新需要你的输入：**
+
+    {prompt_text}{default_hint}
+
+    回复 `/approve`（yes）或 `/deny`（no），也可以直接输入你的答案。
+  gateway.runtime.update.timed_out: ❌ Hermes 更新在 30 分钟后超时。
+  gateway.runtime.update.finished_with_output: '✅ Hermes 更新已完成。
+
+    ```
+    {output}
+    ```'
+  gateway.runtime.update.failed_with_output: '❌ Hermes 更新失败。
+
+    ```
+    {output}
+    ```'
+  gateway.runtime.update.failed_no_output: ❌ Hermes 更新失败。请查看 gateway 日志，或在终端手动执行 `hermes update` 获取详情。
+  gateway.runtime.guard.update_response_failed: '✗ 发送更新进程响应失败：{error}'
+  gateway.runtime.guard.update_response_sent: '✓ 已把 `{label}` 发给更新进程。'
+  gateway.runtime.guard.stop: ⚡ 已停止。你可以继续这个会话。
+  gateway.runtime.guard.queue_usage: 用法：/queue <prompt>
+  gateway.runtime.guard.queue_saved: 已经排到下一轮。
+  gateway.runtime.guard.model_busy: Agent 正在运行，请先等待或 `/stop`。
+  gateway.runtime.guard.stop_pending: ⚡ 已强制停止。Agent 还在启动阶段，当前会话已解锁。
+  gateway.runtime.guard.draining_queue: ⏳ Gateway 正在 {action}，已排到恢复后的下一轮。
+  gateway.runtime.guard.draining_blocked: ⏳ Gateway 正在 {action}，暂时不接受另一轮输入。
+  gateway.runtime.guard.draining_new_work: ⏳ Gateway 正在 {action}，暂时不接收新任务。
+  gateway.runtime.plan.load_failed: 无法加载内置的 /plan skill。
+  gateway.runtime.plan.prepare_failed: '进入 plan 模式失败：{error}'
+  gateway.runtime.unknown_command.notice: 未知命令 `/{command}`。输入 /commands 查看可用命令，或去掉斜杠作为普通消息发送。
+  gateway.runtime.pairing.code_intro: '你好，我暂时还没认出你。
+
+    这是你的配对码：`{code}`
+
+    请让 bot 所有者执行：
+    `hermes pairing approve {platform_name} {code}`'
+  gateway.runtime.pairing.too_many: 当前配对请求太多了，请稍后再试。
+  gateway.runtime.quick.no_output: 命令执行完成，但没有输出。
+  gateway.runtime.quick.timeout: Quick command 执行超时（30 秒）。
+  gateway.runtime.quick.error: 'Quick command 执行出错：{error}'
+  gateway.runtime.quick.no_command: 'Quick command `/{command}` 没有配置 command。'
+  gateway.runtime.quick.no_target: 'Quick command `/{command}` 没有配置 target。'
+  gateway.runtime.quick.bad_type: 'Quick command `/{command}` 的类型不受支持（支持：`exec`、`alias`）。'
+  gateway.runtime.skills.disabled_for_platform: '**{skill_name}** 技能在 {platform} 平台上已禁用。
+
+    可用 `hermes skills config` 重新启用。'
+  gateway.runtime.sethome.prompt: '📬 {platform_name} 还没有设置 Home 频道。Home 频道会接收 Hermes 的 cron 任务结果和跨平台消息。
+
+    输入 /sethome 把当前聊天设为 Home 频道，或者忽略这条提示。'
+  gateway.runtime.session.context_too_large: |-
+    ⚠️ 当前会话已经超过模型上下文窗口。
+    使用 /compact 压缩对话，或用 /reset 重新开始。
+  gateway.runtime.session.auth_failed: '⚠️ Provider 鉴权失败：{error}'
+  gateway.runtime.session.request_failed: '请求失败：{error}
+
+    请重试，或使用 /reset 开始一个新会话。'
+  gateway.runtime.session.exception: '抱歉，我遇到了一个错误（{error_type}）。
+    {error_detail}
+    {status_hint}请重试，或使用 /reset 开始一个新会话。'
+  gateway.runtime.context.injection_refused: 上下文注入已被拒绝。
+  gateway.runtime.proxy.requires_aiohttp: ⚠️ Proxy 模式需要 `aiohttp`。请安装：`pip install aiohttp`
+  gateway.runtime.proxy.url_missing: ⚠️ 还没有配置 Proxy URL（`GATEWAY_PROXY_URL` 或 `gateway.proxy_url`）。
+  gateway.runtime.proxy.error: '⚠️ 代理错误（{status}）：{detail}'
+  gateway.runtime.proxy.connection_error: '⚠️ 代理连接失败：{error}'
+  gateway.runtime.proxy.no_response: （远端 agent 没有返回内容）
+  gateway.runtime.rollback.none_found: '{cwd} 下没有找到 checkpoints。'
+  gateway.runtime.rollback.invalid_number: '无效的 checkpoint 编号。请使用 1-{max_index}。'
+  gateway.runtime.rollback.restored: '✅ 已恢复到 checkpoint {checkpoint}：{reason}
+
+    已自动保存一份回滚前快照。'
+  gateway.runtime.rollback.restore_failed: '❌ {error}'
+  gateway.runtime.agent.still_working: '⏳ 还在处理中……（已过去 {elapsed_mins} 分钟{status_detail}）'
+  gateway.runtime.agent.inactivity_warning: '⚠️ 已有 {elapsed_mins} 分钟没有新活动。如果 agent 还没有恢复响应，它会在 {remaining_mins} 分钟后被超时终止。你可以继续等待，或使用 /reset。'
+  display.session_search.recall_prefix: 回忆：
+  cli.compress.not_enough: (._.) 当前对话不足以压缩（至少需要 4 条消息）。
+  cli.compress.no_agent: (._.) 当前没有活跃代理，请先发一条消息。
+  cli.compress.disabled: (._.) 压缩功能在配置中已关闭。
+  cli.compress.start: 🗜️  正在压缩 {count} 条消息（约 {tokens} tokens）……
+  cli.compress.start_focus: 🗜️  正在压缩 {count} 条消息（约 {tokens} tokens），聚焦："{focus}"……
+  cli.compress.failed: '  ❌ 压缩失败：{error}'
+  cli.compress.result_noop: 压缩后没有变化：{count} 条消息
+  cli.compress.result_done: 已压缩：{before} → {after} 条消息
+  cli.compress.tokens_unchanged: 粗略转写估算：约 {tokens} tokens（未变化）
+  cli.compress.tokens_changed: 粗略转写估算：约 {before} → 约 {after} tokens
+  cli.compress.dense_note: 注意：即使消息条数变少，只要压缩把内容改写成更密集的摘要，粗略 token 估算仍可能上升。
+
+  # ── /reload ──────────────────────────────────────
+  cli.reload.done: 已重新加载 .env（{count} 个变量更新）
+
+  # ── /snapshot ────────────────────────────────────
+  cli.snapshot.no_snapshots: 尚无状态快照。
+  cli.snapshot.create_hint: 创建一个：/snapshot create [标签]
+  cli.snapshot.list_header: '  状态快照（{home}/state-snapshots/）：
+
+'
+  cli.snapshot.column_index: '#'
+  cli.snapshot.column_id: ID
+  cli.snapshot.column_files: 文件数
+  cli.snapshot.column_size: 大小
+  cli.snapshot.column_label: 标签
+  cli.snapshot.created: 快照已创建：{id}
+  cli.snapshot.no_state_files: 未找到可快照的状态文件。
+  cli.snapshot.restore_usage: '  用法：/snapshot restore <快照ID>'
+  cli.snapshot.most_recent: '  最近一个：{id}'
+  cli.snapshot.invalid_number: '  无效快照编号。请使用 1-{max}。'
+  cli.snapshot.restored: 已从快照恢复：{id}
+  cli.snapshot.restart_recommended: 建议重启以使 state.db 的变更生效。
+  cli.snapshot.not_found: 未找到快照：{id}
+  cli.snapshot.prune_usage: '  用法：/snapshot prune [保留数量]'
+  cli.snapshot.pruned: 已清理 {count} 个旧快照（保留 {keep} 个）。
+  cli.snapshot.unknown_subcmd: 未知子命令：{subcmd}
+  cli.snapshot.usage: '  用法：/snapshot [list|create [标签]|restore <ID>|prune [N]]'
+
+  # ── /debug ───────────────────────────────────────
+  debug.collecting: 正在收集调试报告……
+  debug.uploading: 正在上传……
+  debug.uploaded: 调试报告已上传：
+  debug.upload_failed: 上传失败
+  debug.share_hint: 将这些链接分享给 Hermes 团队以获取支持。
+  debug.privacy_notice: "⚠️  这会把以下内容上传到公开粘贴服务：\n  • 系统信息（OS、Python 版本、Hermes 版本、provider、配置了哪些 API key——**不包含**真实 key）\n  • 最近的日志行（agent.log、errors.log、gateway.log——可能包含对话片段和文件路径）\n  • 完整 agent.log 和 gateway.log（各最多 512 KB——大概率包含对话内容、工具输出和文件路径）\n\n粘贴内容会在 1 小时后自动删除。"
+  debug.auto_delete_hint: '
+
+    ⏱  粘贴内容会在 1 小时后自动删除。'
+  debug.delete_now_hint: '立即删除：hermes debug delete <url>'
+  debug.delete_usage: '用法：hermes debug delete <url> [<url> ...]'
+  debug.delete_help: "  删除由 'hermes debug share' 上传到 paste.rs 的粘贴。"
+  debug.delete_success: '  ✓ 已删除：{url}'
+  debug.delete_failed_response: '  ✗ 删除失败：{url}（返回结果异常）'
+  debug.delete_failed: '  ✗ {error}'
+  debug.delete_failed_error: '  ✗ 无法删除 {url}：{error}'
+  debug.delete_desc: '  delete   删除之前上传的粘贴'
+  debug.delete_options_label: '删除选项：'
+  debug.delete_arg: '  <url> ...    一个或多个要删除的粘贴链接'
+  debug.usage: '用法：hermes debug <command>'
+  debug.commands_label: '命令：'
+  debug.share_desc: '  share    上传调试报告到粘贴服务并打印链接'
+  debug.options_label: '选项：'
+  debug.lines_option: '  --lines N    包含的日志行数（默认：200）'
+  debug.expire_option: '  --expire N   粘贴过期天数（默认：7）'
+  debug.local_option: '  --local      本地打印报告而非上传'
+
+  # ── runtime / exit / worktree ───────────────────
+  cli.worktree.requires_repo: '--worktree 需要在 Git 仓库里运行。'
+  cli.worktree.requires_repo_hint: '  请先 cd 到你的项目仓库，再运行 hermes -w'
+  cli.worktree.create_failed: '创建 worktree 失败：{error}'
+  cli.worktree.created: 已创建 worktree：
+  cli.worktree.branch: 分支：
+  cli.worktree.unpushed_kept: 'worktree 中有未推送提交，已保留：{path}'
+  cli.worktree.cleanup_manual: '  如需手动清理：git worktree remove --force {path}'
+  cli.worktree.cleaned: '已清理 worktree：{path}'
+  cli.session.title_applied: '  会话标题已应用：{title}'
+  cli.session.title_apply_failed: '  应用待保存标题失败：{error}'
+  cli.reasoning.level_default: medium（默认）
+  cli.reasoning.level_disabled: none（已禁用）
+  cli.reasoning.display_state_on: 开启 ✓
+  cli.reasoning.display_state_off: 关闭
+  cli.runtime.init_failed: '初始化 agent 失败：{error}'
+  cli.runtime.init_agent: 正在初始化 agent……
+  cli.context.summary: '[@ 上下文：{ref_count} 个引用，{tokens} tokens]'
+  cli.runtime.clarify_timeout: （clarify 已在 {seconds}s 后超时，将由 agent 自行决定）
+  cli.runtime.password_received: '  ✓ 已收到密码（当前会话内缓存）'
+  cli.runtime.password_skipped: '  ⏭ 已跳过'
+  cli.runtime.sudo_timeout: '  ⏱ 超时——继续执行，但不使用 sudo'
+  cli.runtime.approval_timeout: '  ⏱ 超时——已拒绝该命令'
+  cli.runtime.interrupt_detected: ⚡ 检测到新消息，正在中断当前回复……
+  cli.runtime.continuous_voice_stopped: 连续语音模式因错误已停止。
+  cli.runtime.iteration_budget_reached: '⚠ 已达到迭代上限（{used}/{max}），回复可能不完整'
+  cli.runtime.security_scanner_unavailable: ⚠ tirith 安全扫描器已启用，但当前不可用——命令扫描将仅使用模式匹配。
+  cli.runtime.recording_cancelled: 录音已取消。
+  cli.runtime.force_exiting: ⚡ 正在强制退出……
+  cli.runtime.interrupting_agent: ⚡ 正在中断 agent……（再次按 Ctrl+C 可强制退出）
+  cli.runtime.suspend_unsupported_windows: Windows 不支持挂起（Ctrl+Z）。
+  cli.runtime.suspended_message: '{agent_name} 已挂起。运行 `fg` 可将 {agent_name} 恢复到前台。'
+  cli.runtime.voice_recording_failed: '语音录制失败：{error}'
+  cli.runtime.auto_attached_image: '  📎 已自动附加图片：{name}'
+  cli.runtime.detected_file: '  📄 已检测到文件：{name}'
+  cli.runtime.pasted_blocks_summary: '（{count} 段粘贴内容，共 {lines} 行）'
+  cli.runtime.pasted_text_summary: '[粘贴文本：{lines} 行]'
+  cli.runtime.multiline_suffix: '（另 {count} 行）'
+  cli.runtime.images_attached: '📎 已附加 {count} 张图片'
+  cli.spinner.elapsed.seconds: '{seconds:.1f} 秒'
+  cli.spinner.elapsed.minutes: '{minutes} 分 {seconds} 秒'
+  cli.runtime.process_error: '错误：{error}'
+  cli.runtime.interrupt_new_message: ⚡ 检测到新消息，正在中断……
+  cli.runtime.sending_messages_after_interrupt: "⚡ 中断后正在发送 {count} 条消息：'{preview}'"
+  cli.runtime.sending_after_interrupt: "⚡ 中断后正在发送：'{preview}'"
+  cli.runtime.deliver_leftover_steer: "\n⏩ 正在把遗留的 /steer 作为下一轮消息送达：'{preview}'"
+  cli.runtime.stdin_unavailable: "错误：stdin（fd 0）不可用。\n这可能出现在某些 Python 安装方式下（例如 macOS 上由 uv 管理的 cPython）。\n请用 pyenv 或 Homebrew 重新安装 Python，然后重新运行：hermes setup"
+  cli.runtime.stdin_unusable: "错误：stdin 当前不可用（{error}）。\n这可能出现在某些 Python 安装方式下（例如 macOS 上由 uv 管理的 cPython）。\n请用 pyenv 或 Homebrew 重新安装 Python，然后重新运行：hermes setup"
+  cli.summary.resume_with: 继续这个会话可运行：
+  cli.summary.command_resume_id: '  hermes --resume {session_id}'
+  cli.summary.command_resume_title: '  hermes -c "{title}"'
+  cli.summary.session_label: 会话：
+  cli.summary.title_label: 标题：
+  cli.summary.duration_label: 时长：
+  cli.summary.messages_label: 消息：
+  cli.summary.messages_breakdown: '{count}（{user_count} 条用户消息，{tool_count} 次工具调用）'
+  cli.summary.goodbye: 再见！⚕
+  cli.startup.gateway_starting: 正在启动 Hermes Gateway（消息平台）……
+  cli.startup.query_label: 问题：
+  cli.skin.source_user: '（用户）'
