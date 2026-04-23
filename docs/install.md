@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 ## 一行应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release bf039a9
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 7f1c1aa
 ```
 
 ## 给家人的最短说明
