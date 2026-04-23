@@ -26,20 +26,20 @@
 - Publish `releases/eda5ae5a/` as the current latest release.
 - Upgrade the versioned Chinese package from official Hermes `ce98e1ef` to `eda5ae5a`.
 - Shrink the declared overlay scope back to terminal + Telegram fixed visible text only.
-- Rebuild the latest release from a clean `eda5ae5a` official baseline instead of carrying forward the old Feishu-scoped release surface.
+- Rebuild the latest release from a clean `eda5ae5a` official baseline instead of carrying forward the older wider-scope release surface.
 - Carry the existing terminal + Telegram overlay forward and add the newly required latest-upstream terminal copy coverage for gateway service status, hook-block feedback, debug log snapshot labels, and WeCom setup metadata shown in the terminal.
 
 ## 0.6.1
 
 - Publish `releases/ce98e1ef-gateway2/` as the current latest release.
 - Remove the private Moonshot/Kimi `thinking` compatibility patch and return Kimi routing to the official `ce98e1ef` source behavior.
-- Keep the same terminal + Telegram + Feishu fixed-text overlay surface while regenerating the patch from the official baseline instead of carrying forward obsolete Kimi runtime drift.
+- Keep the same legacy wider fixed-text overlay surface while regenerating the patch from the official baseline instead of carrying forward obsolete Kimi runtime drift.
 
 ## 0.6.0
 
 - Upgrade the versioned Chinese package from official Hermes `fc8e4ebf` to `ce98e1ef`.
 - Publish `releases/ce98e1ef-gateway1/` as the previous release on this baseline.
-- Rebase the existing terminal + Telegram + Feishu minimal overlay onto the latest official baseline through a clean official checkout, instead of stacking new patch-on-patch drift.
+- Rebase the existing legacy wider minimal overlay onto the latest official baseline through a clean official checkout, instead of stacking new patch-on-patch drift.
 - Carry forward the declared display-only compatibility hooks, including CJK spinner row handling, display-only skill preview summarization, and the Kimi `thinking` bridge.
 - Add the newly required gateway usage localization keys and adapt numbered clarify-panel “Other” rows to the latest upstream terminal layout.
 
@@ -60,22 +60,22 @@
 
 - Publish `releases/fc8e4ebf-gateway1/` as the current latest release.
 - Finish the remaining terminal gateway fixed-copy coverage for setup banners, service-status prompts, process/service mismatch warnings, and Telegram platform metadata.
-- Add the missing banner toolset aliases for Discord, Feishu Docs, and Feishu Drive.
+- Add the missing banner toolset aliases for Discord plus the extra docs/drive services that were still present in the legacy wider scope.
 - Refresh the local localization-audit helper maps so `auth.py`, `debug.py`, and `main.py` are tracked under their current `_ui` entrypoints instead of stale helper names.
 
 ## 0.5.1
 
-- Publish `releases/fc8e4ebf-feishu2/` as the current latest release.
-- Fix the Feishu reaction regression by keeping provider protocol tokens (`Typing` / `CrossMark`) out of localization data.
-- Add the remaining Feishu fixed-copy coverage for gateway platform setup metadata and QR onboarding prompts.
+- Publish the second legacy wider-scope follow-up release on `fc8e4ebf`.
+- Fix the legacy wider-scope reaction regression by keeping provider protocol tokens (`Typing` / `CrossMark`) out of localization data.
+- Add the remaining legacy wider-scope fixed-copy coverage for gateway platform setup metadata and QR onboarding prompts.
 - Tighten the release policy so API enums, callback tokens, and other protocol identifiers are never treated as localizable UI text.
 
 ## 0.5.0
 
-- Publish `releases/fc8e4ebf-feishu1/` as the current latest release.
-- Expand the declared overlay scope from terminal + Telegram to terminal + Telegram + Feishu fixed UI text.
-- Add Feishu / Lark setup-copy localization, approval-card labels, resolved-card text, fallback labels, summary prefixes, and reaction badges.
-- Extend release verification and localization-audit tooling so Feishu UI hooks are tracked under the same release contract as terminal and Telegram.
+- Publish the first legacy wider-scope follow-up release on `fc8e4ebf`.
+- Expand the then-declared overlay scope from terminal + Telegram to a temporary wider fixed-UI surface.
+- Add that temporary wider-scope setup copy, approval-card labels, resolved-card text, fallback labels, summary prefixes, and reaction badges.
+- Extend release verification and localization-audit tooling so the temporary wider-scope UI hooks are tracked under the same release contract as terminal and Telegram.
 
 ## 0.4.0
 
