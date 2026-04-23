@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.3
+
+- Publish `releases/627abbb1/` as the current latest release.
+- Upgrade the versioned Chinese package from official Hermes `88b6eb9a` to `627abbb1`.
+- Keep the declared overlay scope at terminal + Telegram fixed visible text only.
+- Re-export the release from a fresh `627abbb1` official baseline after absorbing upstream changes in `gateway/run.py` and the prompt-builder test suite.
+
 ## 0.8.2
 
 - Publish `releases/88b6eb9/` as the current latest release.
