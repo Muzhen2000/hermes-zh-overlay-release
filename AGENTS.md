@@ -138,7 +138,9 @@
 12. 用 `scripts/apply_release.py` 把新 release 真正应用到本地 Hermes，一次实测完整升级路径
 13. 确认 `scripts/apply_release.py` 已清掉默认 profile 和所有 named profiles 下的 `.update_check`
 14. 再运行 `zsh -lc 'hermes --version'`，确认 banner / update notice 与真实 git 状态一致
-15. 如果用户反馈的是终端显示层 bug，例如输入框漏字、spinner 包裹高度异常、状态行错位，先检查目标官版是否已经修复；如果上游已经修复，优先通过升级 release 吸收官修，不要先加本地显示层补丁
+15. 在宣称“已对齐官方最新”之前，立刻重新查询一次官方 `main`；如果上游在本轮执行中继续前进，先比较新旧 commit 之间是否触及这 21 个受控文件
+16. 如果新提交没有碰到受控文件，按“纯前移”方式把 release 前移到新的官方 commit，重新跑 verify、真实 apply 和 `hermes --version`，不要停在已经过时的“最新”
+17. 如果用户反馈的是终端显示层 bug，例如输入框漏字、spinner 包裹高度异常、状态行错位，先检查目标官版是否已经修复；如果上游已经修复，优先通过升级 release 吸收官修，不要先加本地显示层补丁
 
 不要这样做：
 
