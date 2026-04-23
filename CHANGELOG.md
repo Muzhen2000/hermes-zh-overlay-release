@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.0
+
+- Publish `releases/bf039a9/` as the current latest release.
+- Upgrade the versioned Chinese package from official Hermes `eda5ae5a` to `bf039a92`.
+- Keep the declared overlay scope at terminal + Telegram fixed visible text only.
+- Regenerate the release from a fresh `bf039a92` official baseline instead of carrying forward any older localized worktree.
+
+## 0.7.0
+
+- Publish `releases/eda5ae5a/` as the current latest release.
+- Upgrade the versioned Chinese package from official Hermes `ce98e1ef` to `eda5ae5a`.
+- Shrink the declared overlay scope back to terminal + Telegram fixed visible text only.
+- Rebuild the latest release from a clean `eda5ae5a` official baseline instead of carrying forward the old Feishu-scoped release surface.
+- Carry the existing terminal + Telegram overlay forward and add the newly required latest-upstream terminal copy coverage for gateway service status, hook-block feedback, debug log snapshot labels, and WeCom setup metadata shown in the terminal.
+
 ## 0.6.1
 
 - Publish `releases/ce98e1ef-gateway2/` as the current latest release.

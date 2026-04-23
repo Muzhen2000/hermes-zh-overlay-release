@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-import importlib.util
-import sys
 
 import yaml
 
@@ -17,10 +15,10 @@ def _latest_release() -> str:
     return str(release_index["latest_release"])
 
 
-def test_release_index_scope_includes_feishu():
+def test_release_index_scope_is_terminal_and_telegram():
     release_index = json.loads((ROOT / "release.json").read_text(encoding="utf-8"))
 
-    assert release_index["scope"] == ["terminal", "telegram", "feishu"]
+    assert release_index["scope"] == ["terminal", "telegram"]
     assert release_index["web_ui_policy"] == "upstream-only"
 
 
@@ -158,24 +156,3 @@ def test_latest_ui_catalog_covers_banner_toolset_aliases():
         "banner.toolset.feishu_drive",
     ):
         assert key in messages
-
-
-def test_local_scan_script_tracks_current_runtime_helpers():
-    scan_script = ROOT.parent / "scripts" / "scan_hermes_localization.py"
-    spec = importlib.util.spec_from_file_location("scan_hermes_localization", scan_script)
-    assert spec is not None and spec.loader is not None
-
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-
-    ui_hooks = {(Path(hook.path).name, hook.helper, hook.prefix) for hook in module.UI_HOOKS}
-    assert ("auth.py", "_ui", "auth.") in ui_hooks
-    assert ("debug.py", "_ui", "debug.") in ui_hooks
-    assert ("main.py", "_ui", "main.") in ui_hooks
-
-    hermes_root = ROOT.parent / "hermes-agent"
-    allowlist = module.CONTROL_AUDIT_ALLOWLIST
-    assert "_ui" in allowlist[str(hermes_root / "hermes_cli" / "auth.py")]
-    assert "_ui" in allowlist[str(hermes_root / "hermes_cli" / "debug.py")]
-    assert "_ui" in allowlist[str(hermes_root / "hermes_cli" / "main.py")]

@@ -84,7 +84,7 @@ def test_validate_release_does_not_depend_on_installed_skill_localization(tmp_pa
                 "official_repo": "https://github.com/example/hermes-agent.git",
                 "latest_release": "r1",
                 "web_ui_policy": "upstream-only",
-                "scope": ["terminal", "telegram", "feishu"],
+                "scope": ["terminal", "telegram"],
             }
         ),
         encoding="utf-8",
@@ -94,7 +94,7 @@ def test_validate_release_does_not_depend_on_installed_skill_localization(tmp_pa
             {
                 "release": "r1",
                 "official_commit": "deadbeef",
-                "scope": ["terminal", "telegram", "feishu"],
+                "scope": ["terminal", "telegram"],
                 "web_ui_policy": "upstream-only",
                 "patch": "patches/hermes-zh.patch",
                 "localization_files": ["skills.zh-CN.yaml", "ui.zh-CN.yaml"],

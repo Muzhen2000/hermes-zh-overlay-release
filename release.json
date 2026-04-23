@@ -1,11 +1,10 @@
 {
   "official_repo": "https://github.com/NousResearch/hermes-agent.git",
-  "latest_release": "ce98e1ef-gateway2",
+  "latest_release": "bf039a9",
   "web_ui_policy": "upstream-only",
   "scope": [
     "terminal",
-    "telegram",
-    "feishu"
+    "telegram"
   ],
   "prerequisite": "official-hermes-installed"
 }
