@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2
+
+- Publish `releases/88b6eb9/` as the current latest release.
+- Upgrade the versioned Chinese package from official Hermes `7f1c1aa4` to `88b6eb9a`.
+- Keep the declared overlay scope at terminal + Telegram fixed visible text only.
+- Reconfirm that the intervening upstream commits stay outside the 21 overlay-managed source files, so the release patch remains byte-identical while the official baseline advances.
+
 ## 0.8.1
 
 - Publish `releases/7f1c1aa/` as the current latest release.

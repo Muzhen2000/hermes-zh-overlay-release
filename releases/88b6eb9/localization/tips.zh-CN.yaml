@@ -1,0 +1,281 @@
+tips:
+- /new 会开启全新会话，并生成新的会话 ID。
+- /retry 会重发你上一条消息，适合回答不理想时快速重试。
+- /undo 会移除上一轮用户/助手对话。
+- /resume 可以接着之前命名过的会话继续聊。
+- /title "项目名" 可以给当前会话命名，之后更容易找回。
+- /model 可以在会话中途切换模型。
+- /reasoning high 会提高模型思考深度。
+- /fast 会尽量走更快的响应路径，是否生效取决于服务商。
+- /background <任务> 会在独立会话里后台运行，不占用当前对话。
+- /queue <消息> 会把一条消息排到下一轮发送。
+- /compress 会手动压缩当前上下文，适合长对话。
+- /statusbar 可以切换底部状态栏显示。
+- /tools disable browser 会临时关闭浏览器工具。
+- /browser connect 可以把浏览器工具接到你正在运行的 Chrome。
+- /plugins 可以查看已安装插件及其状态。
+- /cron 可以管理定时任务和周期性提示。
+- /reload-mcp 会热重载 MCP 配置，不必重启 Hermes。
+- /usage 可以查看当前会话的 token、费用和时长。
+- /profile 可以查看当前正在使用哪个 profile。
+- /config 可以快速查看当前配置。
+- '@file:path/to/file.py 可以把文件内容直接带进当前消息。'
+- '@file:main.py:10-50 只会注入指定行号范围。'
+- '@folder:src/ 可以插入目录树结构。'
+- '@diff 会把未暂存的 git 改动带进消息。'
+- '@staged 会把已暂存的改动带进消息。'
+- '@url:https://example.com 会抓取网页内容作为上下文。'
+- 输入 @ 时可以触发文件路径补全。
+- Alt+Enter 或 Ctrl+J 可以在输入框里换行。
+- Ctrl+C 会打断当前运行中的 agent；短时间内连续按两次会强制退出。
+- Ctrl+Z 可以把 Hermes 挂到后台，回到 shell 后用 fg 恢复。
+- Tab 可以接受自动补全，也可以补全斜杠命令。
+- 当 agent 正在工作时，直接输入新消息也能打断并改派任务。
+- Alt+V 可以把剪贴板里的图片贴进会话。
+- hermes -c 可以恢复最近一次 CLI 会话。
+- hermes -w 会创建隔离的 git worktree，适合并行处理任务。
+- hermes chat -q "问题" 会执行一次性查询并退出。
+- 已安装的 skill 会自动变成斜杠命令，输入 / 就能看到。
+- skill 也可以限制只在特定平台加载，例如仅限 macOS 或 Linux。
+- Gateway 支持 Telegram、Discord、Slack、WhatsApp、Signal、邮件等多个平台。
+- hermes gateway install 可以把网关装成开机自启服务。
+- 'group_sessions_per_user: true 会让群聊中每个人拥有自己的独立会话。'
+- 危险命令审批支持一次、本会话、永久允许和拒绝四种处理。
+- Hermes 会在上下文接近上限时自动压缩历史，保留关键记忆。
+- SOUL.md 定义 Hermes 的主要人格，USER.md 和 MEMORY.md 记录你的偏好与长期信息。
+- 浏览器页面太长时，辅助模型会先做摘要，再把结果交给主代理。
+- Checkpoints 默认开启，修改文件前会留快照，之后可以 /rollback。
+- /rollback 不只回滚文件，也会回滚对应的对话轮次。
+- MCP 服务器会在运行时自动生成工具集，可以用 hermes tools 按平台开关。
+- voice.record_key 可以在 config.yaml 里改，不一定非要 Ctrl+B。
+- 如果你只想安静跑一条命令，可以用 hermes chat -Q 开启 quiet mode。
+- 'hermes -w -q "Fix issue #42" 将 worktree 隔离与一次性查询结合。'
+- hermes chat -t web,terminal 仅启用指定工具集，聚焦会话。
+- hermes chat -s github-pr-workflow 启动时预加载 skill。
+- hermes chat -q "query" 执行单次非交互查询后退出。
+- hermes chat --max-turns 200 覆盖默认的每轮 90 次迭代限制。
+- hermes chat --checkpoints 在每次破坏性文件变更前创建文件系统快照。
+- hermes --yolo 跳过整个会话中所有危险命令的审批提示。
+- hermes chat --source telegram 为会话打标签，便于 hermes sessions list 筛选。
+- hermes -p work chat 在指定 profile 下运行，不更改默认配置。
+- hermes doctor --fix 诊断并自动修复配置和依赖问题。
+- hermes dump 输出精简的配置摘要——适合提交 bug 报告。
+- hermes config set KEY VALUE 自动将密钥路由到 .env，其余写入 config.yaml。
+- hermes config edit 用默认编辑器打开 config.yaml。
+- hermes config check 扫描缺失或过期的配置项。
+- hermes sessions browse 打开带搜索的交互式会话选择器。
+- hermes sessions stats 按平台显示会话数和数据库大小。
+- hermes sessions prune --older-than 30 清理旧会话。
+- hermes skills search react --source skills-sh 搜索 skills.sh 公共目录。
+- hermes skills check 扫描已安装的 hub skills 是否有上游更新。
+- hermes skills tap add myorg/skills-repo 添加自定义 GitHub skill 源。
+- hermes skills snapshot export setup.json 导出 skill 配置，用于备份或分享。
+- hermes mcp add github --command npx 从命令行添加 MCP server。
+- hermes mcp serve 将 Hermes 自身作为 MCP server 供其他 agent 调用。
+- hermes auth add 支持添加多个 API key，用于凭证池轮换。
+- hermes completion bash >> ~/.bashrc 启用所有命令和 profile 的 Tab 补全。
+- hermes logs -f 实时跟踪 agent.log。--level WARNING --since 1h 过滤输出。
+- hermes backup 创建整个 Hermes 主目录的 zip 备份。
+- hermes profile create coder 创建独立 profile，它本身成为一个命令。
+- hermes profile create work --clone 将当前配置和密钥复制到新 profile。
+- hermes update 自动同步新的内置 skills 到所有 profile。
+- hermes gateway install 将 Hermes 注册为系统服务（systemd/launchd）。
+- hermes memory setup 配置外部记忆提供者（Honcho、Mem0 等）。
+- hermes webhook subscribe 创建带 HMAC 校验的事件驱动 webhook 路由。
+- '在 config.yaml 中设置 display.bell_on_complete: true，长任务完成时响铃。'
+- '设置 display.streaming: true，模型生成时实时显示 token。'
+- '设置 display.show_reasoning: true，查看模型的思维链推理过程。'
+- '设置 display.compact: true，减少输出空白，信息更密集。'
+- '设置 display.busy_input_mode: queue，将消息排队而非打断 agent。'
+- '设置 display.resume_display: minimal，恢复会话时跳过完整对话回顾。'
+- '设置 compression.threshold: 0.50 控制自动压缩触发时机（默认：上下文占用 50%）。'
+- '设置 agent.max_turns: 200，允许 agent 每轮执行更多工具调用步骤。'
+- '设置 file_read_max_chars: 200000，提高单次 read_file 的内容上限。'
+- '设置 approvals.mode: smart，由 LLM 自动批准安全命令、自动拒绝危险命令。'
+- 在 config.yaml 中设置 fallback_model，自动故障转移到备用 provider。
+- '设置 privacy.redact_pii: true，发送给 LLM 前对用户 ID 和电话号码做哈希脱敏。'
+- '设置 browser.record_sessions: true，自动将浏览器会话录制为 WebM 视频。'
+- '在 config.yaml 中设置 worktree: true，始终创建 git worktree（等同于 hermes -w）。'
+- '设置 security.website_blocklist.enabled: true，阻止 web 工具访问指定域名。'
+- '设置 cron.wrap_response: false，直接输出 agent 原始结果，不带 cron 头尾。'
+- HERMES_TIMEZONE 用任意 IANA 时区字符串覆盖服务器时区。
+- config.yaml 支持环境变量替换：使用 ${VAR_NAME} 语法。
+- config.yaml 中的 Quick commands 零 token 消耗即时执行 shell 命令。
+- 自定义 personalities 可在 config.yaml 的 agent.personalities 下定义。
+- provider_routing 控制 OpenRouter provider 的排序、白名单和黑名单。
+- execute_code 运行可编程调用 Hermes 工具的 Python 脚本——结果不进入上下文。
+- delegate_task 生成最多 3 个隔离上下文的并发子 agent 并行工作。
+- web_extract 支持 PDF URL——传入任意 PDF 链接即可转为 markdown。
+- search_files 基于 ripgrep，比 grep 更快——用它替代终端 grep。
+- patch 使用 9 种模糊匹配策略，轻微空白差异不会导致编辑失败。
+- patch 支持 V4A 格式，单次调用批量编辑多个文件。
+- read_file 在文件未找到时会推荐相似文件名。
+- read_file 自动去重——重复读取未变更文件返回轻量 stub。
+- browser_vision 截屏并用 AI 分析——适用于验证码和视觉内容。
+- browser_console 可在页面上下文中执行 JavaScript 表达式。
+- image_generate 使用 FLUX 2 Pro 生成图片，自动 2x 放大。
+- text_to_speech 将文本转为音频——在 Telegram 上以语音气泡播放。
+- send_message 可从会话中向任何已连接的消息平台发送消息。
+- todo 工具帮助 agent 在会话中追踪复杂多步骤任务。
+- session_search 对所有历史对话进行全文搜索。
+- agent 自动将偏好、纠正和环境信息保存到 memory。
+- mixture_of_agents 将难题路由给 4 个前沿 LLM 协作求解。
+- Terminal 命令支持 background 模式，配合 notify_on_complete 处理长时间任务。
+- Terminal 后台进程支持 watch_patterns，匹配特定输出行时触发提醒。
+- terminal 工具支持 6 种后端：local、Docker、SSH、Modal、Daytona 和 Singularity。
+- 每个 profile 拥有独立的 config、API key、memory、sessions、skills 和 cron 任务。
+- Profile 名称即 shell 命令——hermes profile create coder 创建 coder 命令。
+- hermes profile export coder -o backup.tar.gz 创建可移植的 profile 归档。
+- 若两个 profile 意外共享 bot token，第二个 gateway 会被阻止并给出明确错误。
+- 会话在首次交互后自动生成描述性标题——无需手动命名。
+- '会话标题支持谱系："my project" → "my project #2" → "my project #3"。'
+- 退出时，Hermes 打印恢复命令，包含 session ID 和统计信息。
+- hermes sessions export backup.jsonl 导出所有会话，用于备份或分析。
+- hermes -r SESSION_ID 按 ID 恢复任意历史会话。
+- Memory 是冻结快照——变更仅在下次会话启动时出现在系统提示中。
+- Memory 条目自动扫描 prompt injection 和数据外泄模式。
+- 代理有两个记忆存储：个人笔记（约 2200 字符）和用户档案（约 1375 字符）。
+- 你给代理的纠正（"不，这样做"）通常会自动保存到 memory。
+- 内置 80+ skills，覆盖 github、creative、mlops、productivity、research 等。
+- 每个已安装 skill 自动变为斜杠命令——输入 / 查看全部。
+- hermes skills install official/security/1password 从仓库安装可选 skills。
+- Skills 可限制特定 OS 平台——部分仅在 macOS 或 Linux 上加载。
+- config.yaml 中的 skills.external_dirs 可从自定义目录加载 skills。
+- 代理可通过 skill_manage 创建自己的 skills 作为程序记忆。
+- plan skill 将 markdown 计划保存在活动工作区的 .hermes/plans/ 下。
+- Cron 任务可附加 skill：hermes cron add --skill blogwatcher "Check for new posts"。
+- Cron 投递目标包括 telegram、discord、slack、email、sms 等 12+ 平台。
+- 若 cron 响应以 [SILENT] 开头，投递被抑制——适用于仅监控型任务。
+- Cron 支持相对延迟（30m）、间隔（every 2h）、cron 表达式和 ISO 时间戳。
+- Cron 任务在全新 agent 会话中运行——提示词必须自包含。
+- 安装 faster-whisper 后语音模式无需任何 API key（免费本地语音转文字）。
+- 五个 TTS 提供商：Edge TTS（免费）、ElevenLabs、OpenAI、NeuTTS（免费本地）、MiniMax。
+- /voice on 在 CLI 中启用语音模式。Ctrl+B 切换按键说话录音。
+- 流式 TTS 逐句播放生成内容——无需等待完整响应。
+- Telegram、Discord、WhatsApp 和 Slack 上的语音消息自动转写。
+- Hermes 支持 18 个平台：Telegram、Discord、Slack、WhatsApp、Signal、Matrix、email 等。
+- hermes gateway install 将其设为开机自启的系统服务。
+- DingTalk 使用 Stream Mode——无需 webhook 或公网 URL。
+- BlueBubbles 通过本地 macOS 服务器将 iMessage 接入 Hermes。
+- Webhook 路由支持 HMAC 验证、速率限制和事件过滤。
+- API 服务器暴露 OpenAI 兼容端点，兼容 Open WebUI 和 LibreChat。
+- Discord 语音频道模式：bot 加入语音频道，转写语音并回复。
+- 'group_sessions_per_user: true 在群聊中为每人分配独立会话。'
+- /sethome 将聊天标记为 cron 任务投递的主频道。
+- Gateway 支持基于不活跃的超时——活跃代理可无限运行。
+- 危险命令审批有 4 级：once、session、always（永久白名单）、deny。
+- 智能审批模式使用 LLM 自动批准安全命令并标记危险命令。
+- SSRF 保护阻止私有网络、环回地址、链路本地地址和云元数据地址。
+- Tirith 执行前扫描检测同形字 URL 欺骗和管道解释器注入模式。
+- MCP 子进程接收过滤后的环境——仅安全系统变量通过。
+- 上下文文件（.hermes.md、AGENTS.md）加载前会进行 prompt injection 安全扫描。
+- config.yaml 中的 command_allowlist 永久批准特定 shell 命令模式。
+- 上下文达到阈值时自动压缩——memory 刷新，历史摘要。
+- 状态栏随上下文填充依次变黄、橙、红。
+- ~/.hermes/SOUL.md 是代理的核心身份——自定义它以塑造行为。
+- Hermes 从 .hermes.md、AGENTS.md、CLAUDE.md 或 .cursorrules 加载项目上下文（首个匹配）。
+- 子目录中的 AGENTS.md 文件随代理进入文件夹逐步发现。
+- 上下文文件上限 20,000 字符，采用智能头尾截断。
+- 五个浏览器提供方：local Chromium、Browserbase、Browser Use、Camofox、Firecrawl。
+- Camofox 是反检测浏览器——Firefox 分支，C++ 指纹伪装。
+- browser_navigate 自动返回页面快照——无需再调用 browser_snapshot。
+- browser_vision 加 annotate=true 在交互元素上叠加编号标签。
+- MCP 服务器在 config.yaml 中配置——支持 stdio 和 HTTP 传输。
+- 按服务器过滤工具：tools.include 白名单，tools.exclude 黑名单。
+- MCP 服务器运行时自动生成工具集——hermes tools 可按平台切换。
+- 'MCP OAuth 支持：auth: oauth 启用基于浏览器的 PKCE 授权。'
+- Checkpoint 在无文件修改时零开销——默认启用。
+- 回滚前自动保存快照，可撤销撤销操作。
+- /rollback 同时撤销对话轮次，代理不会记住已回滚的变更。
+- Checkpoint 使用 ~/.hermes/checkpoints/ 中的影子仓库——项目 .git 不受影响。
+- batch_runner.py 并行处理数百条提示，用于训练数据生成。
+- hermes chat -Q 启用安静模式用于程序化调用——隐藏 banner 和 spinner。
+- 轨迹保存（--save-trajectories）捕获完整工具使用轨迹，用于模型训练。
+- 三种插件类型：general（工具/钩子）、memory providers、context engines。
+- hermes plugins install owner/repo 直接从 GitHub 安装插件。
+- 8 个外部 memory 提供商：Honcho、OpenViking、Mem0、Hindsight 等。
+- 插件钩子包括 pre_tool_call、post_tool_call、pre_llm_call、post_llm_call。
+- Prompt caching（Anthropic）通过复用缓存的系统提示前缀降低成本。
+- 代理在后台线程自动生成会话标题——零延迟影响。
+- 智能模型路由可自动将简单查询路由到更便宜的模型。
+- 斜杠命令支持前缀匹配：/h 解析为 /help，/mod 解析为 /model。
+- 将文件路径拖入终端自动附加图片或作为上下文发送。
+- 仓库根目录的 .worktreeinclude 列出需复制到 worktree 的 gitignored 文件。
+- hermes acp 将 Hermes 作为 ACP 服务器运行，集成 VS Code、Zed 和 JetBrains。
+- 自定义提供方：在 config.yaml 的 custom_providers 下保存命名端点。
+- HERMES_EPHEMERAL_SYSTEM_PROMPT 注入的 system prompt 不会持久化到历史记录。
+- credential_pool_strategies 支持 fill_first、round_robin、least_used 和 random 轮换策略。
+- hermes login 支持 Nous 和 OpenAI Codex 提供商的 OAuth 认证。
+- API 服务器同时支持 Chat Completions 和 Responses API，带服务端状态。
+- 'config 中 tool_preview_length: 0 在 spinner 活动流中显示完整文件路径。'
+- hermes status --deep 对所有组件执行更深层诊断检查。
+- ~/.hermes/BOOT.md 在每次 gateway 启动时自动运行 — 可用于启动检查。
+- Cron 任务可附加 Python 脚本 (--script)，其 stdout 作为上下文注入到 prompt 中。
+- Cron 脚本存放在 ~/.hermes/scripts/，在 agent 之前运行 — 适合数据采集管线。
+- config.yaml 中 prefill_messages_file 向每次 API 调用注入 few-shot 示例，不存入历史。
+- SOUL.md 完全替换 agent 的默认身份 — 重写它来定制你的 Hermes。
+- SOUL.md 首次运行时自动填充默认人格。编辑 ~/.hermes/SOUL.md 自定义。
+- /compress <focus topic> 将 60-70% 的摘要预算分配给指定主题，激进裁剪其余内容。
+- 第二次及后续压缩时，压缩器更新前一次摘要而非从头开始。
+- gateway 会话重置前，Hermes 在后台自动将重要事实刷入 memory。
+- 'config.yaml 中 network.force_ipv4: true 修复 IPv6 故障服务器的挂起问题。'
+- terminal 工具标注常见退出码：grep 返回 1 = 未找到匹配（非错误）。
+- 前台 terminal 命令失败时自动重试最多 3 次，指数退避（2s, 4s, 8s）。
+- 裸 sudo 命令自动改写为从 .env 管道传入 SUDO_PASSWORD — 无需交互提示。
+- execute_code 内置辅助函数：json_parse() 容错解析、shell_quote()、带退避的 retry()。
+- execute_code 的 7 个沙箱工具（web_search、terminal、read/write/search/patch）使用 RPC — 不进入上下文。
+- 读取同一文件区域 3 次以上触发警告。4 次以上硬阻断，防止循环。
+- write_file 和 patch 检测文件自上次读取后是否被外部修改，并警告数据过时。
+- V4A patch 格式支持 Add File、Delete File 和 Move File 指令 — 不仅限于 Update。
+- MCP 服务器可通过 sampling 请求 LLM 补全 — agent 成为服务器的工具。
+- MCP 服务器发送 notifications/tools/list_changed 触发工具自动重新注册，无需重启。
+- 'delegate_task 配合 acp_command: claude 可在任何平台生成 Claude Code 作为子 agent。'
+- 委派机制有心跳线程 — 子 agent 活动传播到父 agent，防止 gateway 超时。
+- 当提供商返回 HTTP 402（需付款）时，auxiliary client 自动回退到下一个。
+- agent.tool_use_enforcement 引导描述动作而非调用工具的模型 — GPT/Codex 设为 auto。
+- agent.restart_drain_timeout（默认 60s）让运行中的 agent 在 gateway 重启生效前完成。
+- gateway 按 session 缓存 AIAgent 实例 — 破坏此缓存会破坏 Anthropic prompt caching。
+- 任何网站可通过 /.well-known/skills/index.json 暴露 skills — skills hub 自动发现。
+- skills 审计日志 ~/.hermes/skills/.hub/audit.log 跟踪每次安装和移除操作。
+- 过期 git worktree 自动清理：24-72 小时且无未推送提交的在启动时修剪。
+- 每个 profile 在 HERMES_HOME/home/ 拥有独立子进程 HOME — 隔离 git、ssh、npm、gh 配置。
+- HERMES_HOME_MODE 环境变量（八进制，如 0701）设置 web 服务器遍历的自定义目录权限。
+- 容器模式：在 HERMES_HOME 放置 .container-mode，宿主 CLI 自动 exec 进入容器。
+- Ctrl+C 有 5 个优先级层：取消录制 → 取消提示 → 取消选择器 → 中断 agent → 退出。
+- agent 运行期间的每次中断都带时间戳记录到 ~/.hermes/interrupt_debug.log。
+- BROWSER_CDP_URL 将 browser 工具连接到任何运行中的 Chrome — 支持 WebSocket、HTTP 或 host:port。
+- BROWSERBASE_ADVANCED_STEALTH=true 启用自定义 Chromium 的高级反检测（Scale Plan）。
+- CLI 在窄于 80 列的终端中自动切换到紧凑模式。
+- Quick commands 支持两种类型：exec（直接运行 shell 命令）和 alias（重定向到另一命令）。
+- 按任务委派模型：config 中 delegation.model 和 delegation.provider 将子 agent 路由到更便宜的模型。
+- delegation.reasoning_effort 独立控制子 agent 的思考深度。
+- config.yaml 中 display.platforms 允许按平台覆盖显示配置。
+- config 中 human_delay.mode 模拟人类打字速度 — 可配置 min_ms/max_ms 范围。
+- 配置版本迁移在加载时自动运行 — 新配置键无需手动干预即可出现。
+- GPT 和 Codex 模型获得工具纪律和强制工具使用的特殊 system prompt 指导。
+- Gemini 模型获得绝对路径、并行工具调用和非交互命令的定制指令。
+- config.yaml 中 context.engine 可设为插件名以使用替代上下文管理策略。
+- 超过 8000 token 的浏览器页面由 auxiliary LLM 自动摘要后返回给 agent。
+- 压缩器执行廉价预筛：超过 200 字符的工具输出在 LLM 运行前替换为占位符。
+- 压缩失败时，后续尝试暂停 10 分钟以避免 API 过载。
+- 超长危险命令（>70 字符）在审批提示中提供 view 选项先查看完整内容。
+- 录音时基于麦克风 RMS 电平显示 ▁▂▃▄▅▆▇ 音频电平条。
+- Profile 名称不能与现有 PATH 二进制冲突 — hermes profile create ls 会被拒绝。
+- hermes profile create backup --clone-all 复制所有内容（config、keys、SOUL.md、memories、skills、sessions）。
+- 录音键可通过 config.yaml 中 voice.record_key 配置 — 不限于 Ctrl+B。
+- .cursorrules 和 .cursor/rules/*.mdc 文件自动检测并加载为项目上下文。
+- 上下文文件支持 10+ 种 prompt 注入模式 — 不可见 Unicode、ignore instructions、数据外泄尝试。
+- GPT-5 和 Codex 在消息格式中使用 developer 角色而非 system。
+- 按任务的 auxiliary 覆盖：config.yaml 中 auxiliary.vision.provider、auxiliary.compression.model
+  等。
+- auxiliary client 将 main 视为 provider 别名 — 解析为实际主 provider + model。
+- '智能路由可自动将简单查询路由到更便宜的模型 — 设置 smart_model_routing.enabled: true。'
+- hermes claw migrate --dry-run 预览 OpenClaw 迁移但不写入任何内容。
+- 带引号或转义空格的粘贴文件路径自动处理 — 无需手动清理。
+- 斜杠命令从不触发大段粘贴折叠 — /command 携带大参数也能正常工作。
+- 中断模式下，agent 执行期间输入的斜杠命令绕过中断逻辑立即执行。
+- HERMES_DEV=1 绕过容器模式检测，用于本地开发。
+- 每个 MCP 服务器拥有独立工具集（mcp-servername），可通过 hermes tools 独立开关。
+- config 中 MCP ${ENV_VAR} 占位符在服务器启动时解析 — 包括 ~/.hermes/.env 中的变量。
+- 来自可信仓库（NousResearch）的 skills 获得 trusted 安全等级；社区 skills 额外扫描。
+- skills 隔离区 ~/.hermes/skills/.hub/quarantine/ 存放待安全审查的 skills。
