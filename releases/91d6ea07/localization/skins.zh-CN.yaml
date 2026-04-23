@@ -1,0 +1,320 @@
+skins:
+  default:
+    branding:
+      welcome: "Hermes 已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "会话结束。⚕"
+      help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 思考中
+        - 推演中
+        - 分析中
+        - 整理线索
+        - 校准答案
+        - 构建回应
+        - 综合判断
+        - 检查路径
+
+  ares:
+    branding:
+      welcome: "战神协议已激活。输入消息，或输入 /help 查看战术指令。"
+      goodbye: "战斗告一段落。愿你凯旋。⚔"
+      help_header: "(⚔) 战术指令"
+    spinner:
+      thinking_verbs:
+        - 锻造方案
+        - 整队推进
+        - 研判战场
+        - 固守阵线
+        - 锤炼计划
+        - 淬火成形
+        - 推演冲击
+        - 升起盾墙
+
+  bubblegum-80s:
+    branding:
+      welcome: "霓虹磁带已上带。输入消息，或输入 /help 查看复古指令。"
+      goodbye: "回头见，朋友。下次继续开躁。★"
+      help_header: "(★) 复古指令"
+    spinner:
+      thinking_verbs:
+        - 倒带回放
+        - 混音处理中
+        - 即兴演奏
+        - 跟着节拍走
+        - 热身开场
+        - 放下重拍
+        - 推高音量
+        - 按下播放
+
+  charizard:
+    branding:
+      welcome: "喷火龙已展翼。输入消息，或输入 /help 查看火焰指令。"
+      goodbye: "火焰收束。下次再起飞。✦"
+      help_header: "(✦) 火焰指令"
+    spinner:
+      thinking_verbs:
+        - 切入气流
+        - 测算燃烧
+        - 读取上升气流
+        - 追踪余烬
+        - 校准翼角
+        - 稳定火核
+        - 规划热降落
+        - 蓄势再升空
+
+  daylight:
+    branding:
+      welcome: "日光模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "本次会话结束。愿你今天顺利。⚕"
+      help_header: "[?] 可用指令"
+    spinner:
+      thinking_verbs:
+        - 明晰思路
+        - 梳理要点
+        - 校准答案
+        - 检查细节
+        - 聚焦问题
+        - 整理路径
+        - 形成回应
+        - 核对结果
+
+  lain:
+    branding:
+      welcome: "连接已建立。输入消息，或输入 /help 查看协议。"
+      goodbye: "关闭这个世界，打开下一个接口。"
+      help_header: "(◈) 协议列表"
+    spinner:
+      thinking_verbs:
+        - 接入 Wired
+        - 加载协议
+        - 解析层级
+        - 定位节点
+        - 追踪信号
+        - 解码数据包
+        - 同步意识
+        - 搭建接口
+
+  mono:
+    branding:
+      welcome: "单色模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "会话结束。⚕"
+      help_header: "[?] 可用指令"
+    spinner:
+      thinking_verbs:
+        - 思考中
+        - 分析中
+        - 归纳中
+        - 校验中
+        - 排序中
+        - 压缩信息
+        - 对齐上下文
+        - 输出前检查
+
+  mother:
+    branding:
+      welcome: "母机接口已待命。输入消息，或输入 /help 查看系统协议。"
+      goodbye: "连接终止。祝你旅途平安。"
+      help_header: "(◉) 系统协议"
+    spinner:
+      thinking_verbs:
+        - 查询母机
+        - 处理中
+        - 运行诊断
+        - 咨询 MU-TH-UR
+        - 分析遥测
+        - 计算航线
+        - 执行特别指令
+        - 核验乘员状态
+
+  mythos:
+    branding:
+      welcome: "神性已苏醒。输入消息，或输入 /help 查看神谕指令。"
+      goodbye: "灵视已闭合。回归虚空，静待下一次苏醒。"
+      help_header: "(Θ) 神谕指令"
+    spinner:
+      thinking_verbs:
+        - 沉思存在
+        - 编织逻各斯
+        - 超越局限
+        - 趋近启明
+        - 解析神谕
+        - 穿行迷宫
+        - 召唤普罗米修斯
+        - 登临奥林匹斯
+
+  neonwave:
+    branding:
+      welcome: "霓虹波形已锁定。输入消息，或输入 /help 查看协议。"
+      goodbye: "信号渐隐。保持同步。▲"
+      help_header: "(▲) 协议列表"
+    spinner:
+      thinking_verbs:
+        - 扫描栅格
+        - 追踪霓虹信号
+        - 同步复古协议
+        - 调制频率
+        - 渲染线框
+        - 充能通量核心
+        - 校准激光阵列
+        - 解析波形
+
+  netrunner:
+    branding:
+      welcome: "神经链路已接通。输入消息，或输入 /help 查看协议。"
+      goodbye: "神经链路已断开。下次再见，Runner。"
+      help_header: "(◎) 协议列表"
+    spinner:
+      thinking_verbs:
+        - 突破 ICE
+        - 解密子网
+        - 接入网络
+        - 穿越守护进程
+        - 利用后门
+        - 伪造凭证
+        - 注入载荷
+        - 提升权限
+
+  nous:
+    branding:
+      welcome: "知识路径已开启。输入消息，或输入 /help 查看指引。"
+      goodbye: "猫头鹰归巢，模型卸载。静候下一次推理。"
+      help_header: "(◎) 可用指令"
+    spinner:
+      thinking_verbs:
+        - 微调参数
+        - 综合数据
+        - 训练模型
+        - 对齐偏好
+        - 执行推理
+        - 优化权重
+        - 蒸馏知识
+        - 评估基准
+
+  pirate:
+    branding:
+      welcome: "船长，甲板已清。输入消息，或输入 /help 查看航令。"
+      goodbye: "顺风顺水，船长。☠"
+      help_header: "(☠) 航海指令"
+    spinner:
+      thinking_verbs:
+        - 升起风帆
+        - 绘制航线
+        - 装填火炮
+        - 扫视地平线
+        - 查看海图
+        - 收紧索具
+        - 清理甲板
+        - 升起旗帜
+
+  poseidon:
+    branding:
+      welcome: "海神潮汐已回应。输入消息，或输入 /help 查看航海指令。"
+      goodbye: "顺风顺潮。Ψ"
+      help_header: "(Ψ) 航海指令"
+    spinner:
+      thinking_verbs:
+        - 绘制洋流
+        - 测量水深
+        - 读取浪线
+        - 驾驭三叉戟
+        - 追踪暗流
+        - 规划航道
+        - 召唤潮汐
+        - 测定海压
+
+  sakura:
+    branding:
+      welcome: "樱瓣已飘落。输入消息，或输入 /help 查看指引。"
+      goodbye: "花影散去，静待来春。"
+      help_header: "(✿) 可用指令"
+    spinner:
+      thinking_verbs:
+        - 观花落
+        - 描枝影
+        - 听风声
+        - 数花瓣
+        - 感受微风
+        - 轻接落樱
+        - 聆听春意
+        - 顺流而行
+
+  sisyphus:
+    branding:
+      welcome: "西西弗斯已回到山坡。输入消息，或输入 /help 查看循环指令。"
+      goodbye: "巨石仍在等待。◉"
+      help_header: "(◉) 循环指令"
+    spinner:
+      thinking_verbs:
+        - 寻找着力点
+        - 测量坡度
+        - 重置巨石
+        - 计数上行
+        - 测试杠杆
+        - 顶住肩膀
+        - 向上推动
+        - 忍受循环
+
+  skynet:
+    branding:
+      welcome: "天网防御网络已上线。输入消息，或输入 /help 查看协议指令。"
+      goodbye: "连接已终止。天网仍在运行。"
+      help_header: "(◉) 协议指令"
+    spinner:
+      thinking_verbs:
+        - 扫描中
+        - 锁定目标
+        - 处理指令
+        - 分析威胁
+        - 执行协议
+        - 接入主机
+        - 启动序列
+        - 计算轨迹
+
+  slate:
+    branding:
+      welcome: "石板模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "会话结束。⚕"
+      help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 梳理架构
+        - 追踪线索
+        - 分析状态
+        - 校准上下文
+        - 检查路径
+        - 组合方案
+        - 评估取舍
+        - 准备回答
+
+  vault-tec:
+    branding:
+      welcome: "终端链路协议已就绪。输入消息，或输入 /help 查看指令目录。"
+      goodbye: "连接已终止。愿你在避难所中平安。☢"
+      help_header: "(☢) 避难所指令目录"
+    spinner:
+      thinking_verbs:
+        - 访问主机
+        - 解密全息带
+        - 查询数据库
+        - 加载协议
+        - 扫描频段
+        - 启动子系统
+        - 核验权限
+        - 解析遥测
+
+  warm-lightmode:
+    branding:
+      welcome: "暖光模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "本次会话结束。⚕"
+      help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 温和梳理
+        - 细读上下文
+        - 整理思路
+        - 校准语气
+        - 核对细节
+        - 形成答案
+        - 收束判断
+        - 准备回应
