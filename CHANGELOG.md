@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.5
+
+- Publish `releases/6fdbf2f2/` as the current latest release.
+- Upgrade the versioned Chinese package from official Hermes `91d6ea07` to `6fdbf2f2`.
+- Re-export the release from a fresh `6fdbf2f2` official baseline after absorbing upstream gateway CLI changes.
+- Add visible progress output to `scripts/apply_release.py` so the two-line install flow no longer appears idle during network and git operations.
+
 ## 0.8.4
 
 - Publish `releases/91d6ea07/` as the current latest release.

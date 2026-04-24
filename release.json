@@ -1,6 +1,6 @@
 {
   "official_repo": "https://github.com/NousResearch/hermes-agent.git",
-  "latest_release": "91d6ea07",
+  "latest_release": "6fdbf2f2",
   "web_ui_policy": "upstream-only",
   "scope": [
     "terminal",

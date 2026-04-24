@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 
@@ -96,3 +97,66 @@ def test_invalidate_update_cache_removes_default_and_profile_caches(tmp_path):
     assert not default_cache.exists()
     assert not ops_cache.exists()
     assert not dev_cache.exists()
+
+
+def test_apply_release_prints_visible_progress(monkeypatch, tmp_path, capsys):
+    module = _load_module()
+    hermes_home = tmp_path / ".hermes"
+    repo_root = tmp_path / "overlay"
+    release_dir = repo_root / "releases" / "r1"
+    (release_dir / "localization").mkdir(parents=True, exist_ok=True)
+    (release_dir / "patches").mkdir(parents=True, exist_ok=True)
+    (release_dir / "skins").mkdir(parents=True, exist_ok=True)
+    (repo_root / "release.json").write_text(
+        json.dumps(
+            {
+                "official_repo": "https://github.com/example/hermes-agent.git",
+                "latest_release": "r1",
+                "scope": ["terminal", "telegram"],
+                "web_ui_policy": "upstream-only",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (release_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "release": "r1",
+                "official_commit": "deadbeef",
+                "scope": ["terminal", "telegram"],
+                "web_ui_policy": "upstream-only",
+                "patch": "patches/hermes-zh.patch",
+                "localization_files": ["ui.zh-CN.yaml"],
+                "skin_files": [],
+                "allowed_source_files": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (release_dir / "localization" / "ui.zh-CN.yaml").write_text("messages: {}\n", encoding="utf-8")
+    (release_dir / "patches" / "hermes-zh.patch").write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(
+        module,
+        "_clone_or_update_release_repo",
+        lambda **kwargs: repo_root,
+    )
+    monkeypatch.setattr(
+        module,
+        "_copy_release_assets",
+        lambda **kwargs: {
+            "changed": {"ui.zh-CN.yaml": True, "hermes-zh-r1.patch": True},
+            "patch_path": str(hermes_home / "localization" / "patches" / "hermes-zh-r1.patch"),
+        },
+    )
+    monkeypatch.setattr(module, "_prune_legacy_overlay", lambda *args, **kwargs: [])
+    monkeypatch.setattr(module, "_align_source_to_official", lambda **kwargs: None)
+    monkeypatch.setattr(module, "_apply_patch", lambda **kwargs: None)
+    monkeypatch.setattr(module, "_invalidate_update_cache", lambda *args, **kwargs: [])
+
+    module.apply_release(hermes_home=hermes_home, release_source_dir=repo_root)
+
+    progress = capsys.readouterr().err
+    assert "[hermes-zh-release] 同步中文包仓库" in progress
+    assert "[hermes-zh-release] 对齐官方 Hermes 源码版本" in progress
+    assert "[hermes-zh-release] 应用中文 patch" in progress

@@ -17,6 +17,10 @@ class ReleaseError(RuntimeError):
     """Raised when a release apply step fails."""
 
 
+def _progress(message: str) -> None:
+    print(f"[hermes-zh-release] {message}", file=sys.stderr, flush=True)
+
+
 def _run(
     cmd: list[str],
     *,
@@ -206,11 +210,13 @@ def apply_release(
     hermes_home = hermes_home.expanduser()
     user_home = Path.home()
     release_checkout = hermes_home / "hermes-zh-overlay-release"
+    _progress("同步中文包仓库")
     repo_root = _clone_or_update_release_repo(
         release_dir=release_checkout,
         repo_url=repo_url,
         source_dir=release_source_dir,
     )
+    _progress("读取 release 元数据")
     resolved_release, release_index, manifest = _load_release_metadata(repo_root, release_id)
     official_repo = str(release_index.get("official_repo") or "").strip()
     if not official_repo:
@@ -219,21 +225,26 @@ def apply_release(
     if not official_commit:
         raise ReleaseError("manifest does not define official_commit")
 
+    _progress(f"写入中文资源与皮肤（release {resolved_release}）")
     copied = _copy_release_assets(
         repo_root=repo_root,
         hermes_home=hermes_home,
         release_id=resolved_release,
         manifest=manifest,
     )
+    _progress("清理旧版中文自动维护残留")
     removed = _prune_legacy_overlay(hermes_home, user_home)
 
     source_dir = hermes_home / "hermes-agent"
+    _progress("对齐官方 Hermes 源码版本")
     _align_source_to_official(
         source_dir=source_dir,
         official_repo=official_repo,
         official_commit=official_commit,
     )
+    _progress("应用中文 patch")
     _apply_patch(source_dir=source_dir, patch_path=Path(copied["patch_path"]))
+    _progress("失效旧更新缓存")
     invalidated_update_cache = _invalidate_update_cache(hermes_home)
 
     return {

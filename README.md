@@ -8,8 +8,8 @@
 
 当前 release：
 
-- 官方 Hermes commit：`91d6ea07c86b5539021b7620dac6e46ce205ffe4`
-- 中文包 release：`91d6ea07`
+- 官方 Hermes commit：`6fdbf2f2d76cf37393e657bf37ceda3d84589200`
+- 中文包 release：`6fdbf2f2`
 
 范围说明：
 
@@ -32,7 +32,7 @@
 1. 应用这一版中文包
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 91d6ea07
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 6fdbf2f2
 ```
 
 2. 校验本机 Hermes 与这版中文包是否一致
