@@ -10,7 +10,7 @@
 
 - 官方 Hermes 某个版本
 - 对应一份这个版本的最小中文包
-- release 里允许带少量经过 manifest 声明的小补丁
+- release 默认不修改 Hermes 源码；只有极端必要时才允许带经过 manifest 声明的显示层小补丁
 - 如果 release 附带了自建皮肤，也会一并同步到 `~/.hermes/skins/`
 
 ## 一行应用最新中文包
@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 ## 一行应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 6fdbf2f2
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 023b1bff-discord1
 ```
 
 ## 给家人的最短说明
@@ -43,12 +43,13 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 
 - 拉取这个公开仓库的当前 release
 - 把她本地 Hermes 对齐到该 release 绑定的官方 commit
-- 应用这一版最小中文包
+- 应用这一版最小中文包；当前版不包含 Hermes 源码 patch
 - 同步这一版附带的皮肤文件
 
 她运行后，预期体验是：
 
-- 终端、Telegram 中属于本仓库范围的固定文案变为中文
+- 终端、Discord 中属于本仓库范围、且官方已有数据入口的固定文案变为中文
+- 当前版保持 Hermes 官方源码零 diff，因此终端命令固定回复和 Discord 固定回复仍跟随官方英文
 - Web UI 保持官方原样
 - 她自己的会话、记忆、配置和登录态不被覆盖
 
@@ -60,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 4. 清理旧版自动维护残留（仅为迁移收尾，不属于当前系统）
 5. 写入 `~/.hermes/localization/*.yaml`
 6. 如果该 release 附带皮肤，则写入 `~/.hermes/skins/*.yaml`
-7. 应用 `releases/<release>/patches/hermes-zh.patch`
+7. 如果 `manifest.patch` 非空，应用 `releases/<release>/patches/hermes-zh.patch`；当前版会跳过这一步并保持官方源码不变
 8. 清掉默认 profile 与 named profiles 下旧的 `.update_check`，避免升级后仍误报“落后若干提交”
 
 ## 不会动的内容

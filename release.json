@@ -1,10 +1,10 @@
 {
   "official_repo": "https://github.com/NousResearch/hermes-agent.git",
-  "latest_release": "6fdbf2f2",
+  "latest_release": "023b1bff-discord1",
   "web_ui_policy": "upstream-only",
   "scope": [
     "terminal",
-    "telegram"
+    "discord"
   ],
   "prerequisite": "official-hermes-installed"
 }

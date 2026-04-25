@@ -29,7 +29,8 @@ def test_copy_release_assets_materializes_expected_files(tmp_path):
         manifest=manifest,
     )
 
-    assert Path(result["patch_path"]).exists()
+    if result["patch_path"]:
+        assert Path(result["patch_path"]).exists()
     for name in manifest["localization_files"]:
         assert (hermes_home / "localization" / name).exists()
     for name in manifest["skin_files"]:
@@ -112,7 +113,7 @@ def test_apply_release_prints_visible_progress(monkeypatch, tmp_path, capsys):
             {
                 "official_repo": "https://github.com/example/hermes-agent.git",
                 "latest_release": "r1",
-                "scope": ["terminal", "telegram"],
+                "scope": ["terminal", "discord"],
                 "web_ui_policy": "upstream-only",
             }
         ),
@@ -123,9 +124,9 @@ def test_apply_release_prints_visible_progress(monkeypatch, tmp_path, capsys):
             {
                 "release": "r1",
                 "official_commit": "deadbeef",
-                "scope": ["terminal", "telegram"],
+                "scope": ["terminal", "discord"],
                 "web_ui_policy": "upstream-only",
-                "patch": "patches/hermes-zh.patch",
+                "patch": "",
                 "localization_files": ["ui.zh-CN.yaml"],
                 "skin_files": [],
                 "allowed_source_files": [],
@@ -146,12 +147,15 @@ def test_apply_release_prints_visible_progress(monkeypatch, tmp_path, capsys):
         "_copy_release_assets",
         lambda **kwargs: {
             "changed": {"ui.zh-CN.yaml": True, "hermes-zh-r1.patch": True},
-            "patch_path": str(hermes_home / "localization" / "patches" / "hermes-zh-r1.patch"),
+            "patch_path": "",
         },
     )
     monkeypatch.setattr(module, "_prune_legacy_overlay", lambda *args, **kwargs: [])
     monkeypatch.setattr(module, "_align_source_to_official", lambda **kwargs: None)
-    monkeypatch.setattr(module, "_apply_patch", lambda **kwargs: None)
+    def fail_if_patch_called(**kwargs):
+        raise AssertionError("_apply_patch should not run for no-patch releases")
+
+    monkeypatch.setattr(module, "_apply_patch", fail_if_patch_called)
     monkeypatch.setattr(module, "_invalidate_update_cache", lambda *args, **kwargs: [])
 
     module.apply_release(hermes_home=hermes_home, release_source_dir=repo_root)
@@ -159,4 +163,4 @@ def test_apply_release_prints_visible_progress(monkeypatch, tmp_path, capsys):
     progress = capsys.readouterr().err
     assert "[hermes-zh-release] 同步中文包仓库" in progress
     assert "[hermes-zh-release] 对齐官方 Hermes 源码版本" in progress
-    assert "[hermes-zh-release] 应用中文 patch" in progress
+    assert "[hermes-zh-release] 无中文源码 patch，保持官方源码不变" in progress

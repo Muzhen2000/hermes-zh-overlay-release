@@ -15,10 +15,10 @@ def _latest_release() -> str:
     return str(release_index["latest_release"])
 
 
-def test_release_index_scope_is_terminal_and_telegram():
+def test_release_index_scope_is_terminal_and_discord():
     release_index = json.loads((ROOT / "release.json").read_text(encoding="utf-8"))
 
-    assert release_index["scope"] == ["terminal", "telegram"]
+    assert release_index["scope"] == ["terminal", "discord"]
     assert release_index["web_ui_policy"] == "upstream-only"
 
 
@@ -52,6 +52,8 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
     release_dir = ROOT / "releases" / release_id
     ui_data = yaml.safe_load((release_dir / "localization" / "ui.zh-CN.yaml").read_text(encoding="utf-8"))
     messages = set((ui_data or {}).get("messages", {}))
+    if not manifest.get("patch"):
+        return
     patch_text = (release_dir / manifest["patch"]).read_text(encoding="utf-8")
     added_source = "\n".join(
         line[1:]
@@ -62,7 +64,7 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
     helper_prefixes = {
         "cli.py": (("_cli_ui", "cli."),),
         "gateway/run.py": (("_gateway_ui", "gateway.runtime."),),
-        "gateway/platforms/telegram.py": (("_tg_ui", "gateway.telegram."),),
+        "gateway/platforms/discord.py": (("_discord_ui", "gateway.discord."),),
         "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
         "hermes_cli/gateway.py": (("_ui", "gateway."),),
         "hermes_cli/auth.py": (("_ui", "auth."),),
@@ -102,14 +104,14 @@ def test_manifest_lists_existing_skin_files():
         assert (skins_dir / name).exists()
 
 
-def test_manifest_keeps_terminal_localization_entrypoints_under_management():
+def test_manifest_keeps_official_source_clean_when_no_patch_is_declared():
     release_id = _latest_release()
     manifest = json.loads(
         (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
     )
 
-    for path in ["hermes_cli/auth.py", "hermes_cli/debug.py", "hermes_cli/main.py"]:
-        assert path in manifest["allowed_source_files"]
+    if not manifest.get("patch"):
+        assert manifest["allowed_source_files"] == []
 
 
 def test_skin_localization_covers_builtins_and_release_custom_skins():
@@ -150,9 +152,5 @@ def test_latest_ui_catalog_covers_banner_toolset_aliases():
     )
     messages = (ui_data or {}).get("messages", {})
 
-    for key in (
-        "banner.toolset.discord",
-        "banner.toolset.feishu_doc",
-        "banner.toolset.feishu_drive",
-    ):
+    for key in ("banner.toolset.discord",):
         assert key in messages

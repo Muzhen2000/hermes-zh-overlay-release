@@ -47,7 +47,7 @@
 仓库只负责三类内容：
 
 - 终端中用户可见、非 LLM 生成的固定文案
-- Telegram 中用户可见、非 LLM 生成的固定文案
+- Discord 中用户可见、非 LLM 生成的固定文案
 
 这包括但不限于：
 
@@ -58,7 +58,7 @@
 - slash 命令触发后的固定提示语，包括成功、失败、空状态、用法提示、加载中提示、确认/拒绝提示
 - 固定二级选项提示语
 - 用户发出消息后、LLM 回复前的固定状态提示语，包括 agent 初始化提示、busy 状态、spinner face + verb 组合、工具/记忆检索短状态行
-- Telegram 中对应的固定命令说明与固定提示语
+- Discord 中对应的固定命令说明与固定提示语
 
 明确不包括：
 
@@ -72,7 +72,7 @@
 注意：
 
 - 不要只根据一个截图或一个皮肤做症状修补。
-- 固定文案应按“同类问题”检查全部相关皮肤、终端面和 Telegram 面。
+- 固定文案应按“同类问题”检查全部相关皮肤、终端面和 Discord 面。
 - 如果必须隐藏内部提示文本，只允许做展示层摘要，不得改真正送入模型的内容。
 
 ## 3. 六条阶梯原则
@@ -127,18 +127,18 @@
 1. 确定目标官方 commit
 2. 准备一棵干净的 Hermes 官方基线树
 3. 比对旧官方 commit 与新官方 commit
-4. 只检查终端、Telegram 范围内的固定可见文案是否新增、变更或删除
+4. 只检查终端、Discord 范围内的固定可见文案是否新增、变更或删除
 5. 先复用旧 release 的词条与皮肤，再逐项核对是否仍然适用
 6. 优先更新外置词条文件
 7. 外置词条无法覆盖时，才做最小源码接线或字符替换
-8. 重新生成新的 `hermes-zh.patch`
+8. 如果确有源码显示层 hook，重新生成新的 `hermes-zh.patch`；如果没有源码改动，`manifest.patch` 必须为空
 9. 生成新的 `releases/<new_release>/`
 10. 运行校验和 smoke test
 11. 全部通过后，才更新 `release.json` 的 `latest_release`
 12. 用 `scripts/apply_release.py` 把新 release 真正应用到本地 Hermes，一次实测完整升级路径
 13. 确认 `scripts/apply_release.py` 已清掉默认 profile 和所有 named profiles 下的 `.update_check`
 14. 再运行 `zsh -lc 'hermes --version'`，确认 banner / update notice 与真实 git 状态一致
-15. 在宣称“已对齐官方最新”之前，立刻重新查询一次官方 `main`；如果上游在本轮执行中继续前进，先比较新旧 commit 之间是否触及这 21 个受控文件
+15. 在宣称“已对齐官方最新”之前，立刻重新查询一次官方 `main`；如果上游在本轮执行中继续前进，先比较新旧 commit 之间是否触及当前 `allowed_source_files` 声明的受控文件
 16. 如果新提交没有碰到受控文件，按“纯前移”方式把 release 前移到新的官方 commit，重新跑 verify、真实 apply 和 `hermes --version`，不要停在已经过时的“最新”
 17. 如果用户反馈的是终端显示层 bug，例如输入框漏字、spinner 包裹高度异常、状态行错位，先检查目标官版是否已经修复；如果上游已经修复，优先通过升级 release 吸收官修，不要先加本地显示层补丁
 
@@ -157,8 +157,8 @@
 
 1. 先做最小修复让 Hermes 起得来
 2. 立刻验证运行确实恢复
-3. 再从官方基线重新导出 patch
-4. 再验证 patch 能在干净官方 worktree 上应用
+3. 再从官方基线重新导出 release；无源码改动时保持空 patch
+4. 有 patch 时再验证 patch 能在干净官方 worktree 上应用
 5. 只有这样，才可以说问题解决
 
 ## 5. 允许什么，不允许什么
@@ -170,8 +170,8 @@
 - 各皮肤固定文案
 - terminal slash command descriptions
 - terminal slash command fixed replies
-- Telegram slash command descriptions
-- Telegram slash command fixed replies
+- Discord slash command descriptions
+- Discord slash command fixed replies
 - empty-state / usage / success / failure 固定消息
 - 用户发消息后到 LLM 回复前的固定状态行
 - release patch / manifest / validation scripts / release-localization YAML
@@ -201,7 +201,7 @@
 
 - 改命令分发逻辑
 - 改会话状态流
-- 改 Telegram callback 协议或内部 token
+- 改 Discord interaction / command 协议或内部 token
 - 改模型交互文本
 - 为了“统一优雅”而抽大层、搬大模块、重构结构
 - 在一个问题上只修一个皮肤、一个提示语、一个截图症状，而不检查同类范围
@@ -213,7 +213,7 @@
 审计时，逐个对照官方 commit 判断：
 
 1. 这个文件为什么与官版不同？
-2. 这处不同是否属于终端 / Telegram 固定可见中文化？
+2. 这处不同是否属于终端 / Discord 固定可见中文化？
 3. 这处不同能不能外置到数据层？
 4. 如果不能外置，是否已经是最薄钩子？
 5. 是否改变了控制流、运行路径、状态机或模型交互？
@@ -228,24 +228,16 @@
 
 #### 第一类：稳定骨架
 
-这是当前中文包的最小骨架。除非能用更外置、更薄的方式真实替换，否则默认冻结，不要为了追求更少文件数而反复折腾。
+这是历史中文包曾经依赖的最小骨架。当前 release 默认回到官方源码零 patch：`allowed_source_files` 应为空。只有在外置数据无法覆盖且用户明确接受极小显示层 hook 时，才重新建立新的受控源码列表。
 
 当前 release 的稳定骨架包括：
 
-- `hermes_cli/skin_engine.py`
-- `hermes_cli/commands.py`
-- `hermes_cli/tips.py`
-- `cli.py`
-- `gateway/run.py`
-- `gateway/platforms/telegram.py`
-- `hermes_cli/banner.py`
-- `agent/display.py`
-- `agent/manual_compression_feedback.py`
+- 无 Hermes 源码文件
 
 对第一类文件的处理规则：
 
 - 默认保留
-- 不做“为减少文件数而减少文件数”的回退
+- 不做“为减少文件数而减少文件数”的回退，但也不把历史骨架当成未来默认
 - 只接受最薄的用户可见层接线
 - 任何显示层例外都必须在 `manifest.json` 里显式登记
 
@@ -299,7 +291,8 @@
 每个 release 都必须满足：
 
 - 对应一个明确的官方 Hermes commit
-- patch 从那个官方 commit 重新生成
+- 如果有源码改动，patch 从那个官方 commit 重新生成
+- 如果没有源码改动，`manifest.patch` 为空且 `allowed_source_files` 为空
 - 不在旧 release 上假设兼容
 - 不把历史 patch 直接当新 patch 复制
 
@@ -319,7 +312,7 @@
 
 如果官方更新没有触及本仓库范围，仍然可以发布新 release 绑定新的官方 commit，但原则是：
 
-- patch 仍然必须基于新的官方 commit 重新生成
+- 有源码改动时，patch 仍然必须基于新的官方 commit 重新生成；无源码改动时，patch 保持为空
 - 不允许直接在旧 release 上“假设兼容”
 - 不允许为了凑新 release 而顺手扩大改动面
 
@@ -345,12 +338,12 @@
 发新 release 前，至少确认这些事情：
 
 - `scripts/verify_release.py` 通过
-- patch 能基于目标官方 commit 干净应用
+- 如果 `manifest.patch` 非空，patch 能基于目标官方 commit 干净应用；如果为空，Hermes 源码必须保持官方零 diff
 - `manifest.json` 的 `allowed_source_files` 与真实源码 diff 一致
 - 允许列表之外的源码 diff 为 0
 - `manifest.json` 的 `localization_files` 只列真正需要的文件
 - `manifest.json` 的 `localization_files` 不包含 `.py` 运行时桥
-- `ui.zh-CN.yaml` 覆盖 patch 中所有 `_cli_ui(...)` 与 `_gateway_ui(...)` 固定文案 key
+- 如果 `manifest.patch` 非空，`ui.zh-CN.yaml` 覆盖 patch 中所有 `_cli_ui(...)` 与 `_gateway_ui(...)` 固定文案 key
 - 历史遗留文件没有被错误当成未来标准继续带入
 - Web UI 没有被纳入本仓库处理范围
 
@@ -360,7 +353,7 @@
 - 可用技能数量正常，不出现异常归零
 - `/help`、slash 命令注释、命令触发后的固定提示语仍正常
 - 各皮肤固定欢迎语、帮助头、固定思考状态提示语仍正常；不能只测当前皮肤
-- Telegram 固定命令说明与固定提示语仍正常
+- Discord 固定命令说明与固定提示语仍正常；如果当前 release 是零源码 patch，必须明确说明 Discord 固定回复仍跟随官方英文
 
 推荐测试集：
 
@@ -439,10 +432,10 @@
 
 1. 确认官方目标 commit
 2. 从该官方 commit 的干净基线开始
-3. 判断终端 / Telegram 固定可见文案是否进入新的汉化范围
+3. 判断终端 / Discord 固定可见文案是否进入新的汉化范围
 4. 先复用旧 release 的词条与皮肤
 5. 外置优先，源码最小
-6. 重新生成 patch / manifest / release
+6. 无源码改动时发布空 patch release；有极小显示层 hook 时才重新生成 patch / manifest / release
 7. 验证通过后再推送远端
 8. 升级完成后补做一次真正的本地 apply + `hermes --version` 实测，不要只停留在 patch / verify 通过
 
@@ -451,7 +444,7 @@
 提交前问自己这 8 个问题：
 
 1. 我是不是从官方基线开始，而不是从旧脏树开始？
-2. 我是不是只处理了终端和 Telegram，而没有碰 Web UI？
+2. 我是不是只处理了终端和 Discord，而没有碰 Web UI？
 3. 我是不是优先用了外置词条，而不是先改源码？
 4. 我对源码的改动是不是只限于最小可见面？
 5. 我有没有把问题按“同类固定文案”检查，而不是只修一个症状？

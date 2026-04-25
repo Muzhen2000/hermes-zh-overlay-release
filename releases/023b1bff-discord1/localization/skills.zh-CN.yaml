@@ -1,0 +1,120 @@
+skills:
+  apple-notes: 通过 macOS 上的 memo CLI 管理 Apple Notes，支持创建、查看、搜索和编辑。
+  apple-reminders: 通过 remindctl CLI 管理 Apple 提醒事项，支持列出、新增、完成和删除。
+  local-chrome-control: 在用户正在使用的日常 Chrome 中执行本机浏览器操作；Chrome 运行中走当前浏览器，Chrome 未运行时自动切到内置 CDP fallback。
+  findmy: 通过 macOS 上的 FindMy.app、AppleScript 和截图跟踪 Apple 设备与 AirTag。
+  imessage: 通过 macOS 上的 imsg CLI 发送和接收 iMessage / 短信。
+  claude-code: 把编码任务委托给 Claude Code，用于功能开发、重构、PR 审查和迭代编码。
+  codex: 把编码任务委托给 OpenAI Codex CLI 代理，用于开发、重构、PR 审查和批量修复问题。
+  hermes-agent: Hermes Agent 使用与扩展完整指南，适合配置、排障、扩展能力和代码贡献。
+  opencode: 把编码任务委托给 OpenCode CLI 代理，用于功能实现、重构、PR 审查和长时自主会话。
+  ascii-art: 使用本地工具、远程 API 和 LLM 兜底生成 ASCII 艺术，无需 API key。
+  ascii-video: 将视频、音频、图片或生成式输入转换成 ASCII 字符视频，适合终端风动画和音频可视化。
+  ideation: 通过创意约束生成项目点子，适合没有方向时寻找可做的项目。
+  excalidraw: 使用 Excalidraw JSON 生成手绘风图表，如架构图、流程图和时序图。
+  manim-video: 使用 Manim 生成数学和技术动画，适合讲解视频、算法可视化和公式推导。
+  p5js: 使用 p5.js 生成交互式和生成式视觉作品，可导出 HTML、图片、GIF、MP4 或 SVG。
+  popular-web-designs: 提供大量真实网站设计系统模板，可快速生成接近知名产品风格的 HTML/CSS。
+  songwriting-and-ai-music: 涵盖歌曲创作、AI 音乐提示词、改编技巧和经验总结。
+  jupyter-live-kernel: 通过实时 Jupyter kernel 做有状态的 Python 迭代执行，适合探索和实验。
+  webhook-subscriptions: 创建和管理 webhook 订阅，让外部事件自动触发代理运行。
+  dogfood: 对 Web 应用做系统化探索式 QA 测试，发现问题、收集证据并生成报告。
+  himalaya: 使用 himalaya CLI 通过 IMAP/SMTP 管理邮件，支持阅读、撰写、回复和整理。
+  minecraft-modpack-server: 从 CurseForge 或 Modrinth 服务器包搭建模组化 Minecraft 服务器。
+  pokemon-player: 通过无头模拟器自主玩宝可梦：读状态、做决策并发送按键输入。
+  codebase-inspection: 使用 pygount 检查代码库规模、语言构成和代码/注释比例。
+  github-auth: 为代理配置 GitHub 认证，涵盖 git、gh CLI、HTTPS token、SSH key 和 credential helper。
+  github-code-review: 基于 git diff 和 GitHub API 做代码审查，并支持在 PR 上留行内评论。
+  github-issues: 创建、管理、分拣和关闭 GitHub issue，支持搜索、标签、分配和关联 PR。
+  github-pr-workflow: 覆盖完整 PR 生命周期：建分支、提交、开 PR、查 CI、修失败和合并。
+  github-repo-management: 克隆、创建、fork 和管理 GitHub 仓库，以及 remote、secret、release 和 workflow。
+  find-nearby: 用 OpenStreetMap 查找附近地点，如餐馆、咖啡馆、酒吧和药店，无需 API key。
+  mcporter: 使用 mcporter CLI 直接列出、配置、鉴权和调用 MCP server / tool。
+  native-mcp: Hermes 内置 MCP 客户端，可连接外部 MCP server 并把其工具注册为原生工具。
+  gif-search: 通过 Tenor 搜索和下载 GIF，只依赖 curl 和 jq。
+  heartmula: 安装并运行 HeartMuLa 开源音乐生成模型家族，用歌词和标签生成完整歌曲。
+  songsee: 从音频文件生成频谱图和音频特征可视化，适合分析、调试和文档展示。
+  youtube-content: 抓取 YouTube 字幕并转换成章节、摘要、线程或博客等结构化内容。
+  modal-serverless-gpu: 使用 Modal 运行 serverless GPU 工作负载、部署 ML API 和批处理任务。
+  evaluating-llms-harness: 使用 LM Evaluation Harness 在 60+ 基准上评测 LLM。
+  weights-and-biases: 使用 W&B 跟踪实验、可视化训练、做超参搜索并管理模型注册表。
+  huggingface-hub: 使用 Hugging Face Hub CLI 搜索、下载、上传模型和数据集，并管理仓库与 Spaces。
+  gguf-quantization: GGUF 与 llama.cpp 量化指南，适合在消费级硬件和 Apple Silicon 上高效部署模型。
+  guidance: 使用 Guidance 通过正则和语法约束控制 LLM 输出结构。
+  llama-cpp: 在 CPU、Apple Silicon 和消费级 GPU 上运行 LLM 推理，不依赖 NVIDIA。
+  obliteratus: 使用 OBLITERATUS 相关技术移除开源 LLM 的拒答行为并做分析评估。
+  outlines: 使用 Outlines 保证生成阶段输出合法的 JSON、XML 或代码结构。
+  serving-llms-vllm: 使用 vLLM 高吞吐服务 LLM，适合生产 API 部署和推理优化。
+  audiocraft-audio-generation: 使用 AudioCraft 做文生音乐、文生音效和旋律条件生成。
+  clip: OpenAI 视觉语言模型，适合零样本图像分类、图文匹配和跨模态检索。
+  segment-anything-model: 通用图像分割模型，可零样本分割任意对象。
+  stable-diffusion-image-generation: 使用 Stable Diffusion 做文生图、图生图、局部重绘和自定义扩散流程。
+  whisper: OpenAI 通用语音识别模型，适合转写、翻译和多语言音频处理。
+  dspy: 使用 DSPy 以声明式方式构建复杂 AI 系统、RAG 和 agent 工作流。
+  axolotl: 使用 Axolotl 微调 LLM 的专家指南，涵盖 LoRA、QLoRA 和多种训练方法。
+  grpo-rl-training: 使用 TRL 做 GRPO / RL 微调的专家指南。
+  peft-fine-tuning: 使用 LoRA、QLoRA 等做参数高效微调，适合显存受限的大模型训练。
+  pytorch-fsdp: 使用 PyTorch FSDP 做 Fully Sharded Data Parallel 训练的专家指南。
+  fine-tuning-with-trl: 使用 TRL 做 SFT、DPO、PPO、GRPO 和奖励模型训练。
+  unsloth: 使用 Unsloth 快速微调模型，追求更快训练和更低显存占用。
+  obsidian: 在 Obsidian vault 中读取、搜索和创建笔记。
+  google-workspace: 通过 gws CLI 集成 Gmail、Calendar、Drive、Contacts、Sheets 和 Docs。
+  linear: 通过 GraphQL API 管理 Linear issue、项目和团队。
+  nano-pdf: 使用 nano-pdf CLI 通过自然语言编辑 PDF 内容。
+  notion: 通过 Notion API 和 curl 管理页面、数据库和 block。
+  ocr-and-documents: 从 PDF、扫描文档、DOCX 等文件中提取文本，并根据文档类型选择合适工具。
+  powerpoint: 任何涉及 .pptx 的创建、读取、提取、编辑或拆分合并任务都应使用此 skill。
+  godmode: 使用 G0DM0D3 技术越狱 API 提供的 LLM，适合红队和安全边界测试。
+  arxiv: 使用 arXiv 免费 REST API 搜索和获取学术论文。
+  blogwatcher: 使用 blogwatcher-cli 监控博客和 RSS / Atom 源更新。
+  llm-wiki: 构建和维护互相链接的 Markdown LLM 知识库，支持导入、查询和一致性检查。
+  polymarket: 查询 Polymarket 预测市场数据，如市场、价格、订单簿和价格历史。
+  research-paper-writing: 面向 ML / AI 论文的端到端写作管线，覆盖实验、分析、写作、修改和投稿。
+  openhue: 通过 OpenHue CLI 控制 Philips Hue 灯光、房间和场景。
+  xitter: 通过 x-cli 与 X / Twitter 交互，支持发帖、读时间线、搜索、点赞和转发等。
+  hermes-skins: 管理 Hermes CLI 视觉主题（皮肤）的拉取、安装、更新和切换。
+  productize-for-mouseion: 将私人 Hermes skill、本地工作流或个性化配置整理成可公开复用的 Mouseion package 草案。
+  skill-creation-discipline: 创建、保存、补丁、重组或扩展 Hermes skill 时的工作纪律，确保辅助脚本和文件归位到正确目录。
+  darwin-skill: 自主 skill 优化器，借鉴 Karpathy autoresearch 的实验循环，用 8 维 rubric 评估 SKILL.md 并迭代优化。
+  deep-conversation-wiki: 在 Obsidian vault 内维护与用户的深度对话知识库，提炼对话、扩展概念并组织互联追问。
+  firecrawl-web-data: 用 Firecrawl 做网页搜索、抓取、站点映射、批量 crawl、交互式抽取与结构化入库。
+  graphiti-memory-testing: 验证 Graphiti MCP 是否真正可用，区分“服务在线 / 读查询正常 / 写入异步入库未确认”三层状态。
+  karpathy-guidelines: 编码行为准则，减少 LLM 常见编码错误，适合编码、审查和重构时保持克制与清晰。
+  playwright-skill-testing: 用 Playwright 为 Hermes 自建 skill、浏览器工作流和网页自动化流程建立可复现验证。
+  xiaohongshu: 小红书全能 Skill：发布图文/视频、搜索笔记、评论互动、数据看板、通知抓取、推荐词。
+  plan: Hermes 的计划模式：先整理上下文，再把 Markdown 计划写入当前工作区，不直接执行工作。
+  hermes-zh-localization: 维护 Hermes 中文覆盖层的安全工作流，专门处理升级后的扫描、增量翻译和边界校验。
+  requesting-code-review: 提交前验证管线：安全扫描、质量门、独立 reviewer 和自动修复循环。
+  subagent-driven-development: 执行实现计划且任务彼此独立时使用，按任务派发新的子任务并做两阶段审查。
+  systematic-debugging: 遇到 bug、测试失败或异常行为时使用的系统化调试流程。
+  test-driven-development: 实现功能或修 bug 前使用的测试优先流程，强制 RED-GREEN-REFACTOR。
+  writing-plans: 在已有规格或多步骤需求时使用，生成细颗粒、可执行的实现计划。
+  architecture-diagram: 生成专业暗色主题系统架构图（独立 HTML/SVG），基于 Cocoon AI 的 architecture-diagram-generator（MIT）。
+  docling: 使用 Docling 解析复杂 PDF、学术论文、表格、公式和多版面文档，输出高质量 Markdown / HTML / JSON；适合高保真结构理解。
+  document-to-markdown: 统一入口：把 PDF、Office、图片、网页等内容转成适合 LLM 使用的 Markdown / JSON，并按文档类型自动选择 markitdown、Docling、MinerU、PyMuPDF4LLM 或网页抓取方案。
+  markitdown: 使用 Microsoft MarkItDown 将 PDF、Office、HTML、图片、音频等快速转换为适合 LLM 使用的 Markdown；适合作为轻量默认 backend。
+  mineru: 使用 MinerU 把复杂 PDF、扫描件、图片和 DOCX 转成适合 Agent 工作流的 Markdown / JSON，擅长多语言 OCR、复杂布局与表格恢复。
+  reddit-video-maker-bot: 使用与审查 elebumm/RedditVideoMakerBot：拉取仓库、查看结构、安装依赖、配置 Reddit 凭据、运行生成视频，并在受限环境下用 GitHub raw 页面兜底做源码阅读。
+categories:
+  _custom: 自定义
+  apple: Apple 生态
+  browser: 浏览器
+  autonomous-ai-agents: 自主代理
+  creative: 创意
+  data-science: 数据科学
+  devops: DevOps
+  email: 邮件
+  gaming: 游戏
+  general: 通用
+  github: GitHub
+  leisure: 生活娱乐
+  mcp: MCP
+  media: 媒体
+  mlops: MLOps
+  note-taking: 笔记
+  productivity: 生产力
+  red-teaming: 红队
+  research: 研究
+  smart-home: 智能家居
+  social-media: 社交媒体
+  software-development: 软件开发

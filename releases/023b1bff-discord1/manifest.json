@@ -1,0 +1,33 @@
+{
+  "release": "023b1bff-discord1",
+  "official_commit": "023b1bff11c2a01a435f1956a0e2ac1773a065f3",
+  "scope": [
+    "terminal",
+    "discord"
+  ],
+  "web_ui_policy": "upstream-only",
+  "patch": "",
+  "localization_files": [
+    "commands.zh-CN.yaml",
+    "skills.zh-CN.yaml",
+    "skins.zh-CN.yaml",
+    "tips.zh-CN.yaml",
+    "ui.zh-CN.yaml"
+  ],
+  "skin_files": [
+    "bubblegum-80s.yaml",
+    "lain.yaml",
+    "mother.yaml",
+    "mythos.yaml",
+    "neonwave.yaml",
+    "netrunner.yaml",
+    "nous.yaml",
+    "pirate.yaml",
+    "sakura.yaml",
+    "skynet.yaml",
+    "vault-tec.yaml"
+  ],
+  "allowed_source_files": [],
+  "justified_non_text_logic": [],
+  "source_policy": "official-source-only; this release intentionally ships no Hermes source patch"
+}

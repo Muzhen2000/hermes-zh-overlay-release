@@ -123,7 +123,8 @@ def _copy_release_assets(*, repo_root: Path, hermes_home: Path, release_id: str,
 
     patch_rel = str(manifest.get("patch") or "").strip()
     if not patch_rel:
-        raise ReleaseError("manifest does not define patch")
+        return {"changed": changed, "patch_path": ""}
+
     patch_source = release_dir / patch_rel
     if not patch_source.exists():
         raise ReleaseError(f"missing patch asset: {patch_source}")
@@ -242,8 +243,12 @@ def apply_release(
         official_repo=official_repo,
         official_commit=official_commit,
     )
-    _progress("应用中文 patch")
-    _apply_patch(source_dir=source_dir, patch_path=Path(copied["patch_path"]))
+    patch_path = str(copied.get("patch_path") or "").strip()
+    if patch_path:
+        _progress("应用中文 patch")
+        _apply_patch(source_dir=source_dir, patch_path=Path(patch_path))
+    else:
+        _progress("无中文源码 patch，保持官方源码不变")
     _progress("失效旧更新缓存")
     invalidated_update_cache = _invalidate_update_cache(hermes_home)
 

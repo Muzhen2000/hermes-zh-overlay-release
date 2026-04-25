@@ -8,13 +8,13 @@
 
 当前 release：
 
-- 官方 Hermes commit：`6fdbf2f2d76cf37393e657bf37ceda3d84589200`
-- 中文包 release：`6fdbf2f2`
+- 官方 Hermes commit：`023b1bff11c2a01a435f1956a0e2ac1773a065f3`
+- 中文包 release：`023b1bff-discord1`
 
 范围说明：
 
-- 终端、Telegram 中用户可见、非 LLM 生成的固定文案
-- 少量经过 manifest 声明的稳定显示层/兼容性小补丁
+- 终端、Discord 中用户可见、非 LLM 生成的固定文案
+- 当前版优先保持官方 Hermes 源码零 patch；只有官方已有的数据入口会实际生效
 - 不处理 Web UI
 
 当前这版覆盖的主要内容：
@@ -24,15 +24,16 @@
 - slash 命令注释与固定回复
 - 固定二级选项提示语
 - LLM 回复前的固定状态提示语
-- Telegram 中对应的固定命令说明与固定提示语
-- 已声明的小补丁，例如 CJK spinner 行高修正、display-only skill 预览摘要，以及 release apply 对审计 baseline 的保留
+- Discord 数据层说明词条
+- release apply 对审计 baseline 的保留
+- 当前版不包含 Hermes 源码 patch，因此终端命令固定回复和 Discord 固定回复仍跟随官方英文；后续若要完整中文化，必须单独批准极小显示层 hook
 
 ## 使用
 
 1. 应用这一版中文包
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 6fdbf2f2
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 023b1bff-discord1
 ```
 
 2. 校验本机 Hermes 与这版中文包是否一致

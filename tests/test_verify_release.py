@@ -41,6 +41,9 @@ def test_validate_release_matches_manifest_and_patch():
         "vault-tec.yaml",
     ]
     assert sorted(result["patch_files"]) == sorted(manifest["allowed_source_files"])
+    if not manifest.get("patch"):
+        assert result["patch_path"] == ""
+        assert result["patch_files"] == []
 
 
 def test_release_json_points_to_existing_release():
@@ -84,7 +87,7 @@ def test_validate_release_does_not_depend_on_installed_skill_localization(tmp_pa
                 "official_repo": "https://github.com/example/hermes-agent.git",
                 "latest_release": "r1",
                 "web_ui_policy": "upstream-only",
-                "scope": ["terminal", "telegram"],
+                "scope": ["terminal", "discord"],
             }
         ),
         encoding="utf-8",
@@ -94,18 +97,14 @@ def test_validate_release_does_not_depend_on_installed_skill_localization(tmp_pa
             {
                 "release": "r1",
                 "official_commit": "deadbeef",
-                "scope": ["terminal", "telegram"],
+                "scope": ["terminal", "discord"],
                 "web_ui_policy": "upstream-only",
-                "patch": "patches/hermes-zh.patch",
+                "patch": "",
                 "localization_files": ["skills.zh-CN.yaml", "ui.zh-CN.yaml"],
                 "skin_files": [],
-                "allowed_source_files": ["agent/skill_commands.py"],
+                "allowed_source_files": [],
             }
         ),
-        encoding="utf-8",
-    )
-    (release_dir / "patches" / "hermes-zh.patch").write_text(
-        "diff --git a/agent/skill_commands.py b/agent/skill_commands.py\n",
         encoding="utf-8",
     )
     (release_dir / "localization" / "ui.zh-CN.yaml").write_text(

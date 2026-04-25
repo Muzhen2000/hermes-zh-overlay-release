@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+- Publish `releases/023b1bff-discord1/` as the current latest release.
+- Upgrade the versioned Chinese package from official Hermes `6fdbf2f2` to `023b1bff`.
+- Change the active declared scope from terminal + Telegram to terminal + Discord.
+- Restore Hermes to official source-only mode for this release: `manifest.patch` is empty and `allowed_source_files` is `[]`.
+- Teach `scripts/apply_release.py` and `scripts/verify_release.py` to handle no-patch releases, so official Hermes source can stay at zero diff.
+
 ## 0.8.5
 
 - Publish `releases/6fdbf2f2/` as the current latest release.

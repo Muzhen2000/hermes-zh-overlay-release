@@ -118,8 +118,9 @@ def _ui_messages(ui_path: Path) -> set[str]:
 def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
     resolved_release, release_index, manifest = _load_metadata(repo_root, release_id)
     release_dir = repo_root / "releases" / resolved_release
-    patch_path = release_dir / str(manifest.get("patch") or "")
-    if not patch_path.exists():
+    patch_rel = str(manifest.get("patch") or "").strip()
+    patch_path = release_dir / patch_rel if patch_rel else None
+    if patch_path is not None and not patch_path.exists():
         raise VerifyError(f"missing patch file: {patch_path}")
 
     localization_dir = release_dir / "localization"
@@ -140,7 +141,7 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
             raise VerifyError(f"missing skin file: {path}")
         skin_files.append(str(path.relative_to(repo_root)))
 
-    patch_files = _patch_files(patch_path)
+    patch_files = _patch_files(patch_path) if patch_path is not None else []
     allowed = list(manifest.get("allowed_source_files", []))
     if sorted(patch_files) != sorted(allowed):
         raise VerifyError(
@@ -149,7 +150,10 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
         )
 
     ui_path = localization_dir / "ui.zh-CN.yaml"
-    missing_ui_keys = sorted(_ui_keys_from_patch(patch_path) - _ui_messages(ui_path))
+    missing_ui_keys = sorted(
+        (_ui_keys_from_patch(patch_path) if patch_path is not None else set())
+        - _ui_messages(ui_path)
+    )
     if missing_ui_keys:
         raise VerifyError(f"ui.zh-CN.yaml is missing runtime keys: {missing_ui_keys}")
 
@@ -157,7 +161,7 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
         "release": resolved_release,
         "official_repo": release_index.get("official_repo"),
         "official_commit": manifest.get("official_commit"),
-        "patch_path": str(patch_path.relative_to(repo_root)),
+        "patch_path": str(patch_path.relative_to(repo_root)) if patch_path is not None else "",
         "patch_files": patch_files,
         "localization_files": localization_files,
         "skin_files": skin_files,
@@ -167,7 +171,8 @@ def validate_release(repo_root: Path, release_id: str | None = None) -> dict:
 def validate_local_source(*, repo_root: Path, source_dir: Path, release_id: str | None = None) -> dict:
     resolved_release, _, manifest = _load_metadata(repo_root, release_id)
     release_dir = repo_root / "releases" / resolved_release
-    patch_path = release_dir / str(manifest.get("patch") or "")
+    patch_rel = str(manifest.get("patch") or "").strip()
+    patch_path = release_dir / patch_rel if patch_rel else None
     official_commit = str(manifest.get("official_commit") or "")
     if not official_commit:
         raise VerifyError("manifest does not define official_commit")
@@ -180,7 +185,8 @@ def validate_local_source(*, repo_root: Path, source_dir: Path, release_id: str 
         raise VerifyError(f"source HEAD {head} does not match official_commit {official_commit}")
     if dirty != allowed:
         raise VerifyError(f"local dirty files {dirty} do not match allowed_source_files {allowed}")
-    _run(["git", "apply", "--reverse", "--check", str(patch_path)], cwd=source_dir)
+    if patch_path is not None:
+        _run(["git", "apply", "--reverse", "--check", str(patch_path)], cwd=source_dir)
 
     return {
         "source_dir": str(source_dir),
