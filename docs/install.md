@@ -2,89 +2,59 @@
 
 ## 前提
 
-- 你已经按官方方式安装过 Hermes
-- 本地 Hermes 源码目录是 `~/.hermes/hermes-agent`
-- 个人配置、记忆、会话仍保存在 `~/.hermes` 下
+- 你已经按官方方式安装过 Hermes。
+- 本地 Hermes 源码目录是 `~/.hermes/hermes-agent`。
+- 个人配置、记忆、会话、API key、登录态仍保存在 `~/.hermes` 下。
 
-把这个仓库理解成：
+这个仓库提供的是：官方 Hermes 某个 commit + 对应该 commit 的最小中文包。它不是 fork，也不是自动追最新的长期补丁系统。
 
-- 官方 Hermes 某个版本
-- 对应一份这个版本的最小中文包
-- release 默认不修改 Hermes 源码；只有极端必要时才允许带经过 manifest 声明的显示层小补丁
-- 如果 release 附带了自建皮肤，也会一并同步到 `~/.hermes/skins/`
-
-## 一行应用最新中文包
+## 应用最新中文包
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 -
 ```
 
-## 一行应用指定版本
+## 校验一致性
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 023b1bff-discord1
+python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
 ```
 
-## 给家人的最短说明
+这两行是测试用户的标准路径：第一行应用，第二行验证。
 
-如果她已经按官方方式安装过 Hermes，她只需要执行这一条命令：
+## 应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 -
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release e5647d78-terminal-discord1
 ```
 
-她不需要：
+## 这条命令会做什么
 
-- 你的 `~/.hermes/hermes-agent` 源码仓库
-- 手工打 patch
-- 自己判断要先更新哪个仓库
-
-这条命令会自动完成：
-
-- 拉取这个公开仓库的当前 release
-- 把她本地 Hermes 对齐到该 release 绑定的官方 commit
-- 应用这一版最小中文包；当前版不包含 Hermes 源码 patch
-- 同步这一版附带的皮肤文件
-
-她运行后，预期体验是：
-
-- 终端、Discord 中属于本仓库范围、且官方已有数据入口的固定文案变为中文
-- 当前版保持 Hermes 官方源码零 diff，因此终端命令固定回复和 Discord 固定回复仍跟随官方英文
-- Web UI 保持官方原样
-- 她自己的会话、记忆、配置和登录态不被覆盖
-
-## 这条命令具体会做什么
-
-1. 更新 `~/.hermes/hermes-zh-overlay-release`
-2. 读取当前 release 的 `manifest.json`
-3. 将 `~/.hermes/hermes-agent` 强制对齐到该官方 commit
-4. 清理旧版自动维护残留（仅为迁移收尾，不属于当前系统）
-5. 写入 `~/.hermes/localization/*.yaml`
-6. 如果该 release 附带皮肤，则写入 `~/.hermes/skins/*.yaml`
-7. 如果 `manifest.patch` 非空，应用 `releases/<release>/patches/hermes-zh.patch`；当前版会跳过这一步并保持官方源码不变
-8. 清掉默认 profile 与 named profiles 下旧的 `.update_check`，避免升级后仍误报“落后若干提交”
+1. 更新 `~/.hermes/hermes-zh-overlay-release`。
+2. 读取 `release.json` 和当前 release 的 `manifest.json`。
+3. 将 `~/.hermes/hermes-agent` 对齐到 manifest 绑定的官方 commit。
+4. 写入 `~/.hermes/localization/*.yaml`。
+5. 同步 release 附带的 `~/.hermes/skins/*.yaml`。
+6. 如果 manifest 声明 patch，则应用 `releases/<release>/patches/hermes-zh.patch`。
+7. 清掉默认 profile 与 named profiles 下旧的 `.update_check`，避免升级后仍误报“落后若干提交”。
 
 ## 不会动的内容
 
 - `~/.hermes/sessions`
 - `~/.hermes/memory*`
 - `~/.hermes/config.yaml`
-- 你的 API key、登录态、个人数据
+- API key、登录态、个人数据
+- Web UI
+- Telegram / 飞书网关运行面
 
-## 校验
+## 当前 release 的预期效果
 
-```bash
-python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
-```
+- 终端和 Discord 中属于本仓库范围的固定文案变为中文。
+- Discord slash 命令说明包括显式注册命令和动态注册命令。
+- Web UI 保持官方原样。
+- 模型路由、provider 参数、Discord command value/custom_id 等协议字段保持官方语义。
 
 ## 常见问题
 
-- 如果安装命令报 `curl: (6) Could not resolve host: raw.githubusercontent.com`，这是本机网络或 DNS 解析问题，不是中文包本身失败。先重试，或切换网络后再执行同一条命令。
-
-## 注意
-
-- 这个仓库不处理 Web UI
-- 发布了新 release 后，再运行同一条命令更新
-- release 附带的同名皮肤文件会被同步更新，但不会删除你额外自建的其他皮肤
-- 不建议在应用中文包后再直接运行 `hermes update`；应等待这里发布对应版本再更新
-- 如果你手动更新过 Hermes 到官方新版本，但这里还没有发布对应 release，请先不要应用不匹配的中文包
+- 如果安装命令报 `curl: (6) Could not resolve host: raw.githubusercontent.com`，这是本机网络或 DNS 解析问题，不是中文包本身失败。
+- 不建议应用中文包后直接运行 `hermes update`。如果手动更新 Hermes 到官方新版本，应等待这里发布对应 release 后再应用中文包。

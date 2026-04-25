@@ -65,7 +65,6 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
         "cli.py": (("_cli_ui", "cli."),),
         "gateway/run.py": (("_gateway_ui", "gateway.runtime."),),
         "gateway/platforms/discord.py": (("_discord_ui", "gateway.discord."),),
-        "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
         "hermes_cli/gateway.py": (("_ui", "gateway."),),
         "hermes_cli/auth.py": (("_ui", "auth."),),
         "hermes_cli/debug.py": (("_ui", "debug."),),
@@ -114,6 +113,21 @@ def test_manifest_keeps_official_source_clean_when_no_patch_is_declared():
 
     if not manifest.get("patch"):
         assert manifest["allowed_source_files"] == []
+
+
+def test_current_release_does_not_patch_removed_platforms():
+    release_id = _latest_release()
+    manifest = json.loads(
+        (ROOT / "releases" / release_id / "manifest.json").read_text(encoding="utf-8")
+    )
+
+    forbidden = {"gateway/platforms/telegram.py", "gateway/platforms/feishu.py"}
+    assert forbidden.isdisjoint(set(manifest["allowed_source_files"]))
+
+    if manifest.get("patch"):
+        patch_text = (ROOT / "releases" / release_id / manifest["patch"]).read_text(encoding="utf-8")
+        for path in forbidden:
+            assert path not in patch_text
 
 
 def test_skin_localization_covers_builtins_and_release_custom_skins():

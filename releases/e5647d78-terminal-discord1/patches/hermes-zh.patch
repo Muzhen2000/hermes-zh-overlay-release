@@ -6524,7 +6524,7 @@ index 0f792592..329db1c9 100644
      except Exception:
          pass  # Never break the banner over an update check
 diff --git a/hermes_cli/commands.py b/hermes_cli/commands.py
-index efff5718..e585d51d 100644
+index efff5718..c23c33e5 100644
 --- a/hermes_cli/commands.py
 +++ b/hermes_cli/commands.py
 @@ -32,6 +32,8 @@ except ImportError:  # pragma: no cover
@@ -6574,15 +6574,6 @@ index efff5718..e585d51d 100644
      return lines
  
  
-@@ -443,7 +451,7 @@ def telegram_bot_commands() -> list[tuple[str, str]]:
-             continue
-         tg_name = _sanitize_telegram_name(cmd.name)
-         if tg_name:
--            result.append((tg_name, cmd.description))
-+            result.append((tg_name, get_command_description(cmd.name, cmd.description)))
-     for name, description, _args_hint in _iter_plugin_command_entries():
-         tg_name = _sanitize_telegram_name(name)
-         if tg_name:
 diff --git a/hermes_cli/debug.py b/hermes_cli/debug.py
 index 8915d8a6..6ba6bb24 100644
 --- a/hermes_cli/debug.py

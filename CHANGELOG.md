@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.0
+
+- Publish `releases/e5647d78-terminal-discord1/` as the current latest release.
+- Bind the package to official Hermes `e5647d7863d306c8f479e1da011ebe4a4848d56d`.
+- Keep the declared scope at terminal + Discord fixed visible text only; Telegram and Feishu platform runtime patches are out of scope.
+- Restore full terminal fixed-copy coverage: startup, command help, command replies, state/rollback/snapshot/model/reasoning/update/gateway messages, loading states, status bar, and all bundled skin text.
+- Add Discord fixed-copy coverage for slash command descriptions, argument descriptions, command replies, approval/update cards, model picker labels, thread messages, and dynamic commands generated from `hermes_cli.commands`.
+- Keep source changes limited to display-layer hooks and CJK terminal display adaptation; no model-facing prompts, command values, custom IDs, provider protocol fields, or runtime routing are localized.
+- Prune historical release directories from the repository so future agents use only the current verified release as the baseline.
+- Add the 2026-04-25 audit report and refresh README, install docs, AGENTS, and guardrail skill guidance.
+
 ## 0.9.0
 
 - Publish `releases/023b1bff-discord1/` as the current latest release.

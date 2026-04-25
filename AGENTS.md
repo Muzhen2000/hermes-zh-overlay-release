@@ -44,7 +44,7 @@
 
 ## 2. 这个仓库负责什么
 
-仓库只负责三类内容：
+仓库只负责两类内容：
 
 - 终端中用户可见、非 LLM 生成的固定文案
 - Discord 中用户可见、非 LLM 生成的固定文案
@@ -59,10 +59,12 @@
 - 固定二级选项提示语
 - 用户发出消息后、LLM 回复前的固定状态提示语，包括 agent 初始化提示、busy 状态、spinner face + verb 组合、工具/记忆检索短状态行
 - Discord 中对应的固定命令说明与固定提示语
+- Discord 中由 `hermes_cli.commands` 动态生成的 slash 命令说明
 
 明确不包括：
 
 - Web UI
+- Telegram / 飞书网关运行面
 - LLM 回答正文
 - 发给模型的 system prompt、tool summary、内部控制文本
 - 用户不可见的内部日志或运行时控制信息
@@ -228,11 +230,19 @@
 
 #### 第一类：稳定骨架
 
-这是历史中文包曾经依赖的最小骨架。当前 release 默认回到官方源码零 patch：`allowed_source_files` 应为空。只有在外置数据无法覆盖且用户明确接受极小显示层 hook 时，才重新建立新的受控源码列表。
+这是当前中文包依赖的最小显示层骨架。当前 release 允许一份受控源码 patch，但只允许终端和 Discord 固定可见文案取词钩子，以及必要的 CJK 终端显示适配。
 
 当前 release 的稳定骨架包括：
 
-- 无 Hermes 源码文件
+- `hermes_cli/skin_engine.py`
+- `hermes_cli/commands.py`
+- `hermes_cli/tips.py`
+- `hermes_cli/banner.py`
+- `cli.py`
+- `gateway/run.py`
+- `gateway/platforms/discord.py`
+- `agent/display.py`
+- `agent/manual_compression_feedback.py`
 
 对第一类文件的处理规则：
 
@@ -333,12 +343,14 @@
 - 能收口就收口
 - 不能立即收口，也要在文档里明确标注为历史遗留，而不是默认标准
 
+当前仓库策略是只保留当前可验证 release 目录。历史 Kimi、飞书、Telegram、旧 gateway release 只留在 git 历史里，不作为新线程可见模板。
+
 ## 9. 验证门槛
 
 发新 release 前，至少确认这些事情：
 
 - `scripts/verify_release.py` 通过
-- 如果 `manifest.patch` 非空，patch 能基于目标官方 commit 干净应用；如果为空，Hermes 源码必须保持官方零 diff
+- 如果 `manifest.patch` 非空，patch 能基于目标官方 commit 干净应用，且 patch 文件列表等于 `allowed_source_files`；如果为空，Hermes 源码必须保持官方零 diff
 - `manifest.json` 的 `allowed_source_files` 与真实源码 diff 一致
 - 允许列表之外的源码 diff 为 0
 - `manifest.json` 的 `localization_files` 只列真正需要的文件
@@ -353,7 +365,7 @@
 - 可用技能数量正常，不出现异常归零
 - `/help`、slash 命令注释、命令触发后的固定提示语仍正常
 - 各皮肤固定欢迎语、帮助头、固定思考状态提示语仍正常；不能只测当前皮肤
-- Discord 固定命令说明与固定提示语仍正常；如果当前 release 是零源码 patch，必须明确说明 Discord 固定回复仍跟随官方英文
+- Discord 固定命令说明与固定提示语仍正常；动态命令说明也必须在 Discord 端验证，不能只看 `@tree.command` 显式装饰器
 
 推荐测试集：
 
