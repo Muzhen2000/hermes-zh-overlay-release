@@ -3048,7 +3048,7 @@ index abd4d239..c996dc93 100644
              cli._print_exit_summary()
          return
 diff --git a/gateway/platforms/discord.py b/gateway/platforms/discord.py
-index 3eaf6ac0..9a7ea1a4 100644
+index 3eaf6ac0..72efa2f3 100644
 --- a/gateway/platforms/discord.py
 +++ b/gateway/platforms/discord.py
 @@ -83,6 +83,19 @@ def check_discord_requirements() -> bool:
@@ -3474,12 +3474,20 @@ index 3eaf6ac0..9a7ea1a4 100644
          async def slash_btw(interaction: discord.Interaction, question: str):
              await self._run_simple_slash(interaction, f"/btw {question}")
  
-@@ -2327,12 +2345,12 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2327,12 +2345,20 @@ class DiscordAdapter(BasePlatformAdapter):
          def _build_auto_slash_command(_name: str, _description: str, _args_hint: str = ""):
              """Build a discord.app_commands.Command that proxies to _run_simple_slash."""
              discord_name = _name.lower()[:32]
 -            desc = (_description or f"Run /{_name}")[:100]
-+            desc = (_description or _discord_ui("commands.auto.description", "Run /{name}", name=_name))[:100]
++            if _description:
++                try:
++                    from hermes_cli.skin_engine import get_command_description
++                    desc_source = get_command_description(_name, _description)
++                except Exception:
++                    desc_source = _description
++            else:
++                desc_source = _discord_ui("commands.auto.description", "Run /{name}", name=_name)
++            desc = desc_source[:100]
              has_args = bool(_args_hint)
  
              if has_args:
@@ -3489,7 +3497,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                      async def _handler(interaction: discord.Interaction, args: str = ""):
                          await self._run_simple_slash(
                              interaction, f"/{__name} {args}".strip()
-@@ -2509,8 +2527,8 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2509,8 +2535,8 @@ class DiscordAdapter(BasePlatformAdapter):
                  return choices
  
              @discord.app_commands.describe(
@@ -3500,7 +3508,7 @@ index 3eaf6ac0..9a7ea1a4 100644
              )
              @discord.app_commands.autocomplete(name=_autocomplete_name)
              async def _skill_handler(
-@@ -2519,8 +2537,11 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2519,8 +2545,11 @@ class DiscordAdapter(BasePlatformAdapter):
                  entry = skill_lookup.get(name)
                  if not entry:
                      await interaction.response.send_message(
@@ -3514,7 +3522,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                          ephemeral=True,
                      )
                      return
-@@ -2531,7 +2552,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2531,7 +2560,7 @@ class DiscordAdapter(BasePlatformAdapter):
  
              cmd = discord.app_commands.Command(
                  name="skill",
@@ -3523,7 +3531,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  callback=_skill_handler,
              )
              tree.add_command(cmd)
-@@ -2613,8 +2634,11 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2613,8 +2642,11 @@ class DiscordAdapter(BasePlatformAdapter):
          )
  
          if not result.get("success"):
@@ -3537,7 +3545,7 @@ index 3eaf6ac0..9a7ea1a4 100644
              return
  
          thread_id = result.get("thread_id")
-@@ -2622,7 +2646,10 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2622,7 +2654,10 @@ class DiscordAdapter(BasePlatformAdapter):
  
          # Tell the user where the thread is
          link = f"<#{thread_id}>" if thread_id else f"**{thread_name}**"
@@ -3549,7 +3557,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
          # Track thread participation so follow-ups don't require @mention
          if thread_id:
-@@ -2768,24 +2795,30 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2768,24 +2803,30 @@ class DiscordAdapter(BasePlatformAdapter):
          """
          name = (name or "").strip()
          if not name:
@@ -3587,7 +3595,7 @@ index 3eaf6ac0..9a7ea1a4 100644
          starter_message = (message or "").strip()
  
          try:
-@@ -2803,7 +2836,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2803,7 +2844,7 @@ class DiscordAdapter(BasePlatformAdapter):
              }
          except Exception as direct_error:
              try:
@@ -3596,7 +3604,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  seed_msg = await parent_channel.send(seed_content)
                  thread = await seed_msg.create_thread(
                      name=name,
-@@ -2818,8 +2851,12 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2818,8 +2859,12 @@ class DiscordAdapter(BasePlatformAdapter):
              except Exception as fallback_error:
                  return {
                      "error": (
@@ -3611,7 +3619,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                      )
                  }
  
-@@ -2880,9 +2917,11 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2880,9 +2925,11 @@ class DiscordAdapter(BasePlatformAdapter):
          agent thread — this replaces the text-based ``/approve`` flow on Discord.
          """
          if not self._client or not DISCORD_AVAILABLE:
@@ -3624,7 +3632,7 @@ index 3eaf6ac0..9a7ea1a4 100644
              # Resolve channel — use thread_id from metadata if present
              target_id = chat_id
              if metadata and metadata.get("thread_id"):
-@@ -2896,11 +2935,15 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2896,11 +2943,15 @@ class DiscordAdapter(BasePlatformAdapter):
              max_desc = 4088
              cmd_display = command if len(command) <= max_desc else command[: max_desc - 3] + "..."
              embed = discord.Embed(
@@ -3642,7 +3650,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
              view = ExecApprovalView(
                  session_key=session_key,
-@@ -2923,15 +2966,15 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2923,15 +2974,15 @@ class DiscordAdapter(BasePlatformAdapter):
          needs user input (stash restore, config migration).
          """
          if not self._client or not DISCORD_AVAILABLE:
@@ -3661,7 +3669,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  description=f"{prompt}{default_hint}",
                  color=discord.Color.gold(),
              )
-@@ -2960,7 +3003,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2960,7 +3011,7 @@ class DiscordAdapter(BasePlatformAdapter):
          Uses Discord embeds + Select menus via ``ModelPickerView``.
          """
          if not self._client or not DISCORD_AVAILABLE:
@@ -3670,7 +3678,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
          try:
              # Resolve target channel (use thread_id if present)
-@@ -2979,11 +3022,14 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2979,11 +3030,14 @@ class DiscordAdapter(BasePlatformAdapter):
                  provider_label = current_provider
  
              embed = discord.Embed(
@@ -3689,7 +3697,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  ),
                  color=discord.Color.blue(),
              )
-@@ -3576,13 +3622,15 @@ if DISCORD_AVAILABLE:
+@@ -3576,13 +3630,15 @@ if DISCORD_AVAILABLE:
              """Resolve the approval via the gateway approval queue and update the embed."""
              if self.resolved:
                  await interaction.response.send_message(
@@ -3707,7 +3715,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  )
                  return
  
-@@ -3592,7 +3640,14 @@ if DISCORD_AVAILABLE:
+@@ -3592,7 +3648,14 @@ if DISCORD_AVAILABLE:
              embed = interaction.message.embeds[0] if interaction.message.embeds else None
              if embed:
                  embed.color = color
@@ -3723,7 +3731,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
              # Disable all buttons
              for child in self.children:
-@@ -3611,29 +3666,29 @@ if DISCORD_AVAILABLE:
+@@ -3611,29 +3674,29 @@ if DISCORD_AVAILABLE:
              except Exception as exc:
                  logger.error("Failed to resolve gateway approval from button: %s", exc)
  
@@ -3761,7 +3769,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
          async def on_timeout(self):
              """Handle view timeout -- disable buttons and mark as expired."""
-@@ -3667,12 +3722,14 @@ if DISCORD_AVAILABLE:
+@@ -3667,12 +3730,14 @@ if DISCORD_AVAILABLE:
          ):
              if self.resolved:
                  await interaction.response.send_message(
@@ -3778,7 +3786,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  )
                  return
  
-@@ -3682,7 +3739,14 @@ if DISCORD_AVAILABLE:
+@@ -3682,7 +3747,14 @@ if DISCORD_AVAILABLE:
              embed = interaction.message.embeds[0] if interaction.message.embeds else None
              if embed:
                  embed.color = color
@@ -3794,7 +3802,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
              for child in self.children:
                  child.disabled = True
-@@ -3703,17 +3767,17 @@ if DISCORD_AVAILABLE:
+@@ -3703,17 +3775,17 @@ if DISCORD_AVAILABLE:
              except Exception as exc:
                  logger.error("Failed to write update response: %s", exc)
  
@@ -3816,7 +3824,7 @@ index 3eaf6ac0..9a7ea1a4 100644
  
          async def on_timeout(self):
              self.resolved = True
-@@ -3760,8 +3824,8 @@ if DISCORD_AVAILABLE:
+@@ -3760,8 +3832,8 @@ if DISCORD_AVAILABLE:
              options = []
              for p in self.providers:
                  count = p.get("total_models", len(p.get("models", [])))
@@ -3827,7 +3835,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  options.append(
                      discord.SelectOption(
                          label=label[:100],
-@@ -3773,7 +3837,7 @@ if DISCORD_AVAILABLE:
+@@ -3773,7 +3845,7 @@ if DISCORD_AVAILABLE:
                  return
  
              select = discord.ui.Select(
@@ -3836,7 +3844,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  options=options[:25],
                  custom_id="model_provider_select",
              )
-@@ -3781,7 +3845,9 @@ if DISCORD_AVAILABLE:
+@@ -3781,7 +3853,9 @@ if DISCORD_AVAILABLE:
              self.add_item(select)
  
              cancel_btn = discord.ui.Button(
@@ -3847,7 +3855,7 @@ index 3eaf6ac0..9a7ea1a4 100644
              )
              cancel_btn.callback = self._on_cancel
              self.add_item(cancel_btn)
-@@ -3809,7 +3875,11 @@ if DISCORD_AVAILABLE:
+@@ -3809,7 +3883,11 @@ if DISCORD_AVAILABLE:
                  return
  
              select = discord.ui.Select(
@@ -3860,7 +3868,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  options=options,
                  custom_id="model_model_select",
              )
-@@ -3817,13 +3887,17 @@ if DISCORD_AVAILABLE:
+@@ -3817,13 +3895,17 @@ if DISCORD_AVAILABLE:
              self.add_item(select)
  
              back_btn = discord.ui.Button(
@@ -3880,7 +3888,7 @@ index 3eaf6ac0..9a7ea1a4 100644
              )
              cancel_btn.callback = self._on_cancel
              self.add_item(cancel_btn)
-@@ -3831,7 +3905,8 @@ if DISCORD_AVAILABLE:
+@@ -3831,7 +3913,8 @@ if DISCORD_AVAILABLE:
          async def _on_provider_selected(self, interaction: discord.Interaction):
              if not self._check_auth(interaction):
                  await interaction.response.send_message(
@@ -3890,7 +3898,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  )
                  return
  
-@@ -3846,12 +3921,26 @@ if DISCORD_AVAILABLE:
+@@ -3846,12 +3929,26 @@ if DISCORD_AVAILABLE:
  
              total = provider.get("total_models", 0) if provider else 0
              shown = min(len(provider.get("models", [])), 25) if provider else 0
@@ -3920,7 +3928,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                      color=discord.Color.blue(),
                  ),
                  view=self,
-@@ -3860,12 +3949,14 @@ if DISCORD_AVAILABLE:
+@@ -3860,12 +3957,14 @@ if DISCORD_AVAILABLE:
          async def _on_model_selected(self, interaction: discord.Interaction):
              if self.resolved:
                  await interaction.response.send_message(
@@ -3937,7 +3945,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  )
                  return
  
-@@ -3874,8 +3965,8 @@ if DISCORD_AVAILABLE:
+@@ -3874,8 +3973,8 @@ if DISCORD_AVAILABLE:
              self.clear_items()
              await interaction.response.edit_message(
                  embed=discord.Embed(
@@ -3948,7 +3956,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                      color=discord.Color.blue(),
                  ),
                  view=None,
-@@ -3888,11 +3979,11 @@ if DISCORD_AVAILABLE:
+@@ -3888,11 +3987,11 @@ if DISCORD_AVAILABLE:
                      self._selected_provider,
                  )
              except Exception as exc:
@@ -3962,7 +3970,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                      description=result_text,
                      color=discord.Color.green(),
                  ),
-@@ -3902,7 +3993,8 @@ if DISCORD_AVAILABLE:
+@@ -3902,7 +4001,8 @@ if DISCORD_AVAILABLE:
          async def _on_back(self, interaction: discord.Interaction):
              if not self._check_auth(interaction):
                  await interaction.response.send_message(
@@ -3972,7 +3980,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                  )
                  return
  
-@@ -3916,11 +4008,14 @@ if DISCORD_AVAILABLE:
+@@ -3916,11 +4016,14 @@ if DISCORD_AVAILABLE:
  
              await interaction.response.edit_message(
                  embed=discord.Embed(
@@ -3991,7 +3999,7 @@ index 3eaf6ac0..9a7ea1a4 100644
                      ),
                      color=discord.Color.blue(),
                  ),
-@@ -3932,8 +4027,8 @@ if DISCORD_AVAILABLE:
+@@ -3932,8 +4035,8 @@ if DISCORD_AVAILABLE:
              self.clear_items()
              await interaction.response.edit_message(
                  embed=discord.Embed(
