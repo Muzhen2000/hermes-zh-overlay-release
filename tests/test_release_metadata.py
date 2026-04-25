@@ -72,6 +72,8 @@ def test_real_ui_catalog_covers_all_static_runtime_keys():
         "hermes_cli/main.py": (("_ui", "main."),),
         "hermes_cli/status.py": (("_ui", "status."),),
         "hermes_cli/banner.py": (("_ui", "banner."),),
+        "agent/display.py": (("_display_ui", "display."),),
+        "agent/manual_compression_feedback.py": (("_manual_compression_ui", "manual_compression."),),
     }
 
     expected_keys = set()

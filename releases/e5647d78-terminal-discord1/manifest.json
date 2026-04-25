@@ -1,0 +1,52 @@
+{
+  "release": "e5647d78-terminal-discord1",
+  "official_commit": "e5647d7863d306c8f479e1da011ebe4a4848d56d",
+  "scope": [
+    "terminal",
+    "discord"
+  ],
+  "web_ui_policy": "upstream-only",
+  "patch": "patches/hermes-zh.patch",
+  "localization_files": [
+    "commands.zh-CN.yaml",
+    "skills.zh-CN.yaml",
+    "skins.zh-CN.yaml",
+    "tips.zh-CN.yaml",
+    "ui.zh-CN.yaml"
+  ],
+  "skin_files": [
+    "bubblegum-80s.yaml",
+    "lain.yaml",
+    "mother.yaml",
+    "mythos.yaml",
+    "neonwave.yaml",
+    "netrunner.yaml",
+    "nous.yaml",
+    "pirate.yaml",
+    "sakura.yaml",
+    "skynet.yaml",
+    "vault-tec.yaml"
+  ],
+  "allowed_source_files": [
+    "agent/display.py",
+    "agent/manual_compression_feedback.py",
+    "cli.py",
+    "gateway/platforms/discord.py",
+    "gateway/run.py",
+    "hermes_cli/auth.py",
+    "hermes_cli/banner.py",
+    "hermes_cli/commands.py",
+    "hermes_cli/debug.py",
+    "hermes_cli/gateway.py",
+    "hermes_cli/main.py",
+    "hermes_cli/skin_engine.py",
+    "hermes_cli/status.py",
+    "hermes_cli/tips.py"
+  ],
+  "justified_non_text_logic": [
+    "cli.py: display-cell spinner/status height calculation preserves terminal layout for localized CJK text; no command/control flow changes",
+    "hermes_cli/skin_engine.py: data-only YAML lookup for terminal command/skin/tip/ui catalogs",
+    "gateway/platforms/discord.py: Discord visible labels/descriptions/replies lookup; command names, choice values and custom IDs remain protocol-stable"
+  ],
+  "source_policy": "minimal display-layer localization hooks for fixed visible terminal and Discord text; no Web UI, no Telegram platform patch, no model-facing prompt changes"
+}

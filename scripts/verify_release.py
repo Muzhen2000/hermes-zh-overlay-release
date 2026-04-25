@@ -76,6 +76,7 @@ def _ui_keys_from_patch(patch_path: Path) -> set[str]:
     helper_prefixes: dict[str, tuple[tuple[str, str], ...]] = {
         "cli.py": (("_cli_ui", "cli."),),
         "gateway/run.py": (("_gateway_ui", "gateway.runtime."),),
+        "gateway/platforms/discord.py": (("_discord_ui", "gateway.discord."),),
         "gateway/platforms/telegram.py": (("_tg_ui", "gateway.telegram."),),
         "gateway/platforms/feishu.py": (("_feishu_ui", "gateway.feishu."),),
         "hermes_cli/gateway.py": (("_ui", "gateway."),),
@@ -84,6 +85,8 @@ def _ui_keys_from_patch(patch_path: Path) -> set[str]:
         "hermes_cli/main.py": (("_ui", "main."),),
         "hermes_cli/status.py": (("_ui", "status."),),
         "hermes_cli/banner.py": (("_ui", "banner."),),
+        "agent/display.py": (("_display_ui", "display."),),
+        "agent/manual_compression_feedback.py": (("_manual_compression_ui", "manual_compression."),),
     }
     keys = set()
     current_file = ""
