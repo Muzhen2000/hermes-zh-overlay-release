@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+- Complete command localization coverage for the current 58-command registry: add `busy`, `curator`, `footer`, `indicator`, and `redraw`; remove obsolete `btw` and `provider` entries.
+
+- Prune the previous `e5647d78-terminal-discord1` release directory so the public repo again exposes only the current verified release.
+- Update the pinned install command in `docs/install.md` to `58a6171b-terminal-discord1`.
+- Clarify historical audit docs so old release IDs are audit-time baselines, not current entry points.
+- Separate non-disruptive verification commands from optional gateway restart checks in the Discord proxy audit.
+
 ## 1.1.0
 
 - Publish `releases/58a6171b-terminal-discord1/` as the current latest release.

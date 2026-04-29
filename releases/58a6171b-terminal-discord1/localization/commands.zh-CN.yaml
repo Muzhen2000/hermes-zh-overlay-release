@@ -17,7 +17,6 @@ commands:
   approve: 批准待处理的危险命令
   deny: 拒绝待处理的危险命令
   background: 在后台运行一个提示词
-  btw: 基于当前会话上下文提一个临时问题（不调用工具，不持久化）
   agents: 显示当前活跃 agent 与运行中的任务
   queue: 将提示词排入下一轮执行（不打断当前运行）
   steer: 在不打断当前运行的情况下，于下一次工具调用后注入一条消息
@@ -27,7 +26,6 @@ commands:
   resume: 恢复一个已命名的历史会话
   config: 显示当前配置
   model: 切换当前会话使用的模型
-  provider: 显示可用 provider 和当前 provider
   gquota: 显示 Google Gemini Code Assist 配额用量
   personality: 设置预定义人格
   statusbar: 切换上下文/模型状态栏
@@ -58,3 +56,8 @@ commands:
   snapshot: 创建或恢复 Hermes 配置/状态快照
   update: 将 Hermes Agent 更新到最新版本
   quit: 退出 CLI
+  busy: "设置 Hermes 工作时按 Enter 的行为"
+  curator: "后台技能维护（状态、运行、固定、归档）"
+  footer: "开关网关最终回复中的运行元数据页脚"
+  indicator: "选择 TUI 忙碌指示器样式"
+  redraw: "强制重绘整个终端界面（用于恢复终端显示错位）"

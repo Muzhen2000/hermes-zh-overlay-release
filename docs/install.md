@@ -25,7 +25,7 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 ## 应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release e5647d78-terminal-discord1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 58a6171b-terminal-discord1
 ```
 
 ## 这条命令会做什么

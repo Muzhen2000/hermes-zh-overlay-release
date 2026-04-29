@@ -2,13 +2,14 @@
 
 ## Scope
 
-Baseline:
+Original audit baseline:
 
 - Official Hermes commit: `e5647d7863d306c8f479e1da011ebe4a4848d56d`
-- Active release: `e5647d78-terminal-discord1`
+- Audit-time release: `e5647d78-terminal-discord1`
+- Current active release: read `release.json` (`latest_release`)
 - Managed surface: terminal + Discord fixed visible text, plus the single runtime exception declared below
 
-This audit covers only the extra Discord gateway proxy change added after the 2026-04-25 localization audit.
+This audit covers only the extra Discord gateway proxy change added after the 2026-04-25 localization audit. The exception remains valid for later releases only when the active manifest still declares it.
 
 ## Symptom
 
@@ -102,11 +103,16 @@ Until then, this patch should stay in the overlay release because it protects th
 
 ## Verification
 
-Expected checks:
+Expected non-disruptive checks:
 
 ```bash
 python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
 git -C ~/.hermes/hermes-agent diff --check
+```
+
+Optional live-gateway checks, only when the user approves restarting active instances:
+
+```bash
 launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway
 launchctl kickstart -k gui/$(id -u)/ai.hermes.gateway-contemplation
 ```
