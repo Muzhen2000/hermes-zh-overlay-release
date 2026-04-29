@@ -1,6 +1,6 @@
 {
-  "release": "e5647d78-terminal-discord1",
-  "official_commit": "e5647d7863d306c8f479e1da011ebe4a4848d56d",
+  "release": "58a6171b-terminal-discord1",
+  "official_commit": "58a6171bfb0ba2ca10b1b08854511736cd77a623",
   "scope": [
     "terminal",
     "discord"

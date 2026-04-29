@@ -6,12 +6,14 @@
 
 ## 当前版本
 
-- 官方 Hermes commit：`e5647d7863d306c8f479e1da011ebe4a4848d56d`
-- 中文包 release：`e5647d78-terminal-discord1`
+- 官方 Hermes commit：`58a6171bfb0ba2ca10b1b08854511736cd77a623`
+- 中文包 release：`58a6171b-terminal-discord1`
 - 范围：终端 + Discord 中用户可见、非 LLM 生成的固定文案
 - 不处理：Web UI、Telegram、飞书、模型路由、provider 协议、用户配置、登录态
 
-当前 release 带有一份受控 Hermes 源码 patch。它只做显示层中文取词钩子和 CJK 终端显示适配，不改命令分发、会话状态机、模型请求或 Discord 协议字段。
+当前 release 带有一份受控 Hermes 源码 patch。主体只做显示层中文取词钩子和 CJK 终端显示适配，不改命令分发、会话状态机、模型请求或 Discord 协议字段。
+
+本 release 额外登记一个非汉化运行面例外：Discord 网关代理解析会把 `discord.com` / `discord.gg` / `gateway.discord.gg` 传入 Hermes 既有 `NO_PROXY` 逻辑。原因是永久常驻网关在 macOS 系统代理端口失效时会静默掉线，而原 Discord 调用点没有传目标 host，导致只写 `.env` 的 `NO_PROXY` 无法生效。这个补丁不改消息路由、命令协议、认证、模型请求或回复内容；如果上游提供等价修复或官方 direct/no-proxy 配置，应删除该例外。
 
 ## 覆盖内容
 
@@ -40,7 +42,7 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 如果要锁定当前 release：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release e5647d78-terminal-discord1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 58a6171b-terminal-discord1
 ```
 
 如果安装命令报 `curl: (6) Could not resolve host: raw.githubusercontent.com`，这是本机网络或 DNS 解析问题，不是中文包本身失败。切换网络或稍后重试同一条命令。
@@ -51,5 +53,6 @@ curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-releas
 
 - [AGENTS.md](./AGENTS.md)
 - [docs/audit-2026-04-25.md](./docs/audit-2026-04-25.md)
+- [docs/audit-2026-04-26-discord-proxy.md](./docs/audit-2026-04-26-discord-proxy.md)
 
 本仓库只保留当前可验证 release。历史 Kimi、飞书、Telegram、旧 gateway release 目录已删除，避免未来 agent 把旧补丁当成新基线。

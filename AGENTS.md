@@ -96,6 +96,19 @@
 - 如果接手线程环境可用该 skill，应先显式使用它，再继续本仓库维护。
 - 就算没有 skill 可用，也必须把本文件当作远端仓库的等价 LLM 入口来执行，不能跳过。
 
+### 3.1 当前已声明的非汉化运行面例外
+
+当前 release 额外带有一个严格登记的运行面例外：`gateway/platforms/discord.py` 中的 Discord 代理解析会把 Discord 目标 host 传入 Hermes 既有 `NO_PROXY` 判断。
+
+允许它的原因只有一个：用户要求默认实例和多实例 Discord 网关永久常驻，而 macOS 系统代理端口失效时，Hermes 会自动探测到坏代理并把 Discord WebSocket / REST 请求显式发向该代理；原 Discord 调用点没有传 `target_hosts`，所以只配置 `NO_PROXY=discord.com,.discord.com,discord.gg,.discord.gg` 不能生效。
+
+这个例外的边界：
+
+- 只允许复用现有 `resolve_proxy_url(..., target_hosts=...)` 能力。
+- 不允许改消息路由、频道绑定、会话状态、命令分发、认证、模型请求或 LLM prompt。
+- 如果上游 Hermes 提供同等修复，或提供官方 `DISCORD_PROXY=direct` / per-platform no-proxy 配置，必须优先删除本例外。
+- 不能把这个例外扩展成新的代理系统、自动重连系统或多平台网关重构。
+
 ## 4. 维护的默认工作流
 
 ### 4.1 先判断任务类型

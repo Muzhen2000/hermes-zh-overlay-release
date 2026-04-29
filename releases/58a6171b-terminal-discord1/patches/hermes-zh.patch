@@ -1,5 +1,5 @@
 diff --git a/agent/display.py b/agent/display.py
-index 474595d7..c7106507 100644
+index 474595d76..c71065073 100644
 --- a/agent/display.py
 +++ b/agent/display.py
 @@ -158,6 +158,15 @@ def get_tool_emoji(tool_name: str, default: str = "⚡") -> str:
@@ -34,7 +34,7 @@ index 474595d7..c7106507 100644
  
 -
 diff --git a/agent/manual_compression_feedback.py b/agent/manual_compression_feedback.py
-index 8f2d5e5d..7db3b7e5 100644
+index 8f2d5e5d5..7db3b7e5c 100644
 --- a/agent/manual_compression_feedback.py
 +++ b/agent/manual_compression_feedback.py
 @@ -4,6 +4,12 @@ from __future__ import annotations
@@ -108,12 +108,12 @@ index 8f2d5e5d..7db3b7e5 100644
  
      return {
 diff --git a/cli.py b/cli.py
-index abd4d239..c996dc93 100644
+index 1f2f26fc9..7c0241d79 100644
 --- a/cli.py
 +++ b/cli.py
-@@ -69,10 +69,32 @@ from agent.usage_pricing import (
- )
- from agent.account_usage import fetch_account_usage, render_account_usage_lines
+@@ -73,10 +73,32 @@ from agent.usage_pricing import (
+ # top — it transitively pulls the OpenAI SDK chain (~230 ms cold) and is only
+ # needed when the user runs `/limits`. Lazy-imported inside the handler below.
  from hermes_cli.banner import _format_context_length, format_banner_version_label
 +from hermes_cli.skin_engine import get_ui_text
  
@@ -144,7 +144,7 @@ index abd4d239..c996dc93 100644
  # Load .env from ~/.hermes/.env first, then project root as dev fallback.
  # User-managed env files should override stale shell exports on restart.
  from hermes_constants import get_hermes_home, display_hermes_home
-@@ -2311,6 +2333,8 @@ class HermesCLI:
+@@ -2402,6 +2424,8 @@ class HermesCLI:
              return 0
          if self._use_minimal_tui_chrome(width=width):
              return 0
@@ -153,7 +153,7 @@ index abd4d239..c996dc93 100644
          width = width or self._get_tui_terminal_width()
          if width and width > 10:
              import math
-@@ -2318,6 +2342,19 @@ class HermesCLI:
+@@ -2409,6 +2433,19 @@ class HermesCLI:
              return max(1, math.ceil(text_width / width))
          return 1
  
@@ -173,7 +173,7 @@ index abd4d239..c996dc93 100644
      def _render_spinner_text(self) -> str:
          """Return the live spinner/status text exactly as rendered in the TUI."""
          txt = getattr(self, "_spinner_text", "")
-@@ -2666,7 +2703,7 @@ class HermesCLI:
+@@ -2757,7 +2794,7 @@ class HermesCLI:
          """Format the submitted user-message scrollback preview."""
          lines = user_input.split("\n")
          if len(lines) <= 1:
@@ -182,7 +182,7 @@ index abd4d239..c996dc93 100644
  
          first_lines = int(getattr(self, "user_message_preview_first_lines", 2))
          last_lines = int(getattr(self, "user_message_preview_last_lines", 2))
-@@ -2683,13 +2720,14 @@ class HermesCLI:
+@@ -2774,13 +2811,14 @@ class HermesCLI:
              tail = []
  
          preview_lines = [
@@ -200,7 +200,7 @@ index abd4d239..c996dc93 100644
  
          preview_lines.extend(f"[bold]{_escape(line)}[/]" for line in tail)
          return "\n".join(preview_lines)
-@@ -2713,7 +2751,9 @@ class HermesCLI:
+@@ -2804,7 +2842,9 @@ class HermesCLI:
          if "\n" in text:
              ChatConsole().print(self._format_submitted_user_message_preview(text))
          else:
@@ -211,7 +211,7 @@ index abd4d239..c996dc93 100644
  
      def _stream_reasoning_delta(self, text: str) -> None:
          """Stream reasoning/thinking tokens into a dim box above the response.
-@@ -3004,20 +3044,20 @@ class HermesCLI:
+@@ -3095,20 +3135,20 @@ class HermesCLI:
          """Return a user-facing status message for slower slash commands."""
          cmd_lower = command.lower().strip()
          if cmd_lower.startswith("/skills search"):
@@ -240,7 +240,7 @@ index abd4d239..c996dc93 100644
  
      def _command_spinner_frame(self) -> str:
          """Return the current spinner frame for slow slash commands."""
-@@ -3758,14 +3798,14 @@ class HermesCLI:
+@@ -3856,14 +3896,14 @@ class HermesCLI:
          from tools.checkpoint_manager import format_checkpoint_list
  
          if not hasattr(self, 'agent') or not self.agent:
@@ -259,7 +259,7 @@ index abd4d239..c996dc93 100644
              return
  
          cwd = os.getenv("TERMINAL_CWD", os.getcwd())
-@@ -3781,11 +3821,11 @@ class HermesCLI:
+@@ -3879,11 +3919,11 @@ class HermesCLI:
          # Handle /rollback diff <N>
          if args[0].lower() == "diff":
              if len(args) < 2:
@@ -273,7 +273,7 @@ index abd4d239..c996dc93 100644
                  return
              target_hash = self._resolve_checkpoint_ref(args[1], checkpoints)
              if not target_hash:
-@@ -3795,7 +3835,7 @@ class HermesCLI:
+@@ -3893,7 +3933,7 @@ class HermesCLI:
                  stat = result.get("stat", "")
                  diff = result.get("diff", "")
                  if not stat and not diff:
@@ -282,7 +282,7 @@ index abd4d239..c996dc93 100644
                  else:
                      if stat:
                          print(f"\n{stat}")
-@@ -3804,17 +3844,17 @@ class HermesCLI:
+@@ -3902,17 +3942,17 @@ class HermesCLI:
                          diff_lines = diff.splitlines()
                          if len(diff_lines) > 80:
                              print("\n".join(diff_lines[:80]))
@@ -303,7 +303,7 @@ index abd4d239..c996dc93 100644
              return
  
          target_hash = self._resolve_checkpoint_ref(args[0], checkpoints)
-@@ -3827,18 +3867,18 @@ class HermesCLI:
+@@ -3925,18 +3965,18 @@ class HermesCLI:
          result = mgr.restore(cwd, target_hash, file_path=file_path)
          if result["success"]:
              if file_path:
@@ -327,7 +327,7 @@ index abd4d239..c996dc93 100644
  
      def _resolve_checkpoint_ref(self, ref: str, checkpoints: list) -> str | None:
          """Resolve a checkpoint number or hash to a full commit hash."""
-@@ -3847,7 +3887,7 @@ class HermesCLI:
+@@ -3945,7 +3985,7 @@ class HermesCLI:
              if 0 <= idx < len(checkpoints):
                  return checkpoints[idx]["hash"]
              else:
@@ -336,7 +336,7 @@ index abd4d239..c996dc93 100644
                  return None
          except ValueError:
              # Treat as a git hash
-@@ -3874,11 +3914,17 @@ class HermesCLI:
+@@ -3972,11 +4012,17 @@ class HermesCLI:
          if subcmd in ("list", "ls"):
              snaps = list_quick_snapshots()
              if not snaps:
@@ -358,7 +358,7 @@ index abd4d239..c996dc93 100644
              print(f"  {'─'*3}  {'─'*35} {'─'*5} {'─'*10} {'─'*20}")
              for i, s in enumerate(snaps, 1):
                  size = s.get("total_size", 0)
-@@ -3895,17 +3941,17 @@ class HermesCLI:
+@@ -3993,17 +4039,17 @@ class HermesCLI:
              label = " ".join(parts[2:]) if len(parts) > 2 else None
              snap_id = create_quick_snapshot(label=label)
              if snap_id:
@@ -380,7 +380,7 @@ index abd4d239..c996dc93 100644
                  return
              snap_id = parts[2]
              # Allow restore by number (1-indexed)
-@@ -3915,15 +3961,15 @@ class HermesCLI:
+@@ -4013,15 +4059,15 @@ class HermesCLI:
                  if 1 <= idx <= len(snaps):
                      snap_id = snaps[idx - 1]["id"]
                  else:
@@ -400,7 +400,7 @@ index abd4d239..c996dc93 100644
  
          elif subcmd == "prune":
              keep = 20
-@@ -3931,14 +3977,14 @@ class HermesCLI:
+@@ -4029,14 +4075,14 @@ class HermesCLI:
                  try:
                      keep = int(parts[2])
                  except ValueError:
@@ -419,7 +419,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_stop_command(self):
          """Handle /stop — kill all running background processes.
-@@ -3952,12 +3998,12 @@ class HermesCLI:
+@@ -4050,12 +4096,12 @@ class HermesCLI:
          running = [p for p in processes if p.get("status") == "running"]
  
          if not running:
@@ -435,7 +435,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_agents_command(self):
          """Handle /agents — show background processes and agent status."""
-@@ -3967,17 +4013,25 @@ class HermesCLI:
+@@ -4065,17 +4111,25 @@ class HermesCLI:
          running = [p for p in processes if p.get("status") == "running"]
          finished = [p for p in processes if p.get("status") != "running"]
  
@@ -464,7 +464,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_paste_command(self):
          """Handle /paste — explicitly check clipboard for an image.
-@@ -3988,9 +4042,7 @@ class HermesCLI:
+@@ -4086,9 +4140,7 @@ class HermesCLI:
          """
          if _is_termux_environment():
              _cprint(
@@ -475,7 +475,7 @@ index abd4d239..c996dc93 100644
              )
              return
  
-@@ -3998,11 +4050,11 @@ class HermesCLI:
+@@ -4096,11 +4148,11 @@ class HermesCLI:
          if has_clipboard_image():
              if self._try_attach_clipboard_image():
                  n = len(self._attached_images)
@@ -490,7 +490,7 @@ index abd4d239..c996dc93 100644
  
      def _write_osc52_clipboard(self, text: str) -> None:
          """Copy *text* to terminal clipboard via OSC 52."""
-@@ -4028,60 +4080,65 @@ class HermesCLI:
+@@ -4126,60 +4178,65 @@ class HermesCLI:
  
          assistant = [m for m in self.conversation_history if m.get("role") == "assistant"]
          if not assistant:
@@ -569,7 +569,7 @@ index abd4d239..c996dc93 100644
  
      def _preprocess_images_with_vision(self, text: str, images: list, *, announce: bool = True) -> str:
          """Analyze attached images via the vision tool and return enriched text.
-@@ -4248,19 +4305,23 @@ class HermesCLI:
+@@ -4346,19 +4403,23 @@ class HermesCLI:
          is_running = bool(getattr(self, "_agent_running", False))
  
          lines = [
@@ -602,7 +602,7 @@ index abd4d239..c996dc93 100644
          ])
          self._console_print("\n".join(lines), highlight=False, markup=False)
      
-@@ -4281,13 +4342,20 @@ class HermesCLI:
+@@ -4379,13 +4440,20 @@ class HermesCLI:
      def show_help(self):
          """Display help information with categorized commands."""
          from hermes_cli.commands import COMMANDS_BY_CATEGORY
@@ -626,7 +626,7 @@ index abd4d239..c996dc93 100644
          inner_width = 55
          if len(header) > inner_width:
              header = header[:inner_width]
-@@ -4296,38 +4364,46 @@ class HermesCLI:
+@@ -4394,38 +4462,46 @@ class HermesCLI:
          _cprint(f"{_BOLD}+{'-' * inner_width}+{_RST}")
  
          for category, commands in COMMANDS_BY_CATEGORY.items():
@@ -651,10 +651,10 @@ index abd4d239..c996dc93 100644
  
 -        _cprint(f"\n  {_DIM}Tip: Just type your message to chat with Hermes!{_RST}")
 -        _cprint(f"  {_DIM}Multi-line: Alt+Enter for a new line{_RST}")
--        _cprint(f"  {_DIM}Draft editor: Ctrl+G{_RST}")
+-        _cprint(f"  {_DIM}Draft editor: Ctrl+G (Alt+G in VSCode/Cursor){_RST}")
 +        _cprint(f"\n  {_DIM}{_cli_ui('help.tip.chat', 'Tip: Just type your message to chat with Hermes!')}{_RST}")
 +        _cprint(f"  {_DIM}{_cli_ui('help.tip.multi_line', 'Multi-line: Alt+Enter for a new line')}{_RST}")
-+        _cprint(f"  {_DIM}{_cli_ui('help.tip.draft_editor', 'Draft editor: Ctrl+G')}{_RST}")
++        _cprint(f"  {_DIM}{_cli_ui('help.tip.draft_editor', 'Draft editor: Ctrl+G (Alt+G in VSCode/Cursor)')}{_RST}")
          if _is_termux_environment():
 -            _cprint(f"  {_DIM}Attach image: /image {_termux_example_image_path()} or start your prompt with a local image path{_RST}\n")
 +            _cprint(
@@ -682,7 +682,7 @@ index abd4d239..c996dc93 100644
          width = 78
          pad = width - len(title)
          print("+" + "-" * width + "+")
-@@ -4356,7 +4432,7 @@ class HermesCLI:
+@@ -4454,7 +4530,7 @@ class HermesCLI:
                  print(f"    * {name:<20} - {desc}")
              print()
          
@@ -691,7 +691,7 @@ index abd4d239..c996dc93 100644
          print()
  
      def _handle_tools_command(self, cmd: str):
-@@ -4417,17 +4493,17 @@ class HermesCLI:
+@@ -4515,17 +4591,17 @@ class HermesCLI:
  
          names = parts[2:]
          if not names:
@@ -714,7 +714,7 @@ index abd4d239..c996dc93 100644
  
          _run_capture(Namespace(tools_action=subcommand, names=names, platform="cli"))
  
-@@ -4436,7 +4512,7 @@ class HermesCLI:
+@@ -4534,7 +4610,7 @@ class HermesCLI:
          from hermes_cli.config import load_config
          self.enabled_toolsets = _get_platform_tools(load_config(), "cli")
          self.new_session()
@@ -723,7 +723,7 @@ index abd4d239..c996dc93 100644
  
      def show_toolsets(self):
          """Display available toolsets with kawaii ASCII art."""
-@@ -4444,7 +4520,7 @@ class HermesCLI:
+@@ -4542,7 +4618,7 @@ class HermesCLI:
          
          # Header
          print()
@@ -732,7 +732,7 @@ index abd4d239..c996dc93 100644
          width = 58
          pad = width - len(title)
          print("+" + "-" * width + "+")
-@@ -4460,13 +4536,14 @@ class HermesCLI:
+@@ -4558,13 +4634,14 @@ class HermesCLI:
                  
                  # Mark if currently enabled
                  marker = "(*)" if self.enabled_toolsets and name in self.enabled_toolsets else "   "
@@ -751,7 +751,7 @@ index abd4d239..c996dc93 100644
          print()
      
      def _handle_profile_command(self):
-@@ -4478,8 +4555,8 @@ class HermesCLI:
+@@ -4576,8 +4653,8 @@ class HermesCLI:
          profile_name = get_active_profile_name()
  
          print()
@@ -762,7 +762,7 @@ index abd4d239..c996dc93 100644
          print()
  
      def show_config(self):
-@@ -4495,41 +4572,41 @@ class HermesCLI:
+@@ -4593,41 +4670,41 @@ class HermesCLI:
              config_path = user_config_path
          else:
              config_path = project_config_path
@@ -825,7 +825,7 @@ index abd4d239..c996dc93 100644
          print()
      
      def _list_recent_sessions(self, limit: int = 10) -> list[dict[str, Any]]:
-@@ -4559,11 +4636,16 @@ class HermesCLI:
+@@ -4657,11 +4734,16 @@ class HermesCLI:
  
          print()
          if reason == "history":
@@ -845,7 +845,7 @@ index abd4d239..c996dc93 100644
          print(f"  {'─' * 32} {'─' * 40} {'─' * 13} {'─' * 24}")
          for session in sessions:
              title = (session.get("title") or "—")[:30]
-@@ -4571,7 +4653,7 @@ class HermesCLI:
+@@ -4669,7 +4751,7 @@ class HermesCLI:
              last_active = _relative_time(session.get("last_active"))
              print(f"  {title:<32} {preview:<40} {last_active:<13} {session['id']}")
          print()
@@ -854,7 +854,7 @@ index abd4d239..c996dc93 100644
          print()
          return True
  
-@@ -4579,7 +4661,7 @@ class HermesCLI:
+@@ -4677,7 +4759,7 @@ class HermesCLI:
          """Display conversation history."""
          if not self.conversation_history:
              if not self._show_recent_sessions(reason="history"):
@@ -863,7 +863,7 @@ index abd4d239..c996dc93 100644
              return
  
          preview_limit = 400
-@@ -4591,14 +4673,15 @@ class HermesCLI:
+@@ -4689,14 +4771,15 @@ class HermesCLI:
              if not hidden_tool_messages:
                  return
  
@@ -883,7 +883,7 @@ index abd4d239..c996dc93 100644
          print("+" + "-" * 50 + "+")
  
          for msg in self.conversation_history:
-@@ -4618,24 +4701,24 @@ class HermesCLI:
+@@ -4716,24 +4799,24 @@ class HermesCLI:
              content_text = "" if content is None else str(content)
  
              if role == "user":
@@ -913,7 +913,7 @@ index abd4d239..c996dc93 100644
                  suffix = ""
              print(f"    {preview}{suffix}")
  
-@@ -4718,7 +4801,7 @@ class HermesCLI:
+@@ -4812,7 +4895,7 @@ class HermesCLI:
              self._notify_session_boundary("on_session_reset")
  
          if not silent:
@@ -922,7 +922,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_resume_command(self, cmd_original: str) -> None:
          """Handle /resume <session_id_or_title> — switch to a previous session mid-conversation."""
-@@ -4726,14 +4809,14 @@ class HermesCLI:
+@@ -4820,14 +4903,14 @@ class HermesCLI:
          target = parts[1].strip() if len(parts) > 1 else ""
  
          if not target:
@@ -940,7 +940,7 @@ index abd4d239..c996dc93 100644
              return
  
          # Resolve title or ID
-@@ -4743,8 +4826,8 @@ class HermesCLI:
+@@ -4837,8 +4920,8 @@ class HermesCLI:
  
          session_meta = self._session_db.get_session(target_id)
          if not session_meta:
@@ -951,7 +951,7 @@ index abd4d239..c996dc93 100644
              return
  
          # If the target is the empty head of a compression chain, redirect to
-@@ -4764,7 +4847,7 @@ class HermesCLI:
+@@ -4858,7 +4941,7 @@ class HermesCLI:
                  session_meta = resolved_meta
  
          if target_id == self.session_id:
@@ -960,7 +960,7 @@ index abd4d239..c996dc93 100644
              return
  
          # End current session
-@@ -4807,13 +4890,21 @@ class HermesCLI:
+@@ -4901,13 +4984,21 @@ class HermesCLI:
          title_part = f" \"{session_meta['title']}\"" if session_meta.get("title") else ""
          msg_count = len([m for m in self.conversation_history if m.get("role") == "user"])
          if self.conversation_history:
@@ -988,7 +988,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_branch_command(self, cmd_original: str) -> None:
          """Handle /branch [name] — fork the current session into a new independent copy.
-@@ -4823,11 +4914,11 @@ class HermesCLI:
+@@ -4917,11 +5008,11 @@ class HermesCLI:
          Inspired by Claude Code's /branch command.
          """
          if not self.conversation_history:
@@ -1002,7 +1002,7 @@ index abd4d239..c996dc93 100644
              return
  
          parts = cmd_original.split(None, 1)
-@@ -4872,7 +4963,7 @@ class HermesCLI:
+@@ -4966,7 +5057,7 @@ class HermesCLI:
                  parent_session_id=parent_session_id,
              )
          except Exception as e:
@@ -1011,7 +1011,7 @@ index abd4d239..c996dc93 100644
              return
  
          # Copy conversation history to the new session
-@@ -4919,17 +5010,20 @@ class HermesCLI:
+@@ -5019,12 +5110,15 @@ class HermesCLI:
                  self.agent._invalidate_system_prompt()
  
          msg_count = len([m for m in self.conversation_history if m.get("role") == "user"])
@@ -1032,28 +1032,32 @@ index abd4d239..c996dc93 100644
 +        _cprint(_cli_ui("branch.current", "  Branch session:   {session_id}", session_id=new_session_id))
  
      def save_conversation(self):
-         """Save the current conversation to a file."""
+         """Save the current conversation to a JSON snapshot under ~/.hermes/sessions/saved/.
+@@ -5035,7 +5129,7 @@ class HermesCLI:
+         regardless of whether the user ever runs ``/save``.
+         """
          if not self.conversation_history:
 -            print("(;_;) No conversation to save.")
 +            print(_cli_ui("save.none", "(;_;) No conversation to save."))
              return
-         
+ 
          timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-@@ -4941,10 +5035,10 @@ class HermesCLI:
-                     "model": self.model,
+@@ -5055,11 +5149,11 @@ class HermesCLI:
                      "session_start": self.session_start.isoformat(),
                      "messages": self.conversation_history,
--                }, f, indent=2, ensure_ascii=False)
--            print(f"(^_^)v Conversation saved to: {filename}")
-+            }, f, indent=2, ensure_ascii=False)
-+            print(_cli_ui("save.saved", "(^_^)v Conversation saved to: {filename}", filename=filename))
+                 }, f, indent=2, ensure_ascii=False)
+-            print(f"(^_^)v Conversation snapshot saved to: {path}")
++            print(_cli_ui("save.snapshot_saved", "(^_^)v Conversation snapshot saved to: {path}", path=path))
+             if self.session_id:
+-                print(f"       Resume the live session with: hermes --resume {self.session_id}")
++                print(_cli_ui("save.resume_hint", "       Resume the live session with: hermes --resume {session_id}", session_id=self.session_id))
          except Exception as e:
 -            print(f"(x_x) Failed to save: {e}")
 +            print(_cli_ui("save.failed", "(x_x) Failed to save: {error}", error=e))
      
      def retry_last(self):
          """Retry the last user message by removing the last exchange and re-sending.
-@@ -4954,7 +5048,7 @@ class HermesCLI:
+@@ -5069,7 +5163,7 @@ class HermesCLI:
          Returns the message to re-send, or None if there's nothing to retry.
          """
          if not self.conversation_history:
@@ -1062,7 +1066,7 @@ index abd4d239..c996dc93 100644
              return None
          
          # Walk backwards to find the last user message
-@@ -4965,14 +5059,15 @@ class HermesCLI:
+@@ -5080,14 +5174,15 @@ class HermesCLI:
                  break
          
          if last_user_idx is None:
@@ -1080,7 +1084,7 @@ index abd4d239..c996dc93 100644
          return last_message
      
      def undo_last(self):
-@@ -4982,7 +5077,7 @@ class HermesCLI:
+@@ -5097,7 +5192,7 @@ class HermesCLI:
          onward (including assistant responses, tool calls, etc.).
          """
          if not self.conversation_history:
@@ -1089,7 +1093,7 @@ index abd4d239..c996dc93 100644
              return
          
          # Walk backwards to find the last user message
-@@ -4993,7 +5088,7 @@ class HermesCLI:
+@@ -5108,7 +5203,7 @@ class HermesCLI:
                  break
          
          if last_user_idx is None:
@@ -1098,7 +1102,7 @@ index abd4d239..c996dc93 100644
              return
          
          # Count how many messages we're removing
-@@ -5003,9 +5098,10 @@ class HermesCLI:
+@@ -5118,9 +5213,10 @@ class HermesCLI:
          # Truncate history to before the last user message
          self.conversation_history = self.conversation_history[:last_user_idx]
          
@@ -1111,7 +1115,7 @@ index abd4d239..c996dc93 100644
      
      def _run_curses_picker(self, title: str, items: list[str], default_index: int = 0) -> int | None:
          """Run curses_single_select via run_in_terminal so prompt_toolkit handles terminal ownership cleanly."""
-@@ -5111,7 +5207,7 @@ class HermesCLI:
+@@ -5226,7 +5322,7 @@ class HermesCLI:
  
      def _apply_model_switch_result(self, result, persist_global: bool) -> None:
          if not result.success:
@@ -1120,7 +1124,7 @@ index abd4d239..c996dc93 100644
              return
  
          old_model = self.model
-@@ -5137,7 +5233,7 @@ class HermesCLI:
+@@ -5252,7 +5348,7 @@ class HermesCLI:
                      api_mode=result.api_mode,
                  )
              except Exception as exc:
@@ -1129,7 +1133,7 @@ index abd4d239..c996dc93 100644
  
          self._pending_model_switch_note = (
              f"[Note: model was just switched from {old_model} to {result.new_model} "
-@@ -5146,18 +5242,18 @@ class HermesCLI:
+@@ -5261,8 +5357,8 @@ class HermesCLI:
          )
  
          provider_label = result.provider_label or result.target_provider
@@ -1138,10 +1142,13 @@ index abd4d239..c996dc93 100644
 +        _cprint(_cli_ui("model.switched", "  ✓ Model switched: {model}", model=result.new_model))
 +        _cprint(_cli_ui("model.provider", "    Provider: {provider}", provider=provider_label))
  
-         mi = result.model_info
+         # Context: always resolve via the provider-aware chain so Codex OAuth,
+         # Copilot, and Nous-enforced caps win over the raw models.dev entry
+@@ -5282,27 +5378,41 @@ class HermesCLI:
+         except Exception:
+             pass
          if mi:
-             if mi.context_window:
--                _cprint(f"    Context: {mi.context_window:,} tokens")
++            if mi.context_window:
 +                _cprint(_cli_ui("model.context", "    Context: {tokens} tokens", tokens=f"{mi.context_window:,}"))
              if mi.max_output:
 -                _cprint(f"    Max output: {mi.max_output:,} tokens")
@@ -1151,19 +1158,21 @@ index abd4d239..c996dc93 100644
 -            _cprint(f"    Capabilities: {mi.format_capabilities()}")
 +                _cprint(_cli_ui("model.cost", "    Cost: {value}", value=mi.format_cost()))
 +            _cprint(_cli_ui("model.capabilities", "    Capabilities: {value}", value=mi.format_capabilities()))
-         else:
-             try:
-                 from agent.model_metadata import get_model_context_length
-@@ -5167,7 +5263,7 @@ class HermesCLI:
-                     api_key=result.api_key or self.api_key,
-                     provider=result.target_provider,
-                 )
--                _cprint(f"    Context: {ctx:,} tokens")
++        else:
++            try:
++                from agent.model_metadata import get_model_context_length
++                ctx = get_model_context_length(
++                    result.new_model,
++                    base_url=result.base_url or self.base_url,
++                    api_key=result.api_key or self.api_key,
++                    provider=result.target_provider,
++                )
 +                _cprint(_cli_ui("model.context", "    Context: {tokens} tokens", tokens=f"{ctx:,}"))
-             except Exception:
-                 pass
++            except Exception:
++                pass
  
-@@ -5176,16 +5272,16 @@ class HermesCLI:
+         cache_enabled = (
+             (base_url_host_matches(result.base_url or "", "openrouter.ai") and "claude" in result.new_model.lower())
              or result.api_mode == "anthropic_messages"
          )
          if cache_enabled:
@@ -1184,7 +1193,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_model_picker_selection(self, persist_global: bool = False) -> None:
          state = self._model_picker_state
-@@ -5299,10 +5395,10 @@ class HermesCLI:
+@@ -5416,10 +5526,10 @@ class HermesCLI:
                  providers = []
  
              if not providers:
@@ -1198,7 +1207,7 @@ index abd4d239..c996dc93 100644
                  return
  
              self._open_model_picker(
-@@ -5328,7 +5424,7 @@ class HermesCLI:
+@@ -5445,7 +5555,7 @@ class HermesCLI:
          )
  
          if not result.success:
@@ -1207,7 +1216,7 @@ index abd4d239..c996dc93 100644
              return
  
          # Apply to CLI state.
-@@ -5358,7 +5454,7 @@ class HermesCLI:
+@@ -5475,7 +5585,7 @@ class HermesCLI:
                      api_mode=result.api_mode,
                  )
              except Exception as exc:
@@ -1216,7 +1225,7 @@ index abd4d239..c996dc93 100644
  
          # Store a note to prepend to the next user message so the model
          # knows a switch occurred (avoids injecting system messages mid-history
-@@ -5371,8 +5467,8 @@ class HermesCLI:
+@@ -5488,8 +5598,8 @@ class HermesCLI:
  
          # Display confirmation with full metadata
          provider_label = result.provider_label or result.target_provider
@@ -1227,7 +1236,7 @@ index abd4d239..c996dc93 100644
  
          # Context: always resolve via the provider-aware chain so Codex OAuth,
          # Copilot, and Nous-enforced caps win over the raw models.dev entry
-@@ -5387,13 +5483,13 @@ class HermesCLI:
+@@ -5504,13 +5614,13 @@ class HermesCLI:
              model_info=mi,
          )
          if ctx:
@@ -1245,7 +1254,7 @@ index abd4d239..c996dc93 100644
  
          # Cache notice
          cache_enabled = (
-@@ -5401,20 +5497,20 @@ class HermesCLI:
+@@ -5518,20 +5628,20 @@ class HermesCLI:
              or result.api_mode == "anthropic_messages"
          )
          if cache_enabled:
@@ -1270,7 +1279,7 @@ index abd4d239..c996dc93 100644
  
      def _should_handle_model_command_inline(self, text: str, has_images: bool = False) -> bool:
          """Return True when /model should be handled immediately on the UI thread."""
-@@ -5532,29 +5628,31 @@ class HermesCLI:
+@@ -5649,29 +5759,31 @@ class HermesCLI:
                  self.system_prompt = ""
                  self.agent = None  # Force re-init
                  if save_config_value("agent.system_prompt", ""):
@@ -1312,7 +1321,7 @@ index abd4d239..c996dc93 100644
              for name, prompt in self.personalities.items():
                  if isinstance(prompt, dict):
                      preview = prompt.get("description") or prompt.get("system_prompt", "")[:50]
-@@ -5562,7 +5660,7 @@ class HermesCLI:
+@@ -5679,7 +5791,7 @@ class HermesCLI:
                      preview = str(prompt)[:50]
                  print(f"  {name:<12} - {preview}")
              print()
@@ -1321,7 +1330,7 @@ index abd4d239..c996dc93 100644
              print()
      
      def _handle_cron_command(self, cmd: str):
-@@ -5660,19 +5758,19 @@ class HermesCLI:
+@@ -5777,19 +5889,19 @@ class HermesCLI:
              result = _cron_api(action="list")
              jobs = result.get("jobs", []) if result.get("success") else []
              if jobs:
@@ -1345,7 +1354,7 @@ index abd4d239..c996dc93 100644
              print()
              return
  
-@@ -5685,36 +5783,36 @@ class HermesCLI:
+@@ -5802,36 +5914,36 @@ class HermesCLI:
              result = _cron_api(action="list", include_disabled=opts["all"])
              jobs = result.get("jobs", []) if result.get("success") else []
              if not jobs:
@@ -1394,7 +1403,7 @@ index abd4d239..c996dc93 100644
                  return
              result = _cron_api(
                  action="create",
-@@ -5726,24 +5824,24 @@ class HermesCLI:
+@@ -5843,24 +5955,24 @@ class HermesCLI:
                  skills=skills or None,
              )
              if result.get("success"):
@@ -1426,7 +1435,7 @@ index abd4d239..c996dc93 100644
                  return
  
              final_skills = None
-@@ -5773,42 +5871,42 @@ class HermesCLI:
+@@ -5890,42 +6002,42 @@ class HermesCLI:
              )
              if result.get("success"):
                  job = result["job"]
@@ -1481,10 +1490,20 @@ index abd4d239..c996dc93 100644
 -        print("  Available: list, add, edit, pause, resume, run, remove")
 +        print(_cli_ui("cron.unknown", "(._.) Unknown cron command: {subcommand}", subcommand=subcommand))
 +        print(_cli_ui("cron.available", "  Available: list, add, edit, pause, resume, run, remove"))
-     
+ 
+     def _handle_curator_command(self, cmd: str):
+         """Handle /curator slash command.
+@@ -5947,8 +6059,7 @@ class HermesCLI:
+             # don't kill the interactive session.
+             pass
+         except Exception as exc:
+-            print(f"(._.) curator: {exc}")
+-
++            print(_cli_ui("curator.error", "(._.) curator: {error}", error=exc))
      def _handle_skills_command(self, cmd: str):
          """Handle /skills slash command — delegates to hermes_cli.skills_hub."""
-@@ -5821,14 +5919,15 @@ class HermesCLI:
+         from hermes_cli.skills_hub import handle_skills_slash
+@@ -5960,14 +6071,15 @@ class HermesCLI:
          
          print()
          print("+" + "-" * 60 + "+")
@@ -1502,7 +1521,7 @@ index abd4d239..c996dc93 100644
              print("  " + "-" * 55)
              
              platform_status = {
-@@ -5841,34 +5940,34 @@ class HermesCLI:
+@@ -5981,34 +6093,34 @@ class HermesCLI:
                  pconfig = config.platforms.get(platform)
                  if pconfig and pconfig.enabled:
                      home = config.get_home_channel(platform)
@@ -1552,7 +1571,7 @@ index abd4d239..c996dc93 100644
              print()
      
      def process_command(self, command: str) -> bool:
-@@ -5941,7 +6040,7 @@ class HermesCLI:
+@@ -6087,7 +6199,7 @@ class HermesCLI:
                          session_id=self.session_id,
                          context_length=ctx_len,
                      )
@@ -1561,7 +1580,7 @@ index abd4d239..c996dc93 100644
                  # Show a random tip on new session
                  try:
                      from hermes_cli.tips import get_random_tip
-@@ -5951,12 +6050,12 @@ class HermesCLI:
+@@ -6097,12 +6209,12 @@ class HermesCLI:
                          _tip_color = get_active_skin().get_color("banner_dim", "#B8860B")
                      except Exception:
                          _tip_color = "#B8860B"
@@ -1576,7 +1595,7 @@ index abd4d239..c996dc93 100644
                  # Show a random tip on new session
                  try:
                      from hermes_cli.tips import get_random_tip
-@@ -5966,7 +6065,9 @@ class HermesCLI:
+@@ -6112,7 +6224,9 @@ class HermesCLI:
                          _tip_color = get_active_skin().get_color("banner_dim", "#B8860B")
                      except Exception:
                          _tip_color = "#B8860B"
@@ -1587,7 +1606,7 @@ index abd4d239..c996dc93 100644
                  except Exception:
                      pass
          elif canonical == "history":
-@@ -5985,14 +6086,14 @@ class HermesCLI:
+@@ -6131,14 +6245,14 @@ class HermesCLI:
                              _cprint(f"  {e}")
                              new_title = None
                          if not new_title:
@@ -1605,7 +1624,7 @@ index abd4d239..c996dc93 100644
                              except ValueError as e:
                                  _cprint(f"  {e}")
                          else:
-@@ -6000,27 +6101,27 @@ class HermesCLI:
+@@ -6146,27 +6260,27 @@ class HermesCLI:
                              # Check uniqueness proactively with the sanitized title
                              existing = self._session_db.get_session_by_title(new_title)
                              if existing:
@@ -1642,7 +1661,7 @@ index abd4d239..c996dc93 100644
          elif canonical == "new":
              self.new_session()
          elif canonical == "resume":
-@@ -6055,8 +6156,9 @@ class HermesCLI:
+@@ -6203,8 +6317,9 @@ class HermesCLI:
              self._show_session_status()
          elif canonical == "statusbar":
              self._status_bar_visible = not self._status_bar_visible
@@ -1653,8 +1672,8 @@ index abd4d239..c996dc93 100644
 +            self._console_print(_cli_ui("status_bar.toggled", "  Status bar {state}", state=state))
          elif canonical == "verbose":
              self._toggle_verbose()
-         elif canonical == "yolo":
-@@ -6082,7 +6184,7 @@ class HermesCLI:
+         elif canonical == "footer":
+@@ -6232,7 +6347,7 @@ class HermesCLI:
          elif canonical == "reload":
              from hermes_cli.config import reload_env
              count = reload_env()
@@ -1663,7 +1682,7 @@ index abd4d239..c996dc93 100644
          elif canonical == "reload-mcp":
              with self._busy_command(self._slow_command_status(cmd_original)):
                  self._reload_mcp()
-@@ -6094,22 +6196,22 @@ class HermesCLI:
+@@ -6244,22 +6359,22 @@ class HermesCLI:
                  mgr = get_plugin_manager()
                  plugins = mgr.list_plugins()
                  if not plugins:
@@ -1693,7 +1712,7 @@ index abd4d239..c996dc93 100644
          elif canonical == "rollback":
              self._handle_rollback_command(cmd_original)
          elif canonical == "snapshot":
-@@ -6127,13 +6229,15 @@ class HermesCLI:
+@@ -6275,13 +6390,15 @@ class HermesCLI:
              parts = cmd_original.split(None, 1)
              payload = parts[1].strip() if len(parts) > 1 else ""
              if not payload:
@@ -1712,7 +1731,7 @@ index abd4d239..c996dc93 100644
          elif canonical == "steer":
              # Inject a message after the next tool call without interrupting.
              # If the agent is actively running, push the text into the agent's
-@@ -6143,21 +6247,35 @@ class HermesCLI:
+@@ -6291,21 +6408,35 @@ class HermesCLI:
              parts = cmd_original.split(None, 1)
              payload = parts[1].strip() if len(parts) > 1 else ""
              if not payload:
@@ -1753,7 +1772,7 @@ index abd4d239..c996dc93 100644
          elif canonical == "skin":
              self._handle_skin_command(cmd_original)
          elif canonical == "voice":
-@@ -6183,13 +6301,27 @@ class HermesCLI:
+@@ -6331,13 +6462,27 @@ class HermesCLI:
                              if output:
                                  self._console_print(_rich_text_from_ansi(output))
                              else:
@@ -1785,7 +1804,7 @@ index abd4d239..c996dc93 100644
                  elif qcmd.get("type") == "alias":
                      target = qcmd.get("target", "").strip()
                      if target:
-@@ -6198,9 +6330,25 @@ class HermesCLI:
+@@ -6346,9 +6491,25 @@ class HermesCLI:
                          aliased_command = f"{target} {user_args}".strip()
                          return self.process_command(aliased_command)
                      else:
@@ -1813,7 +1832,7 @@ index abd4d239..c996dc93 100644
              # Check for plugin-registered slash commands
              elif base_cmd.lstrip("/") in _get_plugin_cmd_handler_names():
                  from hermes_cli.plugins import get_plugin_command_handler
-@@ -6212,7 +6360,7 @@ class HermesCLI:
+@@ -6360,7 +6521,7 @@ class HermesCLI:
                          if result:
                              _cprint(str(result))
                      except Exception as e:
@@ -1822,7 +1841,7 @@ index abd4d239..c996dc93 100644
              # Check for skill slash commands (/gif-search, /axolotl, etc.)
              elif base_cmd in _skill_commands:
                  user_instruction = cmd_original[len(base_cmd):].strip()
-@@ -6221,11 +6369,11 @@ class HermesCLI:
+@@ -6369,11 +6530,11 @@ class HermesCLI:
                  )
                  if msg:
                      skill_name = _skill_commands[base_cmd]["name"]
@@ -1836,7 +1855,7 @@ index abd4d239..c996dc93 100644
              else:
                  # Prefix matching: if input uniquely identifies one command, execute it.
                  # Matches against both built-in COMMANDS and installed skill commands so
-@@ -6254,21 +6402,21 @@ class HermesCLI:
+@@ -6402,21 +6563,21 @@ class HermesCLI:
                      full_name = matches[0]
                      if full_name == typed_base:
                          # Already an exact token — no expansion possible; fall through
@@ -1865,7 +1884,7 @@ index abd4d239..c996dc93 100644
      def _handle_background_command(self, cmd: str):
          """Handle /background <prompt> — run a prompt in a separate background session.
  
-@@ -6278,9 +6426,9 @@ class HermesCLI:
+@@ -6426,9 +6587,9 @@ class HermesCLI:
          """
          parts = cmd.strip().split(maxsplit=1)
          if len(parts) < 2 or not parts[1].strip():
@@ -1878,7 +1897,7 @@ index abd4d239..c996dc93 100644
              return
  
          prompt = parts[1].strip()
-@@ -6290,12 +6438,13 @@ class HermesCLI:
+@@ -6438,12 +6599,13 @@ class HermesCLI:
  
          # Make sure we have valid credentials
          if not self._ensure_runtime_credentials():
@@ -1896,7 +1915,7 @@ index abd4d239..c996dc93 100644
  
          turn_route = self._resolve_turn_agent_config(prompt)
  
-@@ -6356,8 +6505,8 @@ class HermesCLI:
+@@ -6510,8 +6672,8 @@ class HermesCLI:
                      time.sleep(0.05)  # brief pause for refresh
                  print()
                  ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
@@ -1907,7 +1926,7 @@ index abd4d239..c996dc93 100644
                  ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
                  if response:
                      try:
-@@ -6382,7 +6531,7 @@ class HermesCLI:
+@@ -6536,7 +6698,7 @@ class HermesCLI:
                          padding=(1, 4),
                      ))
                  else:
@@ -1916,63 +1935,16 @@ index abd4d239..c996dc93 100644
  
                  # Play bell if enabled
                  if self.bell_on_complete:
-@@ -6395,7 +6544,7 @@ class HermesCLI:
+@@ -6549,7 +6711,7 @@ class HermesCLI:
                      self._app.invalidate()
                      time.sleep(0.05)
                  print()
 -                _cprint(f"  ❌ Background task #{task_num} failed: {e}")
 +                _cprint(_cli_ui("background.failed", "  ❌ Background task #{task_num} failed: {error}", task_num=task_num, error=e))
              finally:
-                 self._background_tasks.pop(task_id, None)
-                 # Clear spinner only if no foreground agent owns it
-@@ -6417,23 +6566,23 @@ class HermesCLI:
-         """
-         parts = cmd.strip().split(maxsplit=1)
-         if len(parts) < 2 or not parts[1].strip():
--            _cprint("  Usage: /btw <question>")
--            _cprint("  Example: /btw what module owns session title sanitization?")
--            _cprint("  Answers using session context. No tools, not persisted.")
-+            _cprint(_cli_ui("btw.usage", "  Usage: /btw <question>"))
-+            _cprint(_cli_ui("btw.example", "  Example: /btw what module owns session title sanitization?"))
-+            _cprint(_cli_ui("btw.hint", "  Answers using session context. No tools, not persisted."))
-             return
- 
-         question = parts[1].strip()
-         task_id = f"btw_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:6]}"
- 
-         if not self._ensure_runtime_credentials():
--            _cprint("  (>_<) Cannot start /btw: no valid credentials.")
-+            _cprint(_cli_ui("btw.credentials_missing", "  (>_<) Cannot start /btw: no valid credentials."))
-             return
- 
-         turn_route = self._resolve_turn_agent_config(question)
-         history_snapshot = list(self.conversation_history)
- 
-         preview = question[:60] + ("..." if len(question) > 60 else "")
--        _cprint(f'  💬 /btw: "{preview}"')
-+        _cprint(_cli_ui("btw.started", '  💬 /btw: "{prompt}"', prompt=preview))
- 
-         def run_btw():
-             try:
-@@ -6505,7 +6654,7 @@ class HermesCLI:
-                         padding=(1, 4),
-                     ))
-                 else:
--                    _cprint("  💬 /btw: (no response)")
-+                    _cprint(_cli_ui("btw.no_response", "  💬 /btw: (no response)"))
- 
-                 if self.bell_on_complete:
-                     sys.stdout.write("\a")
-@@ -6516,7 +6665,7 @@ class HermesCLI:
-                     self._app.invalidate()
-                     time.sleep(0.05)
-                 print()
--                _cprint(f"  ❌ /btw failed: {e}")
-+                _cprint(_cli_ui("btw.failed", "  ❌ /btw failed: {error}", error=e))
-             finally:
-                 if self._app:
-                     self._invalidate(min_interval=0)
-@@ -6606,10 +6755,10 @@ class HermesCLI:
+                 try:
+                     set_sudo_password_callback(None)
+@@ -6647,10 +6809,10 @@ class HermesCLI:
                  pass
  
              if _already_open:
@@ -1985,7 +1957,7 @@ index abd4d239..c996dc93 100644
                  _launched = self._try_launch_chrome_debug(_port, _plat.system())
                  if _launched:
                      # Wait for the port to come up
-@@ -6624,12 +6773,12 @@ class HermesCLI:
+@@ -6665,21 +6827,29 @@ class HermesCLI:
                          except (OSError, socket.timeout):
                              time.sleep(0.5)
                      if _already_open:
@@ -1999,23 +1971,29 @@ index abd4d239..c996dc93 100644
                  else:
 -                    print("   ⚠ Could not auto-launch Chrome")
 +                    print(_cli_ui("browser.connect.launch_failed", "   ⚠ Could not auto-launch Chrome"))
-                     # Show manual instructions as fallback
-                     _data_dir = str(_hermes_home / "chrome-debug")
++                    # Show manual instructions as fallback
++                    _data_dir = str(_hermes_home / "chrome-debug")
                      sys_name = _plat.system()
-@@ -6652,10 +6801,10 @@ class HermesCLI:
-                             f' --user-data-dir="{_data_dir}"'
-                             f" --no-first-run --no-default-browser-check"
-                         )
--                    print(f"     Launch Chrome manually:")
+                     chrome_cmd = manual_chrome_debug_command(_port, sys_name)
+                     if chrome_cmd:
+                         print(f"     Launch Chrome manually:")
+                         print(f"     {chrome_cmd}")
+                     else:
+-                        print("     No Chrome/Chromium executable found in this environment")
++                        chrome_cmd = (
++                            f"google-chrome --remote-debugging-port=9222"
++                            f' --user-data-dir="{_data_dir}"'
++                            f" --no-first-run --no-default-browser-check"
++                        )
 +                    print(_cli_ui("browser.connect.launch_manually", "     Launch Chrome manually:"))
-                     print(f"     {chrome_cmd}")
++                    print(f"     {chrome_cmd}")
              else:
 -                print(f"   ⚠ Port {_port} is not reachable at {cdp_url}")
 +                print(_cli_ui("browser.connect.port_unreachable", "   ⚠ Port {port} is not reachable at {url}", port=_port, url=cdp_url))
  
-             os.environ["BROWSER_CDP_URL"] = cdp_url
-             # Eagerly start the CDP supervisor so pending_dialogs + frame_tree
-@@ -6666,8 +6815,8 @@ class HermesCLI:
+             if not _already_open:
+                 print()
+@@ -6696,8 +6866,8 @@ class HermesCLI:
              except Exception:
                  pass
              print()
@@ -2026,7 +2004,7 @@ index abd4d239..c996dc93 100644
              print()
  
              # Inject context message so the model knows
-@@ -6692,8 +6841,8 @@ class HermesCLI:
+@@ -6722,8 +6892,8 @@ class HermesCLI:
                  except Exception:
                      pass
                  print()
@@ -2037,7 +2015,7 @@ index abd4d239..c996dc93 100644
                  print()
  
                  if hasattr(self, '_pending_input'):
-@@ -6703,14 +6852,14 @@ class HermesCLI:
+@@ -6733,14 +6903,14 @@ class HermesCLI:
                      )
              else:
                  print()
@@ -2055,7 +2033,7 @@ index abd4d239..c996dc93 100644
  
                  _port = 9222
                  try:
-@@ -6723,9 +6872,9 @@ class HermesCLI:
+@@ -6753,9 +6923,9 @@ class HermesCLI:
                      s.settimeout(1)
                      s.connect(("127.0.0.1", _port))
                      s.close()
@@ -2067,7 +2045,7 @@ index abd4d239..c996dc93 100644
              else:
                  try:
                      from tools.browser_tool import _get_cloud_provider
-@@ -6734,21 +6883,21 @@ class HermesCLI:
+@@ -6764,21 +6934,21 @@ class HermesCLI:
                      provider = None
  
                  if provider is not None:
@@ -2097,7 +2075,7 @@ index abd4d239..c996dc93 100644
              print()
  
      def _handle_skin_command(self, cmd: str):
-@@ -6756,7 +6905,7 @@ class HermesCLI:
+@@ -6786,7 +6956,7 @@ class HermesCLI:
          try:
              from hermes_cli.skin_engine import list_skins, set_active_skin, get_active_skin_name
          except ImportError:
@@ -2106,7 +2084,7 @@ index abd4d239..c996dc93 100644
              return
  
          parts = cmd.strip().split(maxsplit=1)
-@@ -6764,33 +6913,33 @@ class HermesCLI:
+@@ -6794,33 +6964,33 @@ class HermesCLI:
              # Show current skin and list available
              current = get_active_skin_name()
              skins = list_skins()
@@ -2149,9 +2127,9 @@ index abd4d239..c996dc93 100644
 -            print("  Prompt + TUI colors updated.")
 +            print(_cli_ui("skin.tui_updated", "  Prompt + TUI colors updated."))
  
-     def _toggle_verbose(self):
-         """Cycle tool progress mode: off → new → all → verbose → off."""
-@@ -6812,11 +6961,17 @@ class HermesCLI:
+     def _handle_footer_command(self, cmd_original: str) -> None:
+         """Toggle or inspect ``display.runtime_footer.enabled`` from the CLI.
+@@ -6894,11 +7064,17 @@ class HermesCLI:
          # writes directly to stdout which patch_stdout's StdoutProxy mangles
          # into garbled sequences like '?[33mTool progress: NEW?[0m' (#2262).
          from hermes_cli.colors import Colors as _Colors
@@ -2173,7 +2151,7 @@ index abd4d239..c996dc93 100644
          }
          _cprint(labels.get(self.tool_progress_mode, ""))
  
-@@ -6828,15 +6983,23 @@ class HermesCLI:
+@@ -6910,15 +7086,23 @@ class HermesCLI:
          current = bool(os.environ.get("HERMES_YOLO_MODE"))
          if current:
              os.environ.pop("HERMES_YOLO_MODE", None)
@@ -2201,7 +2179,7 @@ index abd4d239..c996dc93 100644
              )
  
      def _handle_reasoning_command(self, cmd: str):
-@@ -6854,15 +7017,15 @@ class HermesCLI:
+@@ -6936,15 +7120,15 @@ class HermesCLI:
              # Show current state
              rc = self.reasoning_config
              if rc is None:
@@ -2223,7 +2201,7 @@ index abd4d239..c996dc93 100644
              return
  
          arg = parts[1].strip().lower()
-@@ -6873,32 +7036,32 @@ class HermesCLI:
+@@ -6955,32 +7139,32 @@ class HermesCLI:
              if self.agent:
                  self.agent.reasoning_callback = self._current_reasoning_callback()
              save_config_value("display.show_reasoning", True)
@@ -2264,7 +2242,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_busy_command(self, cmd: str):
          """Handle /busy — control what Enter does while Hermes is working.
-@@ -6933,7 +7096,7 @@ class HermesCLI:
+@@ -7027,7 +7211,7 @@ class HermesCLI:
      def _handle_fast_command(self, cmd: str):
          """Handle /fast — toggle fast mode (OpenAI Priority Processing / Anthropic Fast Mode)."""
          if not self._fast_command_available():
@@ -2273,7 +2251,7 @@ index abd4d239..c996dc93 100644
              return
  
          # Determine the branding for the current model
-@@ -6947,9 +7110,9 @@ class HermesCLI:
+@@ -7041,9 +7225,9 @@ class HermesCLI:
  
          parts = cmd.strip().split(maxsplit=1)
          if len(parts) < 2 or parts[1].strip().lower() == "status":
@@ -2286,7 +2264,7 @@ index abd4d239..c996dc93 100644
              return
  
          arg = parts[1].strip().lower()
-@@ -6957,21 +7120,21 @@ class HermesCLI:
+@@ -7051,21 +7235,21 @@ class HermesCLI:
          if arg in {"fast", "on"}:
              self.service_tier = "priority"
              saved_value = "fast"
@@ -2314,7 +2292,7 @@ index abd4d239..c996dc93 100644
  
      def _on_reasoning(self, reasoning_text: str):
          """Callback for intermediate reasoning display during tool-call loops."""
-@@ -6989,15 +7152,15 @@ class HermesCLI:
+@@ -7083,15 +7267,15 @@ class HermesCLI:
          Claude Code's ``/compact <focus>`` feature.
          """
          if not self.conversation_history or len(self.conversation_history) < 4:
@@ -2333,7 +2311,7 @@ index abd4d239..c996dc93 100644
              return
  
          # Extract optional focus topic from the command (e.g. "/compress database schema")
-@@ -7008,17 +7171,31 @@ class HermesCLI:
+@@ -7102,17 +7286,31 @@ class HermesCLI:
                  focus_topic = parts[1].strip()
  
          original_count = len(self.conversation_history)
@@ -2367,9 +2345,9 @@ index abd4d239..c996dc93 100644
 +                        )
 +                    )
  
-                 compressed, _ = self.agent._compress_context(
-                     original_history,
-@@ -7053,7 +7230,7 @@ class HermesCLI:
+                 # Pass None as system_message so _compress_context rebuilds
+                 # the system prompt from scratch via _build_system_prompt(None).
+@@ -7153,7 +7351,7 @@ class HermesCLI:
                      print(f"     {summary['note']}")
  
              except Exception as e:
@@ -2378,7 +2356,7 @@ index abd4d239..c996dc93 100644
  
      def _handle_debug_command(self):
          """Handle /debug — upload debug report + logs and print paste URLs."""
-@@ -7066,14 +7243,14 @@ class HermesCLI:
+@@ -7166,14 +7364,14 @@ class HermesCLI:
      def _show_usage(self):
          """Show rate limits (if available) and session token usage."""
          if not self.agent:
@@ -2395,7 +2373,7 @@ index abd4d239..c996dc93 100644
              return
  
          # ── Rate limits (shown first when available) ────────────────
-@@ -7113,33 +7290,33 @@ class HermesCLI:
+@@ -7213,33 +7411,33 @@ class HermesCLI:
          )
          elapsed = format_duration_compact((datetime.now() - self.session_start).total_seconds())
  
@@ -2449,7 +2427,7 @@ index abd4d239..c996dc93 100644
  
          # Account limits -- fetched off-thread with a hard timeout so slow
          # provider APIs don't hang the prompt.
-@@ -7183,7 +7360,7 @@ class HermesCLI:
+@@ -7285,7 +7483,7 @@ class HermesCLI:
                  try:
                      days = int(parts[i + 1])
                  except ValueError:
@@ -2458,7 +2436,7 @@ index abd4d239..c996dc93 100644
                      return
                  i += 2
              elif parts[i] == "--source" and i + 1 < len(parts):
-@@ -7202,7 +7379,7 @@ class HermesCLI:
+@@ -7304,7 +7502,7 @@ class HermesCLI:
              print(engine.format_terminal(report))
              db.close()
          except Exception as e:
@@ -2467,7 +2445,7 @@ index abd4d239..c996dc93 100644
  
      def _check_config_mcp_changes(self) -> None:
          """Detect mcp_servers changes in config.yaml and auto-reload MCP connections.
-@@ -7251,14 +7428,14 @@ class HermesCLI:
+@@ -7353,14 +7551,14 @@ class HermesCLI:
          # timeout so a hung MCP server cannot block the process_loop
          # indefinitely (which would freeze the entire TUI).
          print()
@@ -2484,7 +2462,7 @@ index abd4d239..c996dc93 100644
  
      def _reload_mcp(self):
          """Reload MCP servers: disconnect all, re-read config.yaml, reconnect.
-@@ -7274,7 +7451,7 @@ class HermesCLI:
+@@ -7376,7 +7574,7 @@ class HermesCLI:
                  old_servers = set(_servers.keys())
  
              if not self._command_running:
@@ -2493,7 +2471,7 @@ index abd4d239..c996dc93 100644
  
              # Shutdown existing connections
              shutdown_mcp_servers()
-@@ -7291,15 +7468,22 @@ class HermesCLI:
+@@ -7393,15 +7591,22 @@ class HermesCLI:
              reconnected = connected_servers & old_servers
  
              if reconnected:
@@ -2521,7 +2499,7 @@ index abd4d239..c996dc93 100644
  
              # Refresh the agent's tool list so the model can call new tools
              if self.agent is not None:
-@@ -7340,10 +7524,16 @@ class HermesCLI:
+@@ -7442,10 +7647,16 @@ class HermesCLI:
                  except Exception:
                      pass  # Best-effort
  
@@ -2540,7 +2518,7 @@ index abd4d239..c996dc93 100644
  
      # ====================================================================
      # Tool-call generation indicator (shown during streaming)
-@@ -7532,7 +7722,7 @@ class HermesCLI:
+@@ -7659,7 +7870,7 @@ class HermesCLI:
              with self._voice_lock:
                  if not self._voice_recording:
                      return
@@ -2549,7 +2527,7 @@ index abd4d239..c996dc93 100644
              if hasattr(self, '_app') and self._app:
                  self._app.invalidate()
              self._voice_stop_and_transcribe()
-@@ -7557,7 +7747,7 @@ class HermesCLI:
+@@ -7684,7 +7895,7 @@ class HermesCLI:
              _recording_hint = "Termux:API capture | Ctrl+B to stop"
          else:
              _recording_hint = "Ctrl+B to stop"
@@ -2558,7 +2536,7 @@ index abd4d239..c996dc93 100644
  
          # Periodically refresh prompt to update audio level indicator
          def _refresh_level():
-@@ -7599,13 +7789,13 @@ class HermesCLI:
+@@ -7726,13 +7937,13 @@ class HermesCLI:
                      pass
  
              if wav_path is None:
@@ -2574,7 +2552,7 @@ index abd4d239..c996dc93 100644
  
              # Get STT model from config
              stt_model = None
-@@ -7627,13 +7817,13 @@ class HermesCLI:
+@@ -7754,13 +7965,13 @@ class HermesCLI:
                  self._pending_input.put(transcript)
                  submitted = True
              elif result.get("success"):
@@ -2591,7 +2569,7 @@ index abd4d239..c996dc93 100644
          finally:
              with self._voice_lock:
                  self._voice_processing = False
-@@ -7652,7 +7842,7 @@ class HermesCLI:
+@@ -7779,7 +7990,7 @@ class HermesCLI:
                  if self._no_speech_count >= 3:
                      self._voice_continuous = False
                      self._no_speech_count = 0
@@ -2600,7 +2578,7 @@ index abd4d239..c996dc93 100644
                      return
              else:
                  self._no_speech_count = 0
-@@ -7668,7 +7858,7 @@ class HermesCLI:
+@@ -7795,7 +8006,7 @@ class HermesCLI:
                          if hasattr(self, '_app') and self._app:
                              self._app.invalidate()
                      except Exception as e:
@@ -2609,7 +2587,7 @@ index abd4d239..c996dc93 100644
                  threading.Thread(target=_restart_recording, daemon=True).start()
  
      def _voice_speak_response(self, text: str):
-@@ -7719,7 +7909,7 @@ class HermesCLI:
+@@ -7846,7 +8057,7 @@ class HermesCLI:
                      pass
          except Exception as e:
              logger.warning("Voice TTS playback failed: %s", e)
@@ -2618,7 +2596,7 @@ index abd4d239..c996dc93 100644
          finally:
              self._voice_tts_done.set()
  
-@@ -7743,8 +7933,8 @@ class HermesCLI:
+@@ -7870,8 +8081,8 @@ class HermesCLI:
              else:
                  self._enable_voice_mode()
          else:
@@ -2629,7 +2607,7 @@ index abd4d239..c996dc93 100644
  
      def _voice_beeps_enabled(self) -> bool:
          """Return whether CLI voice mode should play record start/stop beeps."""
-@@ -7760,7 +7950,7 @@ class HermesCLI:
+@@ -7887,7 +8098,7 @@ class HermesCLI:
      def _enable_voice_mode(self):
          """Enable voice mode after checking requirements."""
          if self._voice_mode:
@@ -2638,7 +2616,7 @@ index abd4d239..c996dc93 100644
              return
  
          from tools.voice_mode import check_voice_requirements, detect_audio_environment
-@@ -7768,14 +7958,14 @@ class HermesCLI:
+@@ -7895,14 +8106,14 @@ class HermesCLI:
          # Environment detection -- warn and block in incompatible environments
          env_check = detect_audio_environment()
          if not env_check["available"]:
@@ -2655,7 +2633,7 @@ index abd4d239..c996dc93 100644
              for line in reqs["details"].split("\n"):
                  _cprint(f"  {_DIM}{line}{_RST}")
              if reqs["missing_packages"]:
-@@ -7784,7 +7974,9 @@ class HermesCLI:
+@@ -7911,7 +8122,9 @@ class HermesCLI:
                      _cprint(f"  {_DIM}Then install/update the Termux:API Android app for microphone capture{_RST}")
                      _cprint(f"  {_BOLD}Option 2: pkg install python-numpy portaudio && python -m pip install sounddevice{_RST}")
                  else:
@@ -2666,7 +2644,7 @@ index abd4d239..c996dc93 100644
              return
  
          with self._voice_lock:
-@@ -7804,7 +7996,7 @@ class HermesCLI:
+@@ -7931,7 +8144,7 @@ class HermesCLI:
          # system prompt change) to avoid invalidating the prompt cache.  See
          # _voice_message_prefix property and its usage in _process_message().
  
@@ -2675,7 +2653,7 @@ index abd4d239..c996dc93 100644
          try:
              from hermes_cli.config import load_config
              _raw_ptt = load_config().get("voice", {}).get("record_key", "ctrl+b")
-@@ -7812,10 +8004,10 @@ class HermesCLI:
+@@ -7939,10 +8152,10 @@ class HermesCLI:
          except Exception:
              _ptt_key = "c-b"
          _ptt_display = _ptt_key.replace("c-", "Ctrl+").upper()
@@ -2690,7 +2668,7 @@ index abd4d239..c996dc93 100644
  
      def _disable_voice_mode(self):
          """Disable voice mode, cancel any active recording, and stop TTS."""
-@@ -7847,12 +8039,12 @@ class HermesCLI:
+@@ -7974,12 +8187,12 @@ class HermesCLI:
              pass
          self._voice_tts_done.set()
  
@@ -2705,7 +2683,7 @@ index abd4d239..c996dc93 100644
              return
  
          with self._voice_lock:
-@@ -7862,9 +8054,9 @@ class HermesCLI:
+@@ -7989,9 +8202,9 @@ class HermesCLI:
          if self._voice_tts:
              from tools.tts_tool import check_tts_requirements
              if not check_tts_requirements():
@@ -2717,7 +2695,7 @@ index abd4d239..c996dc93 100644
  
      def _show_voice_status(self):
          """Show current voice mode status."""
-@@ -7873,14 +8065,14 @@ class HermesCLI:
+@@ -8000,14 +8213,14 @@ class HermesCLI:
  
          reqs = check_voice_requirements()
  
@@ -2738,7 +2716,7 @@ index abd4d239..c996dc93 100644
          for line in reqs["details"].split("\n"):
              _cprint(f"    {line}")
  
-@@ -8330,7 +8522,7 @@ class HermesCLI:
+@@ -8457,7 +8670,7 @@ class HermesCLI:
  
          # Initialize agent if needed
          if self.agent is None:
@@ -2747,7 +2725,7 @@ index abd4d239..c996dc93 100644
          if not self._init_agent(
              model_override=turn_route["model"],
              runtime_override=turn_route["runtime"],
-@@ -8358,8 +8550,10 @@ class HermesCLI:
+@@ -8534,8 +8747,10 @@ class HermesCLI:
                  if _ctx_result.expanded or _ctx_result.blocked:
                      if _ctx_result.references:
                          _cprint(
@@ -2760,7 +2738,7 @@ index abd4d239..c996dc93 100644
                      for w in _ctx_result.warnings:
                          _cprint(f"  {_DIM}⚠ {w}{_RST}")
                      if _ctx_result.blocked:
-@@ -8535,7 +8729,7 @@ class HermesCLI:
+@@ -8711,7 +8926,7 @@ class HermesCLI:
                              # But if it does (race condition), don't interrupt.
                              if self._clarify_state or self._clarify_freetext:
                                  continue
@@ -2769,7 +2747,7 @@ index abd4d239..c996dc93 100644
                              # Signal TTS to stop on interrupt
                              if stop_event is not None:
                                  stop_event.set()
-@@ -8784,9 +8978,9 @@ class HermesCLI:
+@@ -8975,9 +9190,9 @@ class HermesCLI:
                  n = len(all_parts)
                  preview = combined[:50] + ("..." if len(combined) > 50 else "")
                  if n > 1:
@@ -2781,7 +2759,7 @@ index abd4d239..c996dc93 100644
                  self._pending_input.put(combined)
  
              # If a /steer was left over (agent finished before another tool
-@@ -8794,7 +8988,7 @@ class HermesCLI:
+@@ -8985,7 +9200,7 @@ class HermesCLI:
              _leftover_steer = result.get("pending_steer") if result else None
              if _leftover_steer and hasattr(self, '_pending_input'):
                  preview = _leftover_steer[:60] + ("..." if len(_leftover_steer) > 60 else "")
@@ -2790,7 +2768,7 @@ index abd4d239..c996dc93 100644
                  self._pending_input.put(_leftover_steer)
  
              return response
-@@ -8842,16 +9036,25 @@ class HermesCLI:
+@@ -9033,16 +9248,25 @@ class HermesCLI:
                  except Exception:
                      pass
  
@@ -2821,7 +2799,7 @@ index abd4d239..c996dc93 100644
          else:
              try:
                  from hermes_cli.skin_engine import get_active_goodbye
-@@ -9069,10 +9272,13 @@ class HermesCLI:
+@@ -9260,10 +9484,13 @@ class HermesCLI:
          try:
              from hermes_cli.skin_engine import get_active_skin
              _welcome_skin = get_active_skin()
@@ -2836,8 +2814,8 @@ index abd4d239..c996dc93 100644
 +            _welcome_text = _cli_ui("startup.welcome", "Welcome to Hermes Agent! Type your message or /help for commands.")
              _welcome_color = "#FFF8DC"
          self._console_print(f"[{_welcome_color}]{_welcome_text}[/]")
-         # Show a random tip to help users discover features
-@@ -9083,13 +9289,15 @@ class HermesCLI:
+         # First-time OpenClaw-residue banner — fires once if ~/.openclaw/ exists
+@@ -9298,7 +9525,9 @@ class HermesCLI:
                  _tip_color = _welcome_skin.get_color("banner_dim", "#B8860B")
              except Exception:
                  _tip_color = "#B8860B"
@@ -2847,6 +2825,8 @@ index abd4d239..c996dc93 100644
 +            )
          except Exception:
              pass  # Tips are non-critical — never break startup
+ 
+@@ -9319,7 +9548,7 @@ class HermesCLI:
          if self.preloaded_skills and not self._startup_skills_line_shown:
              skills_label = ", ".join(self.preloaded_skills)
              self._console_print(
@@ -2855,7 +2835,7 @@ index abd4d239..c996dc93 100644
              )
              self._startup_skills_line_shown = True
          self._console_print()
-@@ -9534,13 +9742,13 @@ class HermesCLI:
+@@ -9819,13 +10048,13 @@ class HermesCLI:
  
              if self._agent_running and self.agent:
                  if now - self._last_ctrl_c_time < 2.0:
@@ -2871,7 +2851,7 @@ index abd4d239..c996dc93 100644
                  self.agent.interrupt()
              else:
                  # If there's text or images, clear them (like bash).
-@@ -9880,27 +10088,27 @@ class HermesCLI:
+@@ -10198,27 +10427,27 @@ class HermesCLI:
  
          def _get_placeholder():
              if cli_ref._voice_recording:
@@ -2899,15 +2879,15 @@ index abd4d239..c996dc93 100644
 +                status = cli_ref._command_status or _cli_ui("placeholder.processing_command", "Processing command...")
                  return f"{frame} {status}"
              if cli_ref._agent_running:
--                return "type a message + Enter to interrupt, Ctrl+C to cancel"
-+                return _cli_ui("placeholder.interrupt", "type a message + Enter to interrupt, Ctrl+C to cancel")
+-                return "msg=interrupt · /queue · /bg · /steer · Ctrl+C cancel"
++                return _cli_ui("placeholder.interrupt", "msg=interrupt · /queue · /bg · /steer · Ctrl+C cancel")
              if cli_ref._voice_mode:
 -                return "type or Ctrl+B to record"
 +                return _cli_ui("placeholder.voice", "type or Ctrl+B to record")
              return ""
  
          input_area.control.input_processors.append(_PlaceholderProcessor(_get_placeholder))
-@@ -9912,21 +10120,21 @@ class HermesCLI:
+@@ -10230,21 +10459,21 @@ class HermesCLI:
              if cli_ref._sudo_state:
                  remaining = max(0, int(cli_ref._sudo_deadline - time.monotonic()))
                  return [
@@ -2932,7 +2912,7 @@ index abd4d239..c996dc93 100644
                      ('class:clarify-countdown', f'  ({remaining}s)'),
                  ]
  
-@@ -9935,18 +10143,18 @@ class HermesCLI:
+@@ -10253,18 +10482,18 @@ class HermesCLI:
                  countdown = f'  ({remaining}s)' if cli_ref._clarify_deadline else ''
                  if cli_ref._clarify_freetext:
                      return [
@@ -2954,7 +2934,7 @@ index abd4d239..c996dc93 100644
                  ]
  
              return []
-@@ -10044,12 +10252,13 @@ class HermesCLI:
+@@ -10362,12 +10591,13 @@ class HermesCLI:
              else:
                  other_num_prefix = ' '
              other_label = (
@@ -2972,7 +2952,7 @@ index abd4d239..c996dc93 100644
              inner_text_width = max(8, box_width - 2)
  
              # Pre-wrap choices + Other option — these are mandatory.
-@@ -10079,16 +10288,16 @@ class HermesCLI:
+@@ -10397,16 +10627,16 @@ class HermesCLI:
                  else:
                      other_num_prefix = ' '
                  if selected == other_idx and not cli_ref._clarify_freetext:
@@ -2993,7 +2973,7 @@ index abd4d239..c996dc93 100644
                      inner_text_width,
                  )
              else:
-@@ -10124,8 +10333,8 @@ class HermesCLI:
+@@ -10442,8 +10672,8 @@ class HermesCLI:
              lines = []
              # Box top border
              lines.append(('class:clarify-border', '╭─ '))
@@ -3004,7 +2984,7 @@ index abd4d239..c996dc93 100644
              if not use_compact_chrome:
                  _append_blank_panel_line(lines, 'class:clarify-border', box_width)
  
-@@ -10186,8 +10395,8 @@ class HermesCLI:
+@@ -10504,8 +10734,8 @@ class HermesCLI:
              state = cli_ref._sudo_state
              if not state:
                  return []
@@ -3015,7 +2995,7 @@ index abd4d239..c996dc93 100644
              box_width = _panel_box_width(title, [body])
              lines = []
              lines.append(('class:sudo-border', '╭─ '))
-@@ -10212,11 +10421,11 @@ class HermesCLI:
+@@ -10530,11 +10760,11 @@ class HermesCLI:
              if not state:
                  return []
  
@@ -3029,7 +3009,7 @@ index abd4d239..c996dc93 100644
              content_lines = [prompt, body]
              if help_text:
                  content_lines.insert(1, str(help_text))
-@@ -10903,7 +11112,7 @@ def main(
+@@ -11217,7 +11447,7 @@ def main(
      if gateway:
          import asyncio
          from gateway.run import start_gateway
@@ -3038,7 +3018,7 @@ index abd4d239..c996dc93 100644
          asyncio.run(start_gateway())
          return
  
-@@ -11106,7 +11315,7 @@ def main(
+@@ -11420,7 +11650,7 @@ def main(
              cli.show_banner()
              _query_label = query or ("[image attached]" if single_query_images else "")
              if _query_label:
@@ -3048,7 +3028,7 @@ index abd4d239..c996dc93 100644
              cli._print_exit_summary()
          return
 diff --git a/gateway/platforms/discord.py b/gateway/platforms/discord.py
-index 3eaf6ac0..8aa188f9 100644
+index 2e08d77c6..46411369e 100644
 --- a/gateway/platforms/discord.py
 +++ b/gateway/platforms/discord.py
 @@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
@@ -3091,7 +3071,7 @@ index 3eaf6ac0..8aa188f9 100644
              if proxy_url:
                  logger.info("[%s] Using proxy for Discord: %s", self.name, proxy_url)
  
-@@ -1070,7 +1087,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1081,7 +1098,7 @@ class DiscordAdapter(BasePlatformAdapter):
          created automatically.
          """
          if not self._client:
@@ -3100,7 +3080,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          try:
              # Determine target channel: thread_id in metadata takes precedence.
-@@ -1084,14 +1101,14 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1095,14 +1112,14 @@ class DiscordAdapter(BasePlatformAdapter):
                  if not channel:
                      channel = await self._client.fetch_channel(int(thread_id))
                  if not channel:
@@ -3117,7 +3097,7 @@ index 3eaf6ac0..8aa188f9 100644
  
              # Forum channels reject channel.send() — create a thread post instead.
              if self._is_forum_parent(channel):
-@@ -1185,7 +1202,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1196,7 +1213,7 @@ class DiscordAdapter(BasePlatformAdapter):
              )
          except Exception as e:
              logger.error("[%s] Failed to create forum thread in %s: %s", self.name, forum_channel.id, e)
@@ -3126,7 +3106,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          thread_channel = thread if hasattr(thread, "send") else getattr(thread, "thread", None)
          thread_id = str(getattr(thread_channel, "id", getattr(thread, "id", "")))
-@@ -1201,7 +1218,12 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1212,7 +1229,12 @@ class DiscordAdapter(BasePlatformAdapter):
                  msg = await thread_channel.send(content=chunk)
                  message_ids.append(str(msg.id))
              except Exception as e:
@@ -3140,7 +3120,7 @@ index 3eaf6ac0..8aa188f9 100644
                  logger.warning("[%s] %s", self.name, warning)
                  warnings.append(warning)
  
-@@ -1242,7 +1264,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1253,7 +1275,7 @@ class DiscordAdapter(BasePlatformAdapter):
                      hint = getattr(file, "filename", "") or ""
                  elif files:
                      hint = getattr(files[0], "filename", "") or ""
@@ -3149,7 +3129,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          kwargs: Dict[str, Any] = {"name": thread_name}
          if content:
-@@ -1261,7 +1283,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1272,7 +1294,7 @@ class DiscordAdapter(BasePlatformAdapter):
                  getattr(forum_channel, "id", "?"),
                  e,
              )
@@ -3158,7 +3138,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          thread_channel = thread if hasattr(thread, "send") else getattr(thread, "thread", None)
          thread_id = str(getattr(thread_channel, "id", getattr(thread, "id", "")))
-@@ -1284,7 +1306,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1295,7 +1317,7 @@ class DiscordAdapter(BasePlatformAdapter):
      ) -> SendResult:
          """Edit a previously sent Discord message."""
          if not self._client:
@@ -3167,7 +3147,7 @@ index 3eaf6ac0..8aa188f9 100644
          try:
              channel = self._client.get_channel(int(chat_id))
              if not channel:
-@@ -1312,13 +1334,13 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1323,13 +1345,13 @@ class DiscordAdapter(BasePlatformAdapter):
          carries the file — they reject direct POST /messages.
          """
          if not self._client:
@@ -3183,7 +3163,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          filename = file_name or os.path.basename(file_path)
          with open(file_path, "rb") as fh:
-@@ -1367,10 +1389,10 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1378,10 +1400,10 @@ class DiscordAdapter(BasePlatformAdapter):
              if not channel:
                  channel = await self._client.fetch_channel(int(chat_id))
              if not channel:
@@ -3196,7 +3176,7 @@ index 3eaf6ac0..8aa188f9 100644
  
              filename = os.path.basename(audio_path)
  
-@@ -1580,7 +1602,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1591,7 +1613,7 @@ class DiscordAdapter(BasePlatformAdapter):
              ch = self._client.get_channel(text_ch_id)
              if ch:
                  try:
@@ -3205,7 +3185,7 @@ index 3eaf6ac0..8aa188f9 100644
                  except Exception:
                      pass
  
-@@ -1787,7 +1809,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1798,7 +1820,7 @@ class DiscordAdapter(BasePlatformAdapter):
          try:
              return await self._send_file_attachment(chat_id, image_path, caption)
          except FileNotFoundError:
@@ -3214,7 +3194,7 @@ index 3eaf6ac0..8aa188f9 100644
          except Exception as e:  # pragma: no cover - defensive logging
              logger.error("[%s] Failed to send local image, falling back to base adapter: %s", self.name, e, exc_info=True)
              return await super().send_image_file(chat_id, image_path, caption, reply_to, metadata=metadata)
-@@ -1802,7 +1824,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1813,7 +1835,7 @@ class DiscordAdapter(BasePlatformAdapter):
      ) -> SendResult:
          """Send an image natively as a Discord file attachment."""
          if not self._client:
@@ -3223,7 +3203,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          if not is_safe_url(image_url):
              logger.warning("[%s] Blocked unsafe image URL during Discord send_image", self.name)
-@@ -1815,17 +1837,20 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1826,17 +1848,20 @@ class DiscordAdapter(BasePlatformAdapter):
              if not channel:
                  channel = await self._client.fetch_channel(int(chat_id))
              if not channel:
@@ -3247,7 +3227,7 @@ index 3eaf6ac0..8aa188f9 100644
  
                      image_data = await resp.read()
  
-@@ -1881,7 +1906,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1892,7 +1917,7 @@ class DiscordAdapter(BasePlatformAdapter):
      ) -> SendResult:
          """Send an animated GIF natively as a Discord file attachment."""
          if not self._client:
@@ -3256,7 +3236,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          if not is_safe_url(animation_url):
              logger.warning("[%s] Blocked unsafe animation URL during Discord send_animation", self.name)
-@@ -1894,17 +1919,20 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1905,17 +1930,20 @@ class DiscordAdapter(BasePlatformAdapter):
              if not channel:
                  channel = await self._client.fetch_channel(int(chat_id))
              if not channel:
@@ -3280,7 +3260,7 @@ index 3eaf6ac0..8aa188f9 100644
  
                      animation_data = await resp.read()
  
-@@ -1952,7 +1980,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1963,7 +1991,7 @@ class DiscordAdapter(BasePlatformAdapter):
          try:
              return await self._send_file_attachment(chat_id, video_path, caption)
          except FileNotFoundError:
@@ -3289,7 +3269,7 @@ index 3eaf6ac0..8aa188f9 100644
          except Exception as e:  # pragma: no cover - defensive logging
              logger.error("[%s] Failed to send local video, falling back to base adapter: %s", self.name, e, exc_info=True)
              return await super().send_video(chat_id, video_path, caption, reply_to, metadata=metadata)
-@@ -1970,7 +1998,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -1981,7 +2009,7 @@ class DiscordAdapter(BasePlatformAdapter):
          try:
              return await self._send_file_attachment(chat_id, file_path, caption, file_name=file_name)
          except FileNotFoundError:
@@ -3298,7 +3278,7 @@ index 3eaf6ac0..8aa188f9 100644
          except Exception as e:  # pragma: no cover - defensive logging
              logger.error("[%s] Failed to send document, falling back to base adapter: %s", self.name, e, exc_info=True)
              return await super().send_document(chat_id, file_path, caption, file_name, reply_to, metadata=metadata)
-@@ -2022,7 +2050,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2033,7 +2061,7 @@ class DiscordAdapter(BasePlatformAdapter):
      async def get_chat_info(self, chat_id: str) -> Dict[str, Any]:
          """Get information about a Discord channel."""
          if not self._client:
@@ -3307,7 +3287,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          try:
              channel = self._client.get_channel(int(chat_id))
-@@ -2180,121 +2208,121 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2191,121 +2219,121 @@ class DiscordAdapter(BasePlatformAdapter):
  
          tree = self._client.tree
  
@@ -3479,7 +3459,7 @@ index 3eaf6ac0..8aa188f9 100644
          )
          async def slash_thread(
              interaction: discord.Interaction,
-@@ -2305,18 +2333,18 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2316,15 +2344,15 @@ class DiscordAdapter(BasePlatformAdapter):
              await interaction.response.defer(ephemeral=True)
              await self._handle_thread_create_slash(interaction, name, message, auto_archive_duration)
  
@@ -3499,14 +3479,9 @@ index 3eaf6ac0..8aa188f9 100644
 -            await self._run_simple_slash(interaction, f"/background {prompt}", "Background task started~")
 +            await self._run_simple_slash(interaction, f"/background {prompt}", _discord_ui("commands.background.followup", "Background task started~"))
  
--        @tree.command(name="btw", description="Ephemeral side question using session context")
--        @discord.app_commands.describe(question="Your side question (no tools, not persisted)")
-+        @tree.command(name="btw", description=_discord_ui("commands.btw.description", "Ephemeral side question using session context"))
-+        @discord.app_commands.describe(question=_discord_ui("commands.btw.arg_question", "Your side question (no tools, not persisted)"))
-         async def slash_btw(interaction: discord.Interaction, question: str):
-             await self._run_simple_slash(interaction, f"/btw {question}")
- 
-@@ -2327,12 +2355,20 @@ class DiscordAdapter(BasePlatformAdapter):
+         # ── Auto-register any gateway-available commands not yet on the tree ──
+         # This ensures new commands added to COMMAND_REGISTRY in
+@@ -2333,12 +2361,20 @@ class DiscordAdapter(BasePlatformAdapter):
          def _build_auto_slash_command(_name: str, _description: str, _args_hint: str = ""):
              """Build a discord.app_commands.Command that proxies to _run_simple_slash."""
              discord_name = _name.lower()[:32]
@@ -3529,7 +3504,7 @@ index 3eaf6ac0..8aa188f9 100644
                      async def _handler(interaction: discord.Interaction, args: str = ""):
                          await self._run_simple_slash(
                              interaction, f"/{__name} {args}".strip()
-@@ -2509,8 +2545,8 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2515,8 +2551,8 @@ class DiscordAdapter(BasePlatformAdapter):
                  return choices
  
              @discord.app_commands.describe(
@@ -3540,7 +3515,7 @@ index 3eaf6ac0..8aa188f9 100644
              )
              @discord.app_commands.autocomplete(name=_autocomplete_name)
              async def _skill_handler(
-@@ -2519,8 +2555,11 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2525,8 +2561,11 @@ class DiscordAdapter(BasePlatformAdapter):
                  entry = skill_lookup.get(name)
                  if not entry:
                      await interaction.response.send_message(
@@ -3554,7 +3529,7 @@ index 3eaf6ac0..8aa188f9 100644
                          ephemeral=True,
                      )
                      return
-@@ -2531,7 +2570,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2537,7 +2576,7 @@ class DiscordAdapter(BasePlatformAdapter):
  
              cmd = discord.app_commands.Command(
                  name="skill",
@@ -3563,7 +3538,7 @@ index 3eaf6ac0..8aa188f9 100644
                  callback=_skill_handler,
              )
              tree.add_command(cmd)
-@@ -2613,8 +2652,11 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2619,8 +2658,11 @@ class DiscordAdapter(BasePlatformAdapter):
          )
  
          if not result.get("success"):
@@ -3577,7 +3552,7 @@ index 3eaf6ac0..8aa188f9 100644
              return
  
          thread_id = result.get("thread_id")
-@@ -2622,7 +2664,10 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2628,7 +2670,10 @@ class DiscordAdapter(BasePlatformAdapter):
  
          # Tell the user where the thread is
          link = f"<#{thread_id}>" if thread_id else f"**{thread_name}**"
@@ -3589,7 +3564,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          # Track thread participation so follow-ups don't require @mention
          if thread_id:
-@@ -2768,24 +2813,30 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2761,24 +2806,30 @@ class DiscordAdapter(BasePlatformAdapter):
          """
          name = (name or "").strip()
          if not name:
@@ -3627,7 +3602,7 @@ index 3eaf6ac0..8aa188f9 100644
          starter_message = (message or "").strip()
  
          try:
-@@ -2803,7 +2854,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2796,7 +2847,7 @@ class DiscordAdapter(BasePlatformAdapter):
              }
          except Exception as direct_error:
              try:
@@ -3636,7 +3611,7 @@ index 3eaf6ac0..8aa188f9 100644
                  seed_msg = await parent_channel.send(seed_content)
                  thread = await seed_msg.create_thread(
                      name=name,
-@@ -2818,8 +2869,12 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2811,8 +2862,12 @@ class DiscordAdapter(BasePlatformAdapter):
              except Exception as fallback_error:
                  return {
                      "error": (
@@ -3651,7 +3626,7 @@ index 3eaf6ac0..8aa188f9 100644
                      )
                  }
  
-@@ -2880,9 +2935,11 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2873,9 +2928,11 @@ class DiscordAdapter(BasePlatformAdapter):
          agent thread — this replaces the text-based ``/approve`` flow on Discord.
          """
          if not self._client or not DISCORD_AVAILABLE:
@@ -3664,7 +3639,7 @@ index 3eaf6ac0..8aa188f9 100644
              # Resolve channel — use thread_id from metadata if present
              target_id = chat_id
              if metadata and metadata.get("thread_id"):
-@@ -2896,11 +2953,15 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2889,11 +2946,15 @@ class DiscordAdapter(BasePlatformAdapter):
              max_desc = 4088
              cmd_display = command if len(command) <= max_desc else command[: max_desc - 3] + "..."
              embed = discord.Embed(
@@ -3682,7 +3657,7 @@ index 3eaf6ac0..8aa188f9 100644
  
              view = ExecApprovalView(
                  session_key=session_key,
-@@ -2923,15 +2984,15 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2916,15 +2977,15 @@ class DiscordAdapter(BasePlatformAdapter):
          needs user input (stash restore, config migration).
          """
          if not self._client or not DISCORD_AVAILABLE:
@@ -3701,7 +3676,7 @@ index 3eaf6ac0..8aa188f9 100644
                  description=f"{prompt}{default_hint}",
                  color=discord.Color.gold(),
              )
-@@ -2960,7 +3021,7 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2953,7 +3014,7 @@ class DiscordAdapter(BasePlatformAdapter):
          Uses Discord embeds + Select menus via ``ModelPickerView``.
          """
          if not self._client or not DISCORD_AVAILABLE:
@@ -3710,7 +3685,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          try:
              # Resolve target channel (use thread_id if present)
-@@ -2979,11 +3040,14 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2972,11 +3033,14 @@ class DiscordAdapter(BasePlatformAdapter):
                  provider_label = current_provider
  
              embed = discord.Embed(
@@ -3729,7 +3704,7 @@ index 3eaf6ac0..8aa188f9 100644
                  ),
                  color=discord.Color.blue(),
              )
-@@ -3159,7 +3223,10 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -3152,7 +3216,10 @@ class DiscordAdapter(BasePlatformAdapter):
              )
          import aiohttp
          from gateway.platforms.base import resolve_proxy_url, proxy_kwargs_for_aiohttp
@@ -3741,7 +3716,7 @@ index 3eaf6ac0..8aa188f9 100644
          _sess_kw, _req_kw = proxy_kwargs_for_aiohttp(_proxy)
          async with aiohttp.ClientSession(**_sess_kw) as session:
              async with session.get(
-@@ -3576,13 +3643,15 @@ if DISCORD_AVAILABLE:
+@@ -3574,13 +3641,15 @@ if DISCORD_AVAILABLE:
              """Resolve the approval via the gateway approval queue and update the embed."""
              if self.resolved:
                  await interaction.response.send_message(
@@ -3759,7 +3734,7 @@ index 3eaf6ac0..8aa188f9 100644
                  )
                  return
  
-@@ -3592,7 +3661,14 @@ if DISCORD_AVAILABLE:
+@@ -3590,7 +3659,14 @@ if DISCORD_AVAILABLE:
              embed = interaction.message.embeds[0] if interaction.message.embeds else None
              if embed:
                  embed.color = color
@@ -3775,7 +3750,7 @@ index 3eaf6ac0..8aa188f9 100644
  
              # Disable all buttons
              for child in self.children:
-@@ -3611,29 +3687,29 @@ if DISCORD_AVAILABLE:
+@@ -3609,29 +3685,29 @@ if DISCORD_AVAILABLE:
              except Exception as exc:
                  logger.error("Failed to resolve gateway approval from button: %s", exc)
  
@@ -3813,7 +3788,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          async def on_timeout(self):
              """Handle view timeout -- disable buttons and mark as expired."""
-@@ -3667,12 +3743,14 @@ if DISCORD_AVAILABLE:
+@@ -3665,12 +3741,14 @@ if DISCORD_AVAILABLE:
          ):
              if self.resolved:
                  await interaction.response.send_message(
@@ -3830,7 +3805,7 @@ index 3eaf6ac0..8aa188f9 100644
                  )
                  return
  
-@@ -3682,7 +3760,14 @@ if DISCORD_AVAILABLE:
+@@ -3680,7 +3758,14 @@ if DISCORD_AVAILABLE:
              embed = interaction.message.embeds[0] if interaction.message.embeds else None
              if embed:
                  embed.color = color
@@ -3846,7 +3821,7 @@ index 3eaf6ac0..8aa188f9 100644
  
              for child in self.children:
                  child.disabled = True
-@@ -3703,17 +3788,17 @@ if DISCORD_AVAILABLE:
+@@ -3701,17 +3786,17 @@ if DISCORD_AVAILABLE:
              except Exception as exc:
                  logger.error("Failed to write update response: %s", exc)
  
@@ -3868,7 +3843,7 @@ index 3eaf6ac0..8aa188f9 100644
  
          async def on_timeout(self):
              self.resolved = True
-@@ -3760,8 +3845,8 @@ if DISCORD_AVAILABLE:
+@@ -3758,8 +3843,8 @@ if DISCORD_AVAILABLE:
              options = []
              for p in self.providers:
                  count = p.get("total_models", len(p.get("models", [])))
@@ -3879,7 +3854,7 @@ index 3eaf6ac0..8aa188f9 100644
                  options.append(
                      discord.SelectOption(
                          label=label[:100],
-@@ -3773,7 +3858,7 @@ if DISCORD_AVAILABLE:
+@@ -3771,7 +3856,7 @@ if DISCORD_AVAILABLE:
                  return
  
              select = discord.ui.Select(
@@ -3888,7 +3863,7 @@ index 3eaf6ac0..8aa188f9 100644
                  options=options[:25],
                  custom_id="model_provider_select",
              )
-@@ -3781,7 +3866,9 @@ if DISCORD_AVAILABLE:
+@@ -3779,7 +3864,9 @@ if DISCORD_AVAILABLE:
              self.add_item(select)
  
              cancel_btn = discord.ui.Button(
@@ -3899,7 +3874,7 @@ index 3eaf6ac0..8aa188f9 100644
              )
              cancel_btn.callback = self._on_cancel
              self.add_item(cancel_btn)
-@@ -3809,7 +3896,11 @@ if DISCORD_AVAILABLE:
+@@ -3807,7 +3894,11 @@ if DISCORD_AVAILABLE:
                  return
  
              select = discord.ui.Select(
@@ -3912,7 +3887,7 @@ index 3eaf6ac0..8aa188f9 100644
                  options=options,
                  custom_id="model_model_select",
              )
-@@ -3817,13 +3908,17 @@ if DISCORD_AVAILABLE:
+@@ -3815,13 +3906,17 @@ if DISCORD_AVAILABLE:
              self.add_item(select)
  
              back_btn = discord.ui.Button(
@@ -3932,7 +3907,7 @@ index 3eaf6ac0..8aa188f9 100644
              )
              cancel_btn.callback = self._on_cancel
              self.add_item(cancel_btn)
-@@ -3831,7 +3926,8 @@ if DISCORD_AVAILABLE:
+@@ -3829,7 +3924,8 @@ if DISCORD_AVAILABLE:
          async def _on_provider_selected(self, interaction: discord.Interaction):
              if not self._check_auth(interaction):
                  await interaction.response.send_message(
@@ -3942,7 +3917,7 @@ index 3eaf6ac0..8aa188f9 100644
                  )
                  return
  
-@@ -3846,12 +3942,26 @@ if DISCORD_AVAILABLE:
+@@ -3844,12 +3940,26 @@ if DISCORD_AVAILABLE:
  
              total = provider.get("total_models", 0) if provider else 0
              shown = min(len(provider.get("models", [])), 25) if provider else 0
@@ -3972,7 +3947,7 @@ index 3eaf6ac0..8aa188f9 100644
                      color=discord.Color.blue(),
                  ),
                  view=self,
-@@ -3860,12 +3970,14 @@ if DISCORD_AVAILABLE:
+@@ -3858,12 +3968,14 @@ if DISCORD_AVAILABLE:
          async def _on_model_selected(self, interaction: discord.Interaction):
              if self.resolved:
                  await interaction.response.send_message(
@@ -3989,7 +3964,7 @@ index 3eaf6ac0..8aa188f9 100644
                  )
                  return
  
-@@ -3874,8 +3986,8 @@ if DISCORD_AVAILABLE:
+@@ -3872,8 +3984,8 @@ if DISCORD_AVAILABLE:
              self.clear_items()
              await interaction.response.edit_message(
                  embed=discord.Embed(
@@ -4000,7 +3975,7 @@ index 3eaf6ac0..8aa188f9 100644
                      color=discord.Color.blue(),
                  ),
                  view=None,
-@@ -3888,11 +4000,11 @@ if DISCORD_AVAILABLE:
+@@ -3886,11 +3998,11 @@ if DISCORD_AVAILABLE:
                      self._selected_provider,
                  )
              except Exception as exc:
@@ -4014,7 +3989,7 @@ index 3eaf6ac0..8aa188f9 100644
                      description=result_text,
                      color=discord.Color.green(),
                  ),
-@@ -3902,7 +4014,8 @@ if DISCORD_AVAILABLE:
+@@ -3900,7 +4012,8 @@ if DISCORD_AVAILABLE:
          async def _on_back(self, interaction: discord.Interaction):
              if not self._check_auth(interaction):
                  await interaction.response.send_message(
@@ -4024,7 +3999,7 @@ index 3eaf6ac0..8aa188f9 100644
                  )
                  return
  
-@@ -3916,11 +4029,14 @@ if DISCORD_AVAILABLE:
+@@ -3914,11 +4027,14 @@ if DISCORD_AVAILABLE:
  
              await interaction.response.edit_message(
                  embed=discord.Embed(
@@ -4043,7 +4018,7 @@ index 3eaf6ac0..8aa188f9 100644
                      ),
                      color=discord.Color.blue(),
                  ),
-@@ -3932,8 +4048,8 @@ if DISCORD_AVAILABLE:
+@@ -3930,8 +4046,8 @@ if DISCORD_AVAILABLE:
              self.clear_items()
              await interaction.response.edit_message(
                  embed=discord.Embed(
@@ -4055,10 +4030,10 @@ index 3eaf6ac0..8aa188f9 100644
                  ),
                  view=self,
 diff --git a/gateway/run.py b/gateway/run.py
-index f5c1858d..93186bca 100644
+index a37f72b5e..ad74f4ae1 100644
 --- a/gateway/run.py
 +++ b/gateway/run.py
-@@ -96,6 +96,7 @@ _hermes_home = get_hermes_home()
+@@ -230,6 +230,7 @@ _hermes_home = get_hermes_home()
  # User-managed env files should override stale shell exports on restart.
  from dotenv import load_dotenv  # backward-compat for tests that monkeypatch this symbol
  from hermes_cli.env_loader import load_hermes_dotenv
@@ -4066,7 +4041,7 @@ index f5c1858d..93186bca 100644
  _env_path = _hermes_home / '.env'
  load_hermes_dotenv(hermes_home=_hermes_home, project_env=Path(__file__).resolve().parents[1] / '.env')
  
-@@ -503,6 +504,10 @@ def _check_unavailable_skill(command_name: str) -> str | None:
+@@ -650,6 +651,10 @@ def _check_unavailable_skill(command_name: str) -> str | None:
      return None
  
  
@@ -4077,7 +4052,7 @@ index f5c1858d..93186bca 100644
  def _platform_config_key(platform: "Platform") -> str:
      """Map a Platform enum to its config.yaml key (LOCAL→"cli", rest→enum value)."""
      return "cli" if platform == Platform.LOCAL else platform.value
-@@ -3250,18 +3255,22 @@ class GatewayRunner:
+@@ -3631,18 +3636,22 @@ class GatewayRunner:
                      if adapter:
                          await adapter.send(
                              source.chat_id,
@@ -4106,7 +4081,7 @@ index f5c1858d..93186bca 100644
                          )
                      # Record rate limit so subsequent messages are silently ignored
                      self.pairing_store._record_rate_limit(platform_name, source.user_id)
-@@ -3291,10 +3300,18 @@ class GatewayRunner:
+@@ -3691,10 +3700,18 @@ class GatewayRunner:
                      tmp.replace(response_path)
                  except OSError as e:
                      logger.warning("Failed to write update response: %s", e)
@@ -4124,14 +4099,16 @@ index f5c1858d..93186bca 100644
 +                    "✓ Sent `{label}` to the update process.",
 +                    label=label,
 +                )
- 
-         # PRIORITY handling when an agent is already running for this session.
-         # Default behavior is to interrupt immediately so user text/stop messages
-@@ -3384,7 +3401,10 @@ class GatewayRunner:
+             # Recognized slash command during a pending update prompt:
+             # unblock the detached update subprocess by writing a blank
+             # response so ``_gateway_prompt`` returns the prompt's default
+@@ -3807,8 +3824,11 @@ class GatewayRunner:
+                     interrupt_reason=_INTERRUPT_REASON_STOP,
                      invalidation_reason="stop_command",
                  )
-                 logger.info("STOP for session %s — agent interrupted, session lock released", _quick_key[:20])
+-                logger.info("STOP for session %s — agent interrupted, session lock released", _quick_key)
 -                return "⚡ Stopped. You can continue this session."
++                logger.info("STOP for session %s — agent interrupted, session lock released", _quick_key[:20])
 +                return _gateway_ui(
 +                    "guard.stop",
 +                    "⚡ Stopped. You can continue this session.",
@@ -4139,7 +4116,7 @@ index f5c1858d..93186bca 100644
  
              # /reset and /new must bypass the running-agent guard so they
              # actually dispatch as commands instead of being queued as user
-@@ -3409,7 +3429,10 @@ class GatewayRunner:
+@@ -3836,7 +3856,10 @@ class GatewayRunner:
              if event.get_command() in ("queue", "q"):
                  queued_text = event.get_command_args().strip()
                  if not queued_text:
@@ -4151,19 +4128,25 @@ index f5c1858d..93186bca 100644
                  adapter = self.adapters.get(source.platform)
                  if adapter:
                      queued_event = MessageEvent(
-@@ -3420,7 +3443,10 @@ class GatewayRunner:
-                         channel_prompt=event.channel_prompt,
-                     )
-                     adapter._pending_messages[_quick_key] = queued_event
--                return "Queued for the next turn."
+@@ -3849,8 +3872,15 @@ class GatewayRunner:
+                     self._enqueue_fifo(_quick_key, queued_event, adapter)
+                 depth = self._queue_depth(_quick_key, adapter=self.adapters.get(source.platform))
+                 if depth <= 1:
+-                    return "Queued for the next turn."
+-                return f"Queued for the next turn. ({depth} queued)"
++                    return _gateway_ui(
++                        "guard.queue_saved",
++                        "Queued for the next turn.",
++                    )
 +                return _gateway_ui(
-+                    "guard.queue_saved",
-+                    "Queued for the next turn.",
++                    "guard.queue_saved_depth",
++                    "Queued for the next turn. ({depth} queued)",
++                    depth=depth,
 +                )
  
              # /steer <prompt> — inject mid-run after the next tool call.
              # Unlike /queue (turn boundary), /steer lands BETWEEN tool-call
-@@ -3430,7 +3456,7 @@ class GatewayRunner:
+@@ -3860,7 +3890,7 @@ class GatewayRunner:
              if _cmd_def_inner and _cmd_def_inner.name == "steer":
                  steer_text = event.get_command_args().strip()
                  if not steer_text:
@@ -4172,7 +4155,7 @@ index f5c1858d..93186bca 100644
                  running_agent = self._running_agents.get(_quick_key)
                  if running_agent is _AGENT_PENDING_SENTINEL:
                      # Agent hasn't started yet — queue as turn-boundary fallback.
-@@ -3444,17 +3470,24 @@ class GatewayRunner:
+@@ -3874,17 +3904,24 @@ class GatewayRunner:
                              channel_prompt=event.channel_prompt,
                          )
                          adapter._pending_messages[_quick_key] = queued_event
@@ -4185,8 +4168,9 @@ index f5c1858d..93186bca 100644
                      try:
                          accepted = running_agent.steer(steer_text)
                      except Exception as exc:
-                         logger.warning("Steer failed for session %s: %s", _quick_key[:20], exc)
+-                        logger.warning("Steer failed for session %s: %s", _quick_key, exc)
 -                        return f"⚠️ Steer failed: {exc}"
++                        logger.warning("Steer failed for session %s: %s", _quick_key[:20], exc)
 +                        return _gateway_ui("steer.failed", "⚠️ Steer failed: {error}", error=exc)
                      if accepted:
                          preview = steer_text[:60] + ("..." if len(steer_text) > 60 else "")
@@ -4201,7 +4185,7 @@ index f5c1858d..93186bca 100644
                  # Running agent is missing or lacks steer() — fall back to queue.
                  adapter = self.adapters.get(source.platform)
                  if adapter:
-@@ -3466,11 +3499,17 @@ class GatewayRunner:
+@@ -3896,11 +3933,17 @@ class GatewayRunner:
                          channel_prompt=event.channel_prompt,
                      )
                      adapter._pending_messages[_quick_key] = queued_event
@@ -4221,11 +4205,13 @@ index f5c1858d..93186bca 100644
  
              # /approve and /deny must bypass the running-agent interrupt path.
              # The agent thread is blocked on a threading.Event inside
-@@ -3571,7 +3610,10 @@ class GatewayRunner:
+@@ -4004,8 +4047,11 @@ class GatewayRunner:
+                 if event.get_command() == "stop":
                      # Force-clean the sentinel so the session is unlocked.
                      self._release_running_agent_state(_quick_key)
-                     logger.info("HARD STOP (pending) for session %s — sentinel cleared", _quick_key[:20])
+-                    logger.info("HARD STOP (pending) for session %s — sentinel cleared", _quick_key)
 -                    return "⚡ Force-stopped. The agent was still starting — session unlocked."
++                    logger.info("HARD STOP (pending) for session %s — sentinel cleared", _quick_key[:20])
 +                    return _gateway_ui(
 +                        "guard.stop_pending",
 +                        "⚡ Force-stopped. The agent was still starting — session unlocked.",
@@ -4233,7 +4219,7 @@ index f5c1858d..93186bca 100644
                  # Queue the message so it will be picked up after the
                  # agent starts.
                  adapter = self.adapters.get(source.platform)
-@@ -3587,9 +3629,17 @@ class GatewayRunner:
+@@ -4021,9 +4067,17 @@ class GatewayRunner:
                  if self._queue_during_drain_enabled():
                      self._queue_or_replace_pending_event(_quick_key, event)
                  return (
@@ -4252,8 +4238,8 @@ index f5c1858d..93186bca 100644
 +                    )
                  )
              if self._busy_input_mode == "queue":
-                 logger.debug("PRIORITY queue follow-up for session %s", _quick_key[:20])
-@@ -3655,7 +3705,11 @@ class GatewayRunner:
+                 logger.debug("PRIORITY queue follow-up for session %s", _quick_key)
+@@ -4107,7 +4161,11 @@ class GatewayRunner:
                      message = hook_result.get("message")
                      if isinstance(message, str) and message:
                          return message
@@ -4266,7 +4252,7 @@ index f5c1858d..93186bca 100644
                  if decision == "handled":
                      message = hook_result.get("message")
                      return message if isinstance(message, str) and message else None
-@@ -3771,7 +3825,10 @@ class GatewayRunner:
+@@ -4223,7 +4281,10 @@ class GatewayRunner:
              # message. If the payload is empty, surface the usage hint.
              steer_payload = event.get_command_args().strip()
              if not steer_payload:
@@ -4278,7 +4264,7 @@ index f5c1858d..93186bca 100644
              try:
                  event.text = steer_payload
              except Exception:
-@@ -3784,7 +3841,11 @@ class GatewayRunner:
+@@ -4236,7 +4297,11 @@ class GatewayRunner:
              return await self._handle_voice_command(event)
  
          if self._draining:
@@ -4291,7 +4277,7 @@ index f5c1858d..93186bca 100644
  
          # User-defined quick commands (bypass agent loop, no LLM call)
          if command:
-@@ -3807,13 +3868,27 @@ class GatewayRunner:
+@@ -4259,13 +4324,27 @@ class GatewayRunner:
                              )
                              stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
                              output = (stdout or stderr).decode().strip()
@@ -4323,7 +4309,7 @@ index f5c1858d..93186bca 100644
                  elif qcmd.get("type") == "alias":
                      target = qcmd.get("target", "").strip()
                      if target:
-@@ -3824,9 +3899,17 @@ class GatewayRunner:
+@@ -4276,9 +4355,17 @@ class GatewayRunner:
                          command = target_command
                          # Fall through to normal command dispatch below
                      else:
@@ -4343,7 +4329,7 @@ index f5c1858d..93186bca 100644
  
          # Plugin-registered slash commands
          if command:
-@@ -4988,11 +5071,14 @@ class GatewayRunner:
+@@ -5577,11 +5664,14 @@ class GatewayRunner:
  
          # Format context source hint
          if config_context_length is not None:
@@ -4361,7 +4347,7 @@ index f5c1858d..93186bca 100644
  
          # Format context length for display
          if context_length >= 1_000_000:
-@@ -5003,14 +5089,19 @@ class GatewayRunner:
+@@ -5592,14 +5682,19 @@ class GatewayRunner:
              ctx_display = str(context_length)
  
          lines = [
@@ -4385,7 +4371,7 @@ index f5c1858d..93186bca 100644
  
          return "\n".join(lines)
  
-@@ -5100,11 +5191,11 @@ class GatewayRunner:
+@@ -5691,11 +5786,11 @@ class GatewayRunner:
              session_info = ""
  
          if new_entry:
@@ -4399,7 +4385,7 @@ index f5c1858d..93186bca 100644
  
          # Fire plugin on_session_reset hook (new session guaranteed to exist)
          try:
-@@ -5118,7 +5209,7 @@ class GatewayRunner:
+@@ -5709,7 +5804,7 @@ class GatewayRunner:
          # Append a random tip to the reset message
          try:
              from hermes_cli.tips import get_random_tip
@@ -4408,7 +4394,7 @@ index f5c1858d..93186bca 100644
          except Exception:
              _tip_line = ""
  
-@@ -5135,8 +5226,8 @@ class GatewayRunner:
+@@ -5726,8 +5821,8 @@ class GatewayRunner:
          profile_name = get_active_profile_name()
  
          lines = [
@@ -4419,7 +4405,7 @@ index f5c1858d..93186bca 100644
          ]
  
          return "\n".join(lines)
-@@ -5160,19 +5251,23 @@ class GatewayRunner:
+@@ -5755,23 +5850,27 @@ class GatewayRunner:
                  title = None
  
          lines = [
@@ -4445,13 +4431,18 @@ index f5c1858d..93186bca 100644
 +                "**Agent Running:** {state}",
 +                state=_gateway_ui("status.agent_running_yes", "Yes ⚡") if is_running else _gateway_ui("status.agent_running_no", "No"),
 +            ),
+         ])
+         if queue_depth:
+-            lines.append(f"**Queued follow-ups:** {queue_depth}")
++            lines.append(_gateway_ui("status.queued_followups", "**Queued follow-ups:** {count}", count=queue_depth))
+         lines.extend([
              "",
 -            f"**Connected Platforms:** {', '.join(connected_platforms)}",
 +            _gateway_ui("status.connected_platforms", "**Connected Platforms:** {platforms}", platforms=', '.join(connected_platforms)),
          ])
  
          return "\n".join(lines)
-@@ -5219,27 +5314,36 @@ class GatewayRunner:
+@@ -5818,27 +5917,36 @@ class GatewayRunner:
          ]
  
          lines = [
@@ -4494,7 +4485,7 @@ index f5c1858d..93186bca 100644
              ]
          )
          if running_processes:
-@@ -5252,18 +5356,18 @@ class GatewayRunner:
+@@ -5851,18 +5959,18 @@ class GatewayRunner:
                      f"{format_uptime_short(int(proc.get('uptime_seconds', 0)))} · `{cmd}`"
                  )
              if len(running_processes) > 12:
@@ -4516,16 +4507,18 @@ index f5c1858d..93186bca 100644
  
          return "\n".join(lines)
      
-@@ -5292,7 +5396,7 @@ class GatewayRunner:
+@@ -5890,8 +5998,8 @@ class GatewayRunner:
+                 interrupt_reason=_INTERRUPT_REASON_STOP,
                  invalidation_reason="stop_command_pending",
              )
-             logger.info("STOP (pending) for session %s — sentinel cleared", session_key[:20])
+-            logger.info("STOP (pending) for session %s — sentinel cleared", session_key)
 -            return "⚡ Stopped. The agent hadn't started yet — you can continue this session."
++            logger.info("STOP (pending) for session %s — sentinel cleared", session_key[:20])
 +            return _gateway_ui("stop.pending", "⚡ Stopped. The agent hadn't started yet — you can continue this session.")
          if agent:
              # Force-clean the session lock so a truly hung agent doesn't
              # keep it locked forever.
-@@ -5302,9 +5406,9 @@ class GatewayRunner:
+@@ -5901,9 +6009,9 @@ class GatewayRunner:
                  interrupt_reason=_INTERRUPT_REASON_STOP,
                  invalidation_reason="stop_command_handler",
              )
@@ -4537,7 +4530,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_restart_command(self, event: MessageEvent) -> str:
          """Handle /restart command - drain active work, then restart the gateway."""
-@@ -5331,8 +5435,8 @@ class GatewayRunner:
+@@ -5930,8 +6038,8 @@ class GatewayRunner:
          if self._restart_requested or self._draining:
              count = self._running_agent_count()
              if count:
@@ -4548,7 +4541,7 @@ index f5c1858d..93186bca 100644
  
          # Save the requester's routing info so the new gateway process can
          # notify them once it comes back online.
-@@ -5379,8 +5483,11 @@ class GatewayRunner:
+@@ -5978,8 +6086,11 @@ class GatewayRunner:
          else:
              self.request_restart(detached=True, via_service=False)
          if active_agents:
@@ -4562,7 +4555,7 @@ index f5c1858d..93186bca 100644
  
      def _is_stale_restart_redelivery(self, event: MessageEvent) -> bool:
          """Return True if this /restart is a Telegram re-delivery we already handled.
-@@ -5436,20 +5543,20 @@ class GatewayRunner:
+@@ -6035,20 +6146,20 @@ class GatewayRunner:
          """Handle /help command - list available commands."""
          from hermes_cli.commands import gateway_help_lines
          lines = [
@@ -4586,7 +4579,7 @@ index f5c1858d..93186bca 100644
          except Exception:
              pass
          return "\n".join(lines)
-@@ -5463,7 +5570,7 @@ class GatewayRunner:
+@@ -6062,7 +6173,7 @@ class GatewayRunner:
              try:
                  requested_page = int(raw_args)
              except ValueError:
@@ -4595,7 +4588,7 @@ index f5c1858d..93186bca 100644
          else:
              requested_page = 1
  
-@@ -5474,15 +5581,17 @@ class GatewayRunner:
+@@ -6073,15 +6184,17 @@ class GatewayRunner:
              skill_cmds = get_skill_commands()
              if skill_cmds:
                  entries.append("")
@@ -4616,7 +4609,7 @@ index f5c1858d..93186bca 100644
  
          from gateway.config import Platform
          page_size = 15 if event.source.platform == Platform.TELEGRAM else 20
-@@ -5492,19 +5601,32 @@ class GatewayRunner:
+@@ -6091,19 +6204,32 @@ class GatewayRunner:
          page_entries = entries[start:start + page_size]
  
          lines = [
@@ -4653,7 +4646,7 @@ index f5c1858d..93186bca 100644
          return "\n".join(lines)
      
      async def _handle_model_command(self, event: MessageEvent) -> Optional[str]:
-@@ -5612,7 +5734,7 @@ class GatewayRunner:
+@@ -6211,7 +6337,7 @@ class GatewayRunner:
                              custom_providers=custom_provs,
                          )
                          if not result.success:
@@ -4662,7 +4655,7 @@ index f5c1858d..93186bca 100644
  
                          # Update cached agent in-place
                          cached_entry = None
-@@ -5656,8 +5778,8 @@ class GatewayRunner:
+@@ -6255,8 +6381,8 @@ class GatewayRunner:
  
                          # Build confirmation text
                          plabel = result.provider_label or result.target_provider
@@ -4673,8 +4666,8 @@ index f5c1858d..93186bca 100644
                          mi = result.model_info
                          from hermes_cli.model_switch import resolve_display_context_length
                          ctx = resolve_display_context_length(
-@@ -5668,14 +5790,14 @@ class GatewayRunner:
-                             model_info=mi,
+@@ -6268,14 +6394,14 @@ class GatewayRunner:
+                             custom_providers=custom_provs,
                          )
                          if ctx:
 -                            lines.append(f"Context: {ctx:,} tokens")
@@ -4693,7 +4686,7 @@ index f5c1858d..93186bca 100644
                          return "\n".join(lines)
  
                      metadata = {"thread_id": source.thread_id} if source.thread_id else None
-@@ -5693,7 +5815,15 @@ class GatewayRunner:
+@@ -6293,7 +6419,15 @@ class GatewayRunner:
  
              # Fallback: text list (for platforms without picker or if picker failed)
              provider_label = get_label(current_provider)
@@ -4710,7 +4703,7 @@ index f5c1858d..93186bca 100644
  
              try:
                  providers = list_authenticated_providers(
-@@ -5704,11 +5834,23 @@ class GatewayRunner:
+@@ -6305,11 +6439,23 @@ class GatewayRunner:
                      max_models=5,
                  )
                  for p in providers:
@@ -4737,7 +4730,7 @@ index f5c1858d..93186bca 100644
                          lines.append(f"  {model_strs}{extra}")
                      elif p.get("api_url"):
                          lines.append(f"  `{p['api_url']}`")
-@@ -5716,9 +5858,9 @@ class GatewayRunner:
+@@ -6317,9 +6463,9 @@ class GatewayRunner:
              except Exception:
                  pass
  
@@ -4750,7 +4743,7 @@ index f5c1858d..93186bca 100644
              return "\n".join(lines)
  
          # Perform the switch
-@@ -5735,7 +5877,7 @@ class GatewayRunner:
+@@ -6336,7 +6482,7 @@ class GatewayRunner:
          )
  
          if not result.success:
@@ -4759,7 +4752,7 @@ index f5c1858d..93186bca 100644
  
          # If there's a cached agent, update it in-place
          cached_entry = None
-@@ -5800,8 +5942,8 @@ class GatewayRunner:
+@@ -6401,8 +6547,8 @@ class GatewayRunner:
  
          # Build confirmation message with full metadata
          provider_label = result.provider_label or result.target_provider
@@ -4770,8 +4763,8 @@ index f5c1858d..93186bca 100644
  
          # Context: always resolve via the provider-aware chain so Codex OAuth,
          # Copilot, and Nous-enforced caps win over the raw models.dev entry.
-@@ -5815,13 +5957,13 @@ class GatewayRunner:
-             model_info=mi,
+@@ -6417,13 +6563,13 @@ class GatewayRunner:
+             custom_providers=custom_provs,
          )
          if ctx:
 -            lines.append(f"Context: {ctx:,} tokens")
@@ -4788,7 +4781,7 @@ index f5c1858d..93186bca 100644
  
          # Cache notice
          cache_enabled = (
-@@ -5829,15 +5971,15 @@ class GatewayRunner:
+@@ -6431,15 +6577,15 @@ class GatewayRunner:
              or result.api_mode == "anthropic_messages"
          )
          if cache_enabled:
@@ -4808,7 +4801,7 @@ index f5c1858d..93186bca 100644
  
          return "\n".join(lines)
  
-@@ -5862,18 +6004,22 @@ class GatewayRunner:
+@@ -6458,18 +6604,22 @@ class GatewayRunner:
              personalities = {}
  
          if not personalities:
@@ -4835,7 +4828,7 @@ index f5c1858d..93186bca 100644
              return "\n".join(lines)
  
          def _resolve_prompt(value):
-@@ -5893,9 +6039,12 @@ class GatewayRunner:
+@@ -6489,9 +6639,12 @@ class GatewayRunner:
                  config["agent"]["system_prompt"] = ""
                  atomic_yaml_write(config_path, config)
              except Exception as e:
@@ -4850,7 +4843,7 @@ index f5c1858d..93186bca 100644
          elif args in personalities:
              new_prompt = _resolve_prompt(personalities[args])
  
-@@ -5906,15 +6055,23 @@ class GatewayRunner:
+@@ -6502,15 +6655,23 @@ class GatewayRunner:
                  config["agent"]["system_prompt"] = new_prompt
                  atomic_yaml_write(config_path, config)
              except Exception as e:
@@ -4877,7 +4870,7 @@ index f5c1858d..93186bca 100644
      
      async def _handle_retry_command(self, event: MessageEvent) -> str:
          """Handle /retry command - re-send the last user message."""
-@@ -5932,7 +6089,7 @@ class GatewayRunner:
+@@ -6528,7 +6689,7 @@ class GatewayRunner:
                  break
          
          if not last_user_msg:
@@ -4886,7 +4879,7 @@ index f5c1858d..93186bca 100644
          
          # Truncate history to before the last user message and persist
          truncated = history[:last_user_idx]
-@@ -5966,7 +6123,7 @@ class GatewayRunner:
+@@ -6562,7 +6723,7 @@ class GatewayRunner:
                  break
          
          if last_user_idx is None:
@@ -4895,7 +4888,7 @@ index f5c1858d..93186bca 100644
          
          removed_msg = history[last_user_idx].get("content", "")
          removed_count = len(history) - last_user_idx
-@@ -5975,7 +6132,12 @@ class GatewayRunner:
+@@ -6571,7 +6732,12 @@ class GatewayRunner:
          session_entry.last_prompt_tokens = 0
          
          preview = removed_msg[:40] + "..." if len(removed_msg) > 40 else removed_msg
@@ -4909,9 +4902,9 @@ index f5c1858d..93186bca 100644
      
      async def _handle_set_home_command(self, event: MessageEvent) -> str:
          """Handle /sethome command -- set the current chat as the platform's home channel."""
-@@ -5999,11 +6161,13 @@ class GatewayRunner:
-             # Also set in the current environment so it takes effect immediately
-             os.environ[env_key] = str(chat_id)
+@@ -6587,11 +6753,13 @@ class GatewayRunner:
+             from hermes_cli.config import save_env_value
+             save_env_value(env_key, str(chat_id))
          except Exception as e:
 -            return f"Failed to save home channel: {e}"
 +            return _gateway_ui("sethome.save_failed", "Failed to save home channel: {error}", error=e)
@@ -4927,10 +4920,10 @@ index f5c1858d..93186bca 100644
          )
      
      @staticmethod
-@@ -6034,26 +6198,22 @@ class GatewayRunner:
+@@ -6622,26 +6790,22 @@ class GatewayRunner:
              self._save_voice_modes()
              if adapter:
-                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
+                 self._set_adapter_auto_tts_enabled(adapter, chat_id, enabled=True)
 -            return (
 -                "Voice mode enabled.\n"
 -                "I'll reply with voice when you send voice messages.\n"
@@ -4950,7 +4943,7 @@ index f5c1858d..93186bca 100644
              self._voice_mode[voice_key] = "all"
              self._save_voice_modes()
              if adapter:
-                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
+                 self._set_adapter_auto_tts_enabled(adapter, chat_id, enabled=True)
 -            return (
 -                "Auto-TTS enabled.\n"
 -                "All replies will include a voice message."
@@ -4959,7 +4952,7 @@ index f5c1858d..93186bca 100644
          elif args in ("channel", "join"):
              return await self._handle_voice_channel_join(event)
          elif args == "leave":
-@@ -6061,9 +6221,9 @@ class GatewayRunner:
+@@ -6649,9 +6813,9 @@ class GatewayRunner:
          elif args == "status":
              mode = self._voice_mode.get(voice_key, "off")
              labels = {
@@ -4972,7 +4965,7 @@ index f5c1858d..93186bca 100644
              }
              # Append voice channel info if connected
              adapter = self.adapters.get(event.source.platform)
-@@ -6072,15 +6232,15 @@ class GatewayRunner:
+@@ -6660,15 +6824,15 @@ class GatewayRunner:
                  info = adapter.get_voice_channel_info(guild_id)
                  if info:
                      lines = [
@@ -4993,10 +4986,10 @@ index f5c1858d..93186bca 100644
          else:
              # Toggle: off → on, on/all → off
              current = self._voice_mode.get(voice_key, "off")
-@@ -6089,29 +6249,29 @@ class GatewayRunner:
+@@ -6677,29 +6841,29 @@ class GatewayRunner:
                  self._save_voice_modes()
                  if adapter:
-                     self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=False)
+                     self._set_adapter_auto_tts_enabled(adapter, chat_id, enabled=True)
 -                return "Voice mode enabled."
 +                return _gateway_ui("voice.toggle_on", "Voice mode enabled.")
              else:
@@ -5028,7 +5021,7 @@ index f5c1858d..93186bca 100644
  
          # Wire callbacks BEFORE join so voice input arriving immediately
          # after connection is not lost.
-@@ -6127,11 +6287,11 @@ class GatewayRunner:
+@@ -6715,11 +6879,11 @@ class GatewayRunner:
              adapter._voice_input_callback = None
              err_lower = str(e).lower()
              if "pynacl" in err_lower or "nacl" in err_lower or "davey" in err_lower:
@@ -5044,10 +5037,10 @@ index f5c1858d..93186bca 100644
  
          if success:
              adapter._voice_text_channels[guild_id] = int(event.source.chat_id)
-@@ -6140,13 +6300,14 @@ class GatewayRunner:
+@@ -6728,13 +6892,14 @@ class GatewayRunner:
              self._voice_mode[self._voice_key(event.source.platform, event.source.chat_id)] = "all"
              self._save_voice_modes()
-             self._set_adapter_auto_tts_disabled(adapter, event.source.chat_id, disabled=False)
+             self._set_adapter_auto_tts_enabled(adapter, event.source.chat_id, enabled=True)
 -            return (
 -                f"Joined voice channel **{voice_channel.name}**.\n"
 -                f"I'll speak my replies and listen to you. Use /voice leave to disconnect."
@@ -5063,7 +5056,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_voice_channel_leave(self, event: MessageEvent) -> str:
          """Leave the Discord voice channel."""
-@@ -6154,10 +6315,10 @@ class GatewayRunner:
+@@ -6742,10 +6907,10 @@ class GatewayRunner:
          guild_id = self._get_guild_id(event)
  
          if not guild_id or not hasattr(adapter, "leave_voice_channel"):
@@ -5076,7 +5069,7 @@ index f5c1858d..93186bca 100644
  
          try:
              await adapter.leave_voice_channel(guild_id)
-@@ -6169,7 +6330,7 @@ class GatewayRunner:
+@@ -6757,7 +6922,7 @@ class GatewayRunner:
          self._set_adapter_auto_tts_disabled(adapter, event.source.chat_id, disabled=True)
          if hasattr(adapter, "_voice_input_callback"):
              adapter._voice_input_callback = None
@@ -5085,7 +5078,7 @@ index f5c1858d..93186bca 100644
  
      def _handle_voice_timeout_cleanup(self, chat_id: str) -> None:
          """Called by the adapter when a voice channel times out.
-@@ -6467,7 +6628,7 @@ class GatewayRunner:
+@@ -7055,7 +7220,7 @@ class GatewayRunner:
          # Restore by number or hash
          checkpoints = mgr.list_checkpoints(cwd)
          if not checkpoints:
@@ -5094,7 +5087,7 @@ index f5c1858d..93186bca 100644
  
          target_hash = None
          try:
-@@ -6475,17 +6636,19 @@ class GatewayRunner:
+@@ -7063,17 +7228,19 @@ class GatewayRunner:
              if 0 <= idx < len(checkpoints):
                  target_hash = checkpoints[idx]["hash"]
              else:
@@ -5119,7 +5112,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_background_command(self, event: MessageEvent) -> str:
          """Handle /background <prompt> — run a prompt in a separate background session.
-@@ -6496,11 +6659,9 @@ class GatewayRunner:
+@@ -7084,11 +7251,9 @@ class GatewayRunner:
          """
          prompt = event.get_command_args().strip()
          if not prompt:
@@ -5134,7 +5127,7 @@ index f5c1858d..93186bca 100644
              )
  
          source = event.source
-@@ -6514,7 +6675,12 @@ class GatewayRunner:
+@@ -7102,7 +7267,12 @@ class GatewayRunner:
          _task.add_done_callback(self._background_tasks.discard)
  
          preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
@@ -5148,7 +5141,7 @@ index f5c1858d..93186bca 100644
  
      async def _run_background_task(
          self, prompt: str, source: "SessionSource", task_id: str
-@@ -6538,7 +6704,11 @@ class GatewayRunner:
+@@ -7126,7 +7296,11 @@ class GatewayRunner:
              if not runtime_kwargs.get("api_key"):
                  await adapter.send(
                      source.chat_id,
@@ -5161,7 +5154,7 @@ index f5c1858d..93186bca 100644
                      metadata=_thread_metadata,
                  )
                  return
-@@ -6595,7 +6765,7 @@ class GatewayRunner:
+@@ -7183,7 +7357,7 @@ class GatewayRunner:
  
              response = result.get("final_response", "") if result else ""
              if not response and result and result.get("error"):
@@ -5170,7 +5163,7 @@ index f5c1858d..93186bca 100644
  
              # Extract media files from the response
              if response:
-@@ -6603,7 +6773,11 @@ class GatewayRunner:
+@@ -7191,7 +7365,11 @@ class GatewayRunner:
                  images, text_content = adapter.extract_images(response)
  
                  preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
@@ -5183,7 +5176,7 @@ index f5c1858d..93186bca 100644
  
                  if text_content:
                      await adapter.send(
-@@ -6614,7 +6788,7 @@ class GatewayRunner:
+@@ -7202,7 +7380,7 @@ class GatewayRunner:
                  elif not images and not media_files:
                      await adapter.send(
                          chat_id=source.chat_id,
@@ -5192,7 +5185,7 @@ index f5c1858d..93186bca 100644
                          metadata=_thread_metadata,
                      )
  
-@@ -6642,7 +6816,12 @@ class GatewayRunner:
+@@ -7232,7 +7410,12 @@ class GatewayRunner:
                  preview = prompt[:60] + ("..." if len(prompt) > 60 else "")
                  await adapter.send(
                      chat_id=source.chat_id,
@@ -5206,7 +5199,7 @@ index f5c1858d..93186bca 100644
                      metadata=_thread_metadata,
                  )
  
-@@ -6651,7 +6830,12 @@ class GatewayRunner:
+@@ -7241,7 +7424,12 @@ class GatewayRunner:
              try:
                  await adapter.send(
                      chat_id=source.chat_id,
@@ -5220,111 +5213,38 @@ index f5c1858d..93186bca 100644
                      metadata=_thread_metadata,
                  )
              except Exception:
-@@ -6661,10 +6845,9 @@ class GatewayRunner:
-         """Handle /btw <question> — ephemeral side question in the same chat."""
-         question = event.get_command_args().strip()
-         if not question:
--            return (
--                "Usage: /btw <question>\n"
--                "Example: /btw what module owns session title sanitization?\n\n"
--                "Answers using session context. No tools, not persisted."
-+            return _gateway_ui(
-+                "btw.usage",
-+                "Usage: /btw <question>\nExample: /btw what module owns session title sanitization?\n\nAnswers using session context. No tools, not persisted.",
-             )
- 
-         source = event.source
-@@ -6673,7 +6856,7 @@ class GatewayRunner:
-         # Guard: one /btw at a time per session
-         existing = getattr(self, "_active_btw_tasks", {}).get(session_key)
-         if existing and not existing.done():
--            return "A /btw is already running for this chat. Wait for it to finish."
-+            return _gateway_ui("btw.running", "A /btw is already running for this chat. Wait for it to finish.")
- 
-         if not hasattr(self, "_active_btw_tasks"):
-             self._active_btw_tasks: dict = {}
-@@ -6692,7 +6875,11 @@ class GatewayRunner:
-         _task.add_done_callback(_cleanup)
- 
-         preview = question[:60] + ("..." if len(question) > 60 else "")
--        return f'💬 /btw: "{preview}"\nReply will appear here shortly.'
-+        return _gateway_ui(
-+            "btw.started",
-+            '💬 /btw: "{preview}"\nReply will appear here shortly.',
-+            preview=preview,
-+        )
- 
-     async def _run_btw_task(
-         self, question: str, source, session_key: str, task_id: str,
-@@ -6717,7 +6904,7 @@ class GatewayRunner:
-             if not runtime_kwargs.get("api_key"):
-                 await adapter.send(
-                     source.chat_id,
--                    "❌ /btw failed: no provider credentials configured.",
-+                    _gateway_ui("btw.no_credentials", "❌ /btw failed: no provider credentials configured."),
-                     metadata=_thread_meta,
-                 )
-                 return
-@@ -6780,14 +6967,14 @@ class GatewayRunner:
- 
-             response = (result.get("final_response") or "") if result else ""
-             if not response and result and result.get("error"):
--                response = f"Error: {result['error']}"
-+                response = _gateway_ui("btw.error_prefix", "Error: {error}", error=result["error"])
-             if not response:
--                response = "(No response generated)"
-+                response = _gateway_ui("btw.no_response", "(No response generated)")
- 
-             media_files, response = adapter.extract_media(response)
-             images, text_content = adapter.extract_images(response)
-             preview = question[:60] + ("..." if len(question) > 60 else "")
--            header = f'💬 /btw: "{preview}"\n\n'
-+            header = _gateway_ui("btw.answer_header", '💬 /btw: "{preview}"\n\n', preview=preview)
- 
-             if text_content:
-                 await adapter.send(
-@@ -6798,7 +6985,7 @@ class GatewayRunner:
-             elif not images and not media_files:
-                 await adapter.send(
-                     chat_id=source.chat_id,
--                    content=header + "(No response generated)",
-+                    content=header + _gateway_ui("btw.no_response", "(No response generated)"),
-                     metadata=_thread_meta,
-                 )
- 
-@@ -6819,7 +7006,7 @@ class GatewayRunner:
-             try:
-                 await adapter.send(
-                     chat_id=source.chat_id,
--                    content=f"❌ /btw failed: {e}",
-+                    content=_gateway_ui("btw.failed", "❌ /btw failed: {error}", error=e),
-                     metadata=_thread_meta,
-                 )
-             except Exception:
-@@ -6871,11 +7058,17 @@ class GatewayRunner:
-             else:
+@@ -7301,13 +7489,23 @@ class GatewayRunner:
                  level = rc.get("effort", "medium")
              display_state = "on ✓" if self._show_reasoning else "off"
+             has_session_override = session_key in (getattr(self, "_session_reasoning_overrides", {}) or {})
+-            scope = "session override" if has_session_override else "global config"
 -            return (
 -                "🧠 **Reasoning Settings**\n\n"
 -                f"**Effort:** `{level}`\n"
+-                f"**Scope:** {scope}\n"
 -                f"**Display:** {display_state}\n\n"
--                "_Usage:_ `/reasoning <none|minimal|low|medium|high|xhigh|show|hide>`"
+-                "_Usage:_ `/reasoning <none|minimal|low|medium|high|xhigh|reset|show|hide> [--global]`"
++            scope = (
++                _gateway_ui("reasoning.scope_session_override", "session override")
++                if has_session_override
++                else _gateway_ui("reasoning.scope_global_config", "global config")
++            )
 +            return "\n\n".join(
 +                [
 +                    _gateway_ui("reasoning.settings_title", "🧠 **Reasoning Settings**"),
 +                    "\n".join(
 +                        [
 +                            _gateway_ui("reasoning.effort_label", "**Effort:** `{level}`", level=level),
++                            _gateway_ui("reasoning.scope_label", "**Scope:** {scope}", scope=scope),
 +                            _gateway_ui("reasoning.display_label", "**Display:** {state}", state=display_state),
 +                        ]
 +                    ),
-+                    _gateway_ui("reasoning.usage", "_Usage:_ `/reasoning <none|minimal|low|medium|high|xhigh|show|hide>`"),
++                    _gateway_ui("reasoning.usage", "_Usage:_ `/reasoning <none|minimal|low|medium|high|xhigh|reset|show|hide> [--global]`"),
 +                ]
              )
  
          # Display toggle (per-platform)
-@@ -6884,14 +7077,19 @@ class GatewayRunner:
+@@ -7316,34 +7514,51 @@ class GatewayRunner:
              self._show_reasoning = True
              _save_config_key(f"display.platforms.{platform_key}.show_reasoning", True)
              return (
@@ -5347,41 +5267,76 @@ index f5c1858d..93186bca 100644
  
          # Effort level change
          effort = args.strip()
-@@ -6900,17 +7098,27 @@ class GatewayRunner:
+         if effort == "reset":
+             if persist_global:
+-                return "⚠️ `/reasoning reset --global` is not supported. Use `/reasoning <level> --global` to change the global default."
++                return _gateway_ui(
++                    "reasoning.reset_global_unsupported",
++                    "⚠️ `/reasoning reset --global` is not supported. Use `/reasoning <level> --global` to change the global default.",
++                )
+             self._set_session_reasoning_override(session_key, None)
+             self._reasoning_config = self._load_reasoning_config()
+             self._evict_cached_agent(session_key)
+-            return "🧠 ✓ Session reasoning override cleared; falling back to global config."
++            return _gateway_ui(
++                "reasoning.reset_session",
++                "🧠 ✓ Session reasoning override cleared; falling back to global config.",
++            )
+         if effort == "none":
+             parsed = {"enabled": False}
          elif effort in ("minimal", "low", "medium", "high", "xhigh"):
              parsed = {"enabled": True, "effort": effort}
          else:
 -            return (
--                f"⚠️ Unknown argument: `{effort}`\n\n"
+-                f"⚠️ Unknown argument: `{effort or raw_args.lower()}`\n\n"
 -                "**Valid levels:** none, minimal, low, medium, high, xhigh\n"
--                "**Display:** show, hide"
+-                "**Display:** show, hide\n"
+-                "**Persist:** add `--global` to save beyond this session"
 +            return "\n\n".join(
 +                [
-+                    _gateway_ui("reasoning.invalid_arg", "⚠️ Unknown argument: `{effort}`", effort=effort),
++                    _gateway_ui("reasoning.invalid_arg", "⚠️ Unknown argument: `{effort}`", effort=effort or raw_args.lower()),
 +                    "\n".join(
 +                        [
 +                            _gateway_ui("reasoning.valid_levels", "**Valid levels:** none, minimal, low, medium, high, xhigh"),
 +                            _gateway_ui("reasoning.display_options", "**Display:** show, hide"),
++                            _gateway_ui("reasoning.persist_options", "**Persist:** add `--global` to save beyond this session"),
 +                        ]
 +                    ),
 +                ]
              )
  
          self._reasoning_config = parsed
-         if _save_config_key("agent.reasoning_effort", effort):
--            return f"🧠 ✓ Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_"
+@@ -7351,14 +7566,26 @@ class GatewayRunner:
+             if _save_config_key("agent.reasoning_effort", effort):
+                 self._set_session_reasoning_override(session_key, None)
+                 self._evict_cached_agent(session_key)
+-                return f"🧠 ✓ Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_"
++                return _gateway_ui(
++                    "reasoning.saved",
++                    "🧠 ✓ Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_",
++                    effort=effort,
++                )
+             self._set_session_reasoning_override(session_key, parsed)
+             self._evict_cached_agent(session_key)
+-            return f"🧠 ✓ Reasoning effort set to `{effort}` (session only — config save failed)\n_(takes effect on next message)_"
 +            return _gateway_ui(
-+                "reasoning.saved",
-+                "🧠 ✓ Reasoning effort set to `{effort}` (saved to config)\n_(takes effect on next message)_",
++                "reasoning.session_save_failed",
++                "🧠 ✓ Reasoning effort set to `{effort}` (session only — config save failed)\n_(takes effect on next message)_",
 +                effort=effort,
 +            )
-         else:
--            return f"🧠 ✓ Reasoning effort set to `{effort}` (this session only)"
-+            return _gateway_ui("reasoning.session_only", "🧠 ✓ Reasoning effort set to `{effort}` (this session only)", effort=effort)
+ 
+         self._set_session_reasoning_override(session_key, parsed)
+         self._evict_cached_agent(session_key)
+-        return f"🧠 ✓ Reasoning effort set to `{effort}` (session only — add `--global` to persist)\n_(takes effect on next message)_"
++        return _gateway_ui(
++            "reasoning.session_only",
++            "🧠 ✓ Reasoning effort set to `{effort}` (session only — add `--global` to persist)\n_(takes effect on next message)_",
++            effort=effort,
++        )
  
      async def _handle_fast_command(self, event: MessageEvent) -> str:
          """Handle /fast — mirror the CLI Priority Processing toggle in gateway chats."""
-@@ -6924,7 +7132,7 @@ class GatewayRunner:
+@@ -7372,7 +7599,7 @@ class GatewayRunner:
          user_config = _load_gateway_config()
          model = _resolve_gateway_model(user_config)
          if not model_supports_fast_mode(model):
@@ -5390,7 +5345,7 @@ index f5c1858d..93186bca 100644
  
          def _save_config_key(key_path: str, value):
              """Save a dot-separated key to config.yaml."""
-@@ -6948,29 +7156,37 @@ class GatewayRunner:
+@@ -7396,29 +7623,37 @@ class GatewayRunner:
  
          if not args or args == "status":
              status = "fast" if self._service_tier == "priority" else "normal"
@@ -5439,7 +5394,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_yolo_command(self, event: MessageEvent) -> str:
          """Handle /yolo — toggle dangerous command approval bypass for this session only."""
-@@ -6984,10 +7200,10 @@ class GatewayRunner:
+@@ -7432,10 +7667,10 @@ class GatewayRunner:
          current = is_session_yolo_enabled(session_key)
          if current:
              disable_session_yolo(session_key)
@@ -5452,7 +5407,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_verbose_command(self, event: MessageEvent) -> str:
          """Handle /verbose command — cycle tool progress display mode.
-@@ -7014,19 +7230,18 @@ class GatewayRunner:
+@@ -7458,19 +7693,18 @@ class GatewayRunner:
              gate_enabled = False
  
          if not gate_enabled:
@@ -5479,7 +5434,7 @@ index f5c1858d..93186bca 100644
          }
  
          # Read current effective mode for this platform via the resolver
-@@ -7050,11 +7265,11 @@ class GatewayRunner:
+@@ -7494,11 +7728,11 @@ class GatewayRunner:
              atomic_yaml_write(config_path, user_config)
              return (
                  f"{descriptions[new_mode]}\n"
@@ -5491,9 +5446,9 @@ index f5c1858d..93186bca 100644
 -            return f"{descriptions[new_mode]}\n_(could not save to config: {e})_"
 +            return f"{descriptions[new_mode]}\n{_gateway_ui('tool_progress.save_failed', '_(could not save to config: {error})_', error=e)}"
  
-     async def _handle_compress_command(self, event: MessageEvent) -> str:
-         """Handle /compress command -- manually compress conversation context.
-@@ -7068,7 +7283,7 @@ class GatewayRunner:
+     async def _handle_footer_command(self, event: MessageEvent) -> str:
+         """Handle /footer command — toggle the runtime-metadata footer.
+@@ -7600,7 +7834,7 @@ class GatewayRunner:
          history = self.session_store.load_transcript(session_entry.session_id)
  
          if not history or len(history) < 4:
@@ -5502,7 +5457,7 @@ index f5c1858d..93186bca 100644
  
          # Extract optional focus topic from command args
          focus_topic = (event.get_command_args() or "").strip() or None
-@@ -7084,7 +7299,7 @@ class GatewayRunner:
+@@ -7616,7 +7850,7 @@ class GatewayRunner:
                  session_key=session_key,
              )
              if not runtime_kwargs.get("api_key"):
@@ -5511,7 +5466,7 @@ index f5c1858d..93186bca 100644
  
              msgs = [
                  {"role": m.get("role"), "content": m.get("content")}
-@@ -7108,7 +7323,7 @@ class GatewayRunner:
+@@ -7639,7 +7873,7 @@ class GatewayRunner:
  
                  compressor = tmp_agent.context_compressor
                  if not compressor.has_content_to_compress(msgs):
@@ -5520,7 +5475,7 @@ index f5c1858d..93186bca 100644
  
                  loop = asyncio.get_running_loop()
                  compressed, _ = await loop.run_in_executor(
-@@ -7141,14 +7356,14 @@ class GatewayRunner:
+@@ -7683,7 +7917,7 @@ class GatewayRunner:
                  self._cleanup_agent_resources(tmp_agent)
              lines = [f"🗜️ {summary['headline']}"]
              if focus_topic:
@@ -5529,6 +5484,7 @@ index f5c1858d..93186bca 100644
              lines.append(summary["token_line"])
              if summary["note"]:
                  lines.append(summary["note"])
+@@ -7704,7 +7938,7 @@ class GatewayRunner:
              return "\n".join(lines)
          except Exception as e:
              logger.warning("Manual compress failed: %s", e)
@@ -5537,7 +5493,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_title_command(self, event: MessageEvent) -> str:
          """Handle /title command — set or show the current session's title."""
-@@ -7157,7 +7372,7 @@ class GatewayRunner:
+@@ -7713,7 +7947,7 @@ class GatewayRunner:
          session_id = session_entry.session_id
  
          if not self._session_db:
@@ -5546,7 +5502,7 @@ index f5c1858d..93186bca 100644
  
          # Ensure session exists in SQLite DB (it may only exist in session_store
          # if this is the first command in a new session)
-@@ -7181,27 +7396,27 @@ class GatewayRunner:
+@@ -7737,27 +7971,27 @@ class GatewayRunner:
              except ValueError as e:
                  return f"⚠️ {e}"
              if not sanitized:
@@ -5580,7 +5536,7 @@ index f5c1858d..93186bca 100644
  
          source = event.source
          session_key = self._session_key_for_source(source)
-@@ -7217,28 +7432,29 @@ class GatewayRunner:
+@@ -7773,28 +8007,29 @@ class GatewayRunner:
                  titled = [s for s in sessions if s.get("title")]
                  if not titled:
                      return (
@@ -5619,16 +5575,16 @@ index f5c1858d..93186bca 100644
              )
          # Compression creates child continuations that hold the live transcript.
          # Follow that chain so gateway /resume matches CLI behavior (#15000).
-@@ -7250,7 +7466,7 @@ class GatewayRunner:
+@@ -7806,7 +8041,7 @@ class GatewayRunner:
          # Check if already on that session
          current_entry = self.session_store.get_or_create_session(source)
          if current_entry.session_id == target_id:
 -            return f"📌 Already on session **{name}**."
 +            return _gateway_ui("resume.already_on", "📌 Already on session **{name}**.", name=name)
  
-         # Flush memories for current session before switching
-         try:
-@@ -7268,7 +7484,7 @@ class GatewayRunner:
+         # Clear any running agent for this session key
+         self._release_running_agent_state(session_key)
+@@ -7814,7 +8049,7 @@ class GatewayRunner:
          # Switch the session entry to point at the old session
          new_entry = self.session_store.switch_session(session_key, target_id)
          if not new_entry:
@@ -5637,7 +5593,7 @@ index f5c1858d..93186bca 100644
          self._clear_session_boundary_security_state(session_key)
  
          # Get the title for confirmation
-@@ -7277,9 +7493,9 @@ class GatewayRunner:
+@@ -7823,9 +8058,9 @@ class GatewayRunner:
          # Count messages for context
          history = self.session_store.load_transcript(target_id)
          msg_count = len([m for m in history if m.get("role") == "user"]) if history else 0
@@ -5649,7 +5605,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_branch_command(self, event: MessageEvent) -> str:
          """Handle /branch [name] — fork the current session into a new independent copy.
-@@ -7291,7 +7507,7 @@ class GatewayRunner:
+@@ -7837,7 +8072,7 @@ class GatewayRunner:
          import uuid as _uuid
  
          if not self._session_db:
@@ -5658,7 +5614,7 @@ index f5c1858d..93186bca 100644
  
          source = event.source
          session_key = self._session_key_for_source(source)
-@@ -7300,7 +7516,7 @@ class GatewayRunner:
+@@ -7846,7 +8081,7 @@ class GatewayRunner:
          current_entry = self.session_store.get_or_create_session(source)
          history = self.session_store.load_transcript(current_entry.session_id)
          if not history:
@@ -5667,7 +5623,7 @@ index f5c1858d..93186bca 100644
  
          branch_name = event.get_command_args().strip()
  
-@@ -7331,7 +7547,7 @@ class GatewayRunner:
+@@ -7877,7 +8112,7 @@ class GatewayRunner:
              )
          except Exception as e:
              logger.error("Failed to create branch session: %s", e)
@@ -5676,7 +5632,7 @@ index f5c1858d..93186bca 100644
  
          # Copy conversation history to the new session
          for msg in history:
-@@ -7358,20 +7574,20 @@ class GatewayRunner:
+@@ -7904,20 +8139,20 @@ class GatewayRunner:
          # Switch the session store entry to the new session
          new_entry = self.session_store.switch_session(session_key, new_session_id)
          if not new_entry:
@@ -5705,7 +5661,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_usage_command(self, event: MessageEvent) -> str:
          """Handle /usage command -- show token usage for the current session.
-@@ -7433,7 +7649,7 @@ class GatewayRunner:
+@@ -7979,7 +8214,7 @@ class GatewayRunner:
              rl_state = agent.get_rate_limit_state()
              if rl_state and rl_state.has_data:
                  from agent.rate_limit_tracker import format_rate_limit_compact
@@ -5714,7 +5670,7 @@ index f5c1858d..93186bca 100644
                  lines.append("")
  
              # Session token usage — detailed breakdown matching CLI
-@@ -7442,16 +7658,16 @@ class GatewayRunner:
+@@ -7988,16 +8223,16 @@ class GatewayRunner:
              cache_read = getattr(agent, "session_cache_read_tokens", 0) or 0
              cache_write = getattr(agent, "session_cache_write_tokens", 0) or 0
  
@@ -5739,7 +5695,7 @@ index f5c1858d..93186bca 100644
  
              # Cost estimation
              try:
-@@ -7469,9 +7685,9 @@ class GatewayRunner:
+@@ -8015,9 +8250,9 @@ class GatewayRunner:
                  )
                  if cost_result.amount_usd is not None:
                      prefix = "~" if cost_result.status == "estimated" else ""
@@ -5751,7 +5707,7 @@ index f5c1858d..93186bca 100644
              except Exception:
                  pass
  
-@@ -7479,9 +7695,19 @@ class GatewayRunner:
+@@ -8025,9 +8260,19 @@ class GatewayRunner:
              ctx = agent.context_compressor
              if ctx.last_prompt_tokens:
                  pct = min(100, ctx.last_prompt_tokens / ctx.context_length * 100) if ctx.context_length else 0
@@ -5773,7 +5729,7 @@ index f5c1858d..93186bca 100644
  
              if account_lines:
                  lines.append("")
-@@ -7497,10 +7723,10 @@ class GatewayRunner:
+@@ -8043,10 +8288,10 @@ class GatewayRunner:
              msgs = [m for m in history if m.get("role") in ("user", "assistant") and m.get("content")]
              approx = estimate_messages_tokens_rough(msgs)
              lines = [
@@ -5788,7 +5744,7 @@ index f5c1858d..93186bca 100644
              ]
              if account_lines:
                  lines.append("")
-@@ -7508,7 +7734,7 @@ class GatewayRunner:
+@@ -8054,7 +8299,7 @@ class GatewayRunner:
              return "\n".join(lines)
          if account_lines:
              return "\n".join(account_lines)
@@ -5797,7 +5753,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_insights_command(self, event: MessageEvent) -> str:
          """Handle /insights command -- show usage insights and analytics."""
-@@ -7529,7 +7755,7 @@ class GatewayRunner:
+@@ -8075,7 +8320,7 @@ class GatewayRunner:
                      try:
                          days = int(parts[i + 1])
                      except ValueError:
@@ -5806,7 +5762,7 @@ index f5c1858d..93186bca 100644
                      i += 2
                  elif parts[i] == "--source" and i + 1 < len(parts):
                      source = parts[i + 1]
-@@ -7557,7 +7783,7 @@ class GatewayRunner:
+@@ -8103,7 +8348,7 @@ class GatewayRunner:
              return await loop.run_in_executor(None, _run_insights)
          except Exception as e:
              logger.error("Insights command error: %s", e, exc_info=True)
@@ -5815,7 +5771,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_reload_mcp_command(self, event: MessageEvent) -> str:
          """Handle /reload-mcp command -- disconnect and reconnect all MCP servers."""
-@@ -7584,17 +7810,17 @@ class GatewayRunner:
+@@ -8130,17 +8375,17 @@ class GatewayRunner:
              removed = old_servers - connected_servers
              reconnected = connected_servers & old_servers
  
@@ -5839,7 +5795,7 @@ index f5c1858d..93186bca 100644
  
              # Inject a message at the END of the session history so the
              # model knows tools changed on its next turn.  Appended after
-@@ -7624,7 +7850,7 @@ class GatewayRunner:
+@@ -8170,7 +8415,7 @@ class GatewayRunner:
  
          except Exception as e:
              logger.warning("MCP reload failed: %s", e)
@@ -5848,7 +5804,7 @@ index f5c1858d..93186bca 100644
  
      # ------------------------------------------------------------------
      # /approve & /deny — explicit dangerous-command approval
-@@ -7662,8 +7888,8 @@ class GatewayRunner:
+@@ -8208,8 +8453,8 @@ class GatewayRunner:
          if not has_blocking_approval(session_key):
              if session_key in self._pending_approvals:
                  self._pending_approvals.pop(session_key)
@@ -5859,7 +5815,7 @@ index f5c1858d..93186bca 100644
  
          # Parse args: support "all", "all session", "all always", "session", "always"
          args = event.get_command_args().strip().lower().split()
-@@ -7672,26 +7898,31 @@ class GatewayRunner:
+@@ -8218,26 +8463,31 @@ class GatewayRunner:
  
          if any(a in ("always", "permanent", "permanently") for a in remaining):
              choice = "always"
@@ -5896,7 +5852,7 @@ index f5c1858d..93186bca 100644
  
      async def _handle_deny_command(self, event: MessageEvent) -> str:
          """Handle /deny command — reject pending dangerous command(s).
-@@ -7711,24 +7942,24 @@ class GatewayRunner:
+@@ -8257,24 +8507,24 @@ class GatewayRunner:
          if not has_blocking_approval(session_key):
              if session_key in self._pending_approvals:
                  self._pending_approvals.pop(session_key)
@@ -5926,7 +5882,7 @@ index f5c1858d..93186bca 100644
  
      # Platforms where /update is allowed.  ACP, API server, and webhooks are
      # programmatic interfaces that should not trigger system updates.
-@@ -7765,20 +7996,31 @@ class GatewayRunner:
+@@ -8311,20 +8561,31 @@ class GatewayRunner:
              try:
                  urls["Report"] = upload_to_pastebin(report)
              except Exception as exc:
@@ -5964,7 +5920,7 @@ index f5c1858d..93186bca 100644
              return "\n".join(lines)
  
          return await loop.run_in_executor(None, _collect_and_upload)
-@@ -7800,24 +8042,22 @@ class GatewayRunner:
+@@ -8346,24 +8607,22 @@ class GatewayRunner:
          # Block non-messaging platforms (API server, webhooks, ACP)
          platform = event.source.platform
          if platform not in self._UPDATE_ALLOWED_PLATFORMS:
@@ -5995,7 +5951,7 @@ index f5c1858d..93186bca 100644
              )
  
          pending_path = _hermes_home / ".update_pending.json"
-@@ -7871,10 +8111,10 @@ class GatewayRunner:
+@@ -8417,10 +8676,10 @@ class GatewayRunner:
          except Exception as e:
              pending_path.unlink(missing_ok=True)
              exit_code_path.unlink(missing_ok=True)
@@ -6009,15 +5965,16 @@ index f5c1858d..93186bca 100644
      def _schedule_update_notification_watch(self) -> None:
          """Ensure a background task is watching for update completion."""
 diff --git a/hermes_cli/auth.py b/hermes_cli/auth.py
-index 00685436..75c17ea0 100644
+index c5ff23e58..25a64e922 100644
 --- a/hermes_cli/auth.py
 +++ b/hermes_cli/auth.py
-@@ -42,10 +42,15 @@ import httpx
+@@ -42,11 +42,16 @@ import httpx
  import yaml
  
  from hermes_cli.config import get_hermes_home, get_config_path, read_raw_config
 +from hermes_cli.skin_engine import get_ui_text
  from hermes_constants import OPENROUTER_BASE_URL
+ from utils import atomic_replace
  
  logger = logging.getLogger(__name__)
  
@@ -6028,7 +5985,7 @@ index 00685436..75c17ea0 100644
  try:
      import fcntl
  except Exception:
-@@ -3695,23 +3700,27 @@ def _prompt_model_selection(
+@@ -3763,23 +3768,27 @@ def _prompt_model_selection(
          else:
              base = mid
          if mid == current_model:
@@ -6061,7 +6018,7 @@ index 00685436..75c17ea0 100644
  
      # ANSI escape for dim text
      _DIM = "\033[2m"
-@@ -3722,8 +3731,8 @@ def _prompt_model_selection(
+@@ -3790,8 +3799,8 @@ def _prompt_model_selection(
          from simple_term_menu import TerminalMenu
  
          choices = [f"  {_label(mid)}" for mid in ordered]
@@ -6072,7 +6029,7 @@ index 00685436..75c17ea0 100644
  
          # Print the unavailable block BEFORE the menu via regular print().
          # simple_term_menu pads title lines to terminal width (causes wrapping),
-@@ -3736,9 +3745,13 @@ def _prompt_model_selection(
+@@ -3804,9 +3813,13 @@ def _prompt_model_selection(
              for mid in _unavailable:
                  print(f"{_DIM}     {_label(mid)}{_RESET}")
              print()
@@ -6088,7 +6045,7 @@ index 00685436..75c17ea0 100644
          else:
              effective_title = menu_title
  
-@@ -3761,7 +3774,7 @@ def _prompt_model_selection(
+@@ -3829,7 +3842,7 @@ def _prompt_model_selection(
          if idx < len(ordered):
              return ordered[idx]
          elif idx == len(ordered):
@@ -6097,7 +6054,7 @@ index 00685436..75c17ea0 100644
              return custom if custom else None
          return None
      except (ImportError, NotImplementedError, OSError, subprocess.SubprocessError):
-@@ -3773,33 +3786,39 @@ def _prompt_model_selection(
+@@ -3841,33 +3854,39 @@ def _prompt_model_selection(
      for i, mid in enumerate(ordered, 1):
          print(f"  {i:>{num_width}}. {_label(mid)}")
      n = len(ordered)
@@ -6144,7 +6101,7 @@ index 00685436..75c17ea0 100644
          except (KeyboardInterrupt, EOFError):
              return None
  
-@@ -3823,9 +3842,14 @@ def _save_model_choice(model_id: str) -> None:
+@@ -3891,9 +3910,14 @@ def _save_model_choice(model_id: str) -> None:
  
  def login_command(args) -> None:
      """Deprecated: use 'hermes model' or 'hermes setup' instead."""
@@ -6162,7 +6119,7 @@ index 00685436..75c17ea0 100644
      raise SystemExit(0)
  
  
-@@ -3849,19 +3873,19 @@ def _login_openai_codex(
+@@ -3917,19 +3941,19 @@ def _login_openai_codex(
              # the user "Login successful!".
              _resolved_key = existing.get("api_key", "")
              if isinstance(_resolved_key, str) and _resolved_key and not _codex_access_token_is_expiring(_resolved_key, 60):
@@ -6187,7 +6144,7 @@ index 00685436..75c17ea0 100644
          except AuthError:
              pass
  
-@@ -3869,10 +3893,20 @@ def _login_openai_codex(
+@@ -3937,10 +3961,20 @@ def _login_openai_codex(
      if not force_new_login:
          cli_tokens = _import_codex_cli_tokens()
          if cli_tokens:
@@ -6211,7 +6168,7 @@ index 00685436..75c17ea0 100644
              except (EOFError, KeyboardInterrupt):
                  do_import = "n"
              if do_import in ("y", "yes"):
-@@ -3880,15 +3914,15 @@ def _login_openai_codex(
+@@ -3948,15 +3982,15 @@ def _login_openai_codex(
                  base_url = os.getenv("HERMES_CODEX_BASE_URL", "").strip().rstrip("/") or DEFAULT_CODEX_BASE_URL
                  config_path = _update_config_for_provider("openai-codex", base_url)
                  print()
@@ -6232,7 +6189,7 @@ index 00685436..75c17ea0 100644
      print()
  
      creds = _codex_device_code_login()
-@@ -3897,10 +3931,10 @@ def _login_openai_codex(
+@@ -3965,10 +3999,10 @@ def _login_openai_codex(
      _save_codex_tokens(creds["tokens"], creds.get("last_refresh"))
      config_path = _update_config_for_provider("openai-codex", creds.get("base_url", DEFAULT_CODEX_BASE_URL))
      print()
@@ -6246,7 +6203,7 @@ index 00685436..75c17ea0 100644
  
  
  def _codex_device_code_login() -> Dict[str, Any]:
-@@ -3942,12 +3976,12 @@ def _codex_device_code_login() -> Dict[str, Any]:
+@@ -4010,12 +4044,12 @@ def _codex_device_code_login() -> Dict[str, Any]:
          )
  
      # Step 2: Show user the code
@@ -6263,7 +6220,7 @@ index 00685436..75c17ea0 100644
  
      # Step 3: Poll for authorization code
      max_wait = 15 * 60  # 15 minutes
-@@ -4081,12 +4115,12 @@ def _nous_device_code_login(
+@@ -4149,12 +4183,12 @@ def _nous_device_code_login(
      if _is_remote_session():
          open_browser = False
  
@@ -6280,7 +6237,7 @@ index 00685436..75c17ea0 100644
  
      with httpx.Client(timeout=timeout, headers={"Accept": "application/json"}, verify=verify) as client:
          device_data = _request_device_code(
-@@ -4102,19 +4136,19 @@ def _nous_device_code_login(
+@@ -4170,19 +4204,19 @@ def _nous_device_code_login(
          interval = int(device_data["interval"])
  
          print()
@@ -6306,7 +6263,7 @@ index 00685436..75c17ea0 100644
  
          token_data = _poll_for_token(
              client=client,
-@@ -4133,7 +4167,7 @@ def _nous_device_code_login(
+@@ -4201,7 +4235,7 @@ def _nous_device_code_login(
          or requested_inference_url
      )
      if resolved_inference_url != requested_inference_url:
@@ -6315,7 +6272,7 @@ index 00685436..75c17ea0 100644
  
      auth_state = {
          "portal_base_url": portal_base_url,
-@@ -4171,10 +4205,10 @@ def _nous_device_code_login(
+@@ -4239,10 +4273,10 @@ def _nous_device_code_login(
                  "portal_base_url", DEFAULT_NOUS_PORTAL_URL
              ).rstrip("/")
              print()
@@ -6329,7 +6286,7 @@ index 00685436..75c17ea0 100644
              raise SystemExit(1)
          raise
  
-@@ -4218,8 +4252,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+@@ -4286,8 +4320,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
              saved_to = _save_auth_store(auth_store)
  
          print()
@@ -6340,7 +6297,7 @@ index 00685436..75c17ea0 100644
  
          # Resolve model BEFORE writing provider to config.yaml so we never
          # leave the config in a half-updated state (provider=nous but model
-@@ -4252,7 +4286,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+@@ -4320,7 +4354,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
                      )
              _portal = auth_state.get("portal_base_url", "")
              if model_ids:
@@ -6349,7 +6306,7 @@ index 00685436..75c17ea0 100644
                  selected_model = _prompt_model_selection(
                      model_ids, pricing=pricing,
                      unavailable_models=unavailable_models,
-@@ -4260,14 +4294,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+@@ -4328,14 +4362,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
                  )
              elif unavailable_models:
                  _url = (_portal or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
@@ -6368,7 +6325,7 @@ index 00685436..75c17ea0 100644
  
          # Write provider + model atomically so config is never mismatched.
          # If no model was selected (user picked "Skip (keep current)",
-@@ -4287,8 +4321,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+@@ -4355,8 +4389,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
                      auth_store.pop("active_provider", None)
                  _save_auth_store(auth_store)
              print()
@@ -6379,7 +6336,7 @@ index 00685436..75c17ea0 100644
              return
  
          config_path = _update_config_for_provider(
-@@ -4296,14 +4330,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+@@ -4364,14 +4398,14 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
          )
          if selected_model:
              _save_model_choice(selected_model)
@@ -6398,7 +6355,7 @@ index 00685436..75c17ea0 100644
          raise SystemExit(1)
  
  
-@@ -4312,14 +4346,14 @@ def logout_command(args) -> None:
+@@ -4380,14 +4414,14 @@ def logout_command(args) -> None:
      provider_id = getattr(args, "provider", None)
  
      if provider_id and not is_known_auth_provider(provider_id):
@@ -6415,7 +6372,7 @@ index 00685436..75c17ea0 100644
          return
  
      config_matches = _config_provider_matches(target)
-@@ -4327,10 +4361,10 @@ def logout_command(args) -> None:
+@@ -4395,10 +4429,10 @@ def logout_command(args) -> None:
  
      if clear_provider_auth(target) or config_matches:
          _reset_config_provider()
@@ -6431,7 +6388,7 @@ index 00685436..75c17ea0 100644
 -        print(f"No auth state found for {provider_name}.")
 +        print(_ui("logout.no_auth_state", "No auth state found for {provider}.", provider=provider_name))
 diff --git a/hermes_cli/banner.py b/hermes_cli/banner.py
-index 0f792592..329db1c9 100644
+index d46c85399..6fd4682c6 100644
 --- a/hermes_cli/banner.py
 +++ b/hermes_cli/banner.py
 @@ -13,6 +13,7 @@ from pathlib import Path
@@ -6568,7 +6525,7 @@ index 0f792592..329db1c9 100644
      except Exception:
          pass  # Never break the banner over an update check
 diff --git a/hermes_cli/commands.py b/hermes_cli/commands.py
-index efff5718..c23c33e5 100644
+index 7e3e14c54..95de91cf7 100644
 --- a/hermes_cli/commands.py
 +++ b/hermes_cli/commands.py
 @@ -32,6 +32,8 @@ except ImportError:  # pragma: no cover
@@ -6580,7 +6537,7 @@ index efff5718..c23c33e5 100644
  
  # ---------------------------------------------------------------------------
  # CommandDef dataclass
-@@ -205,9 +207,11 @@ def resolve_command(name: str) -> CommandDef | None:
+@@ -215,9 +217,11 @@ def resolve_command(name: str) -> CommandDef | None:
  
  def _build_description(cmd: CommandDef) -> str:
      """Build a CLI-facing description string including usage hint."""
@@ -6594,7 +6551,7 @@ index efff5718..c23c33e5 100644
  
  
  # Backwards-compatible flat dict: "/command" -> description
-@@ -216,7 +220,9 @@ for _cmd in COMMAND_REGISTRY:
+@@ -226,7 +230,9 @@ for _cmd in COMMAND_REGISTRY:
      if not _cmd.gateway_only:
          COMMANDS[f"/{_cmd.name}"] = _build_description(_cmd)
          for _alias in _cmd.aliases:
@@ -6605,7 +6562,7 @@ index efff5718..c23c33e5 100644
  
  # Backwards-compatible categorized dict
  COMMANDS_BY_CATEGORY: dict[str, dict[str, str]] = {}
-@@ -389,8 +395,10 @@ def gateway_help_lines() -> list[str]:
+@@ -399,8 +405,10 @@ def gateway_help_lines() -> list[str]:
              if a.replace("-", "_") == cmd.name.replace("-", "_") and a != cmd.name:
                  continue
              alias_parts.append(f"`/{a}`")
@@ -6619,15 +6576,16 @@ index efff5718..c23c33e5 100644
  
  
 diff --git a/hermes_cli/debug.py b/hermes_cli/debug.py
-index 8915d8a6..6ba6bb24 100644
+index 06be05a35..b4551d9a8 100644
 --- a/hermes_cli/debug.py
 +++ b/hermes_cli/debug.py
-@@ -17,9 +17,14 @@ from dataclasses import dataclass
+@@ -16,10 +16,15 @@ from dataclasses import dataclass
  from pathlib import Path
  from typing import Optional
  
 +from hermes_cli.skin_engine import get_ui_text
  from hermes_constants import get_hermes_home
+ from utils import atomic_replace
  
  
 +def _ui(key: str, default: str = "", **format_args) -> str:
@@ -6637,7 +6595,7 @@ index 8915d8a6..6ba6bb24 100644
  # ---------------------------------------------------------------------------
  # Paste services — try paste.rs first, dpaste.com as fallback.
  # ---------------------------------------------------------------------------
-@@ -377,14 +382,22 @@ def _capture_log_snapshot(
+@@ -383,14 +388,22 @@ def _capture_log_snapshot(
      log_path = _resolve_log_path(log_name)
      if log_path is None:
          primary = _primary_log_path(log_name)
@@ -6662,7 +6620,7 @@ index 8915d8a6..6ba6bb24 100644
  
          with open(log_path, "rb") as f:
              if size <= max_bytes:
-@@ -430,11 +443,23 @@ def _capture_log_snapshot(
+@@ -436,11 +449,23 @@ def _capture_log_snapshot(
  
          full_text = full_raw.decode("utf-8", errors="replace")
          if truncated:
@@ -6688,7 +6646,7 @@ index 8915d8a6..6ba6bb24 100644
  
  
  def _capture_default_log_snapshots(log_lines: int) -> dict[str, LogSnapshot]:
-@@ -528,9 +553,9 @@ def run_debug_share(args):
+@@ -534,9 +559,9 @@ def run_debug_share(args):
      local_only = getattr(args, "local", False)
  
      if not local_only:
@@ -6700,7 +6658,7 @@ index 8915d8a6..6ba6bb24 100644
  
      # Capture dump once — prepended to every paste for context.
      dump_text = _capture_dump()
-@@ -564,7 +589,7 @@ def run_debug_share(args):
+@@ -570,7 +595,7 @@ def run_debug_share(args):
              print(gateway_log)
          return
  
@@ -6709,7 +6667,7 @@ index 8915d8a6..6ba6bb24 100644
      urls: dict[str, str] = {}
      failures: list[str] = []
  
-@@ -572,7 +597,7 @@ def run_debug_share(args):
+@@ -578,7 +603,7 @@ def run_debug_share(args):
      try:
          urls["Report"] = upload_to_pastebin(report, expiry_days=expiry)
      except RuntimeError as exc:
@@ -6718,7 +6676,7 @@ index 8915d8a6..6ba6bb24 100644
          print("\nFull report printed below — copy-paste it manually:\n")
          print(report)
          sys.exit(1)
-@@ -593,42 +618,43 @@ def run_debug_share(args):
+@@ -599,42 +624,43 @@ def run_debug_share(args):
  
      # Print results
      label_width = max(len(k) for k in urls)
@@ -6773,7 +6731,7 @@ index 8915d8a6..6ba6bb24 100644
  
  
  def run_debug(args):
-@@ -650,16 +676,16 @@ def run_debug(args):
+@@ -656,16 +682,16 @@ def run_debug(args):
          run_debug_delete(args)
      else:
          # Default: show help
@@ -6801,7 +6759,7 @@ index 8915d8a6..6ba6bb24 100644
 +        print(_ui("delete_options_label", "Options (delete):"))
 +        print(_ui("delete_arg", "  <url> ...    One or more paste URLs to delete"))
 diff --git a/hermes_cli/gateway.py b/hermes_cli/gateway.py
-index 3b828fec..3baa0751 100644
+index a3896b5bb..919e73a08 100644
 --- a/hermes_cli/gateway.py
 +++ b/hermes_cli/gateway.py
 @@ -36,6 +36,11 @@ from hermes_cli.setup import (
@@ -7172,7 +7130,7 @@ index 3b828fec..3baa0751 100644
          ],
      },
      {
-@@ -2994,23 +3094,23 @@ def _setup_dingtalk():
+@@ -3012,23 +3112,23 @@ def _setup_dingtalk():
  def _setup_wecom():
      """Interactive setup for WeCom — scan QR code or manual credential input."""
      print()
@@ -7202,7 +7160,7 @@ index 3b828fec..3baa0751 100644
  
      bot_id = None
      secret = None
-@@ -3020,7 +3120,7 @@ def _setup_wecom():
+@@ -3038,7 +3138,7 @@ def _setup_wecom():
          try:
              from gateway.platforms.wecom import qr_scan_for_bot_info
          except Exception as exc:
@@ -7211,7 +7169,7 @@ index 3b828fec..3baa0751 100644
              qr_scan_for_bot_info = None
  
          if qr_scan_for_bot_info is not None:
-@@ -3028,36 +3128,36 @@ def _setup_wecom():
+@@ -3046,36 +3146,36 @@ def _setup_wecom():
                  credentials = qr_scan_for_bot_info()
              except KeyboardInterrupt:
                  print()
@@ -7260,7 +7218,7 @@ index 3b828fec..3baa0751 100644
              return
  
      # ── Save core credentials ──
-@@ -3066,46 +3166,46 @@ def _setup_wecom():
+@@ -3084,46 +3184,46 @@ def _setup_wecom():
  
      # ── Allowed users (deny-by-default security) ──
      print()
@@ -7324,8 +7282,8 @@ index 3b828fec..3baa0751 100644
 +    print_success(_ui("wecom.setup.configured", "💬 企业微信已配置！"))
  
  
- def _is_service_installed() -> bool:
-@@ -3190,8 +3290,8 @@ def _setup_weixin():
+ def _setup_yuanbao():
+@@ -3214,8 +3314,8 @@ def _setup_weixin():
          return
  
      print()
@@ -7336,7 +7294,7 @@ index 3b828fec..3baa0751 100644
          return
  
      import asyncio
-@@ -3688,12 +3788,13 @@ def gateway_setup():
+@@ -3709,12 +3809,13 @@ def gateway_setup():
          managed_error("run gateway setup")
          return
  
@@ -7353,7 +7311,7 @@ index 3b828fec..3baa0751 100644
      print(color("└─────────────────────────────────────────────────────────┘", Colors.MAGENTA))
  
      # ── Gateway service status ──
-@@ -3710,37 +3811,37 @@ def gateway_setup():
+@@ -3731,37 +3832,37 @@ def gateway_setup():
          print()
  
      if service_installed and service_running:
@@ -7401,7 +7359,7 @@ index 3b828fec..3baa0751 100644
  
          if choice == len(_PLATFORMS):
              break
-@@ -3778,7 +3879,7 @@ def gateway_setup():
+@@ -3799,7 +3900,7 @@ def gateway_setup():
          service_running = _is_service_running()
  
          if service_running:
@@ -7410,7 +7368,7 @@ index 3b828fec..3baa0751 100644
                  try:
                      if supports_systemd_services():
                          systemd_restart()
-@@ -3786,32 +3887,40 @@ def gateway_setup():
+@@ -3807,32 +3908,40 @@ def gateway_setup():
                          launchd_restart()
                      else:
                          stop_profile_gateway()
@@ -7458,7 +7416,7 @@ index 3b828fec..3baa0751 100644
                      try:
                          installed_scope = None
                          did_install = False
-@@ -3821,43 +3930,49 @@ def gateway_setup():
+@@ -3842,43 +3951,49 @@ def gateway_setup():
                              launchd_install(force=False)
                              did_install = True
                          print()
@@ -7526,7 +7484,7 @@ index 3b828fec..3baa0751 100644
  
      print()
  
-@@ -3873,7 +3988,7 @@ def gateway_command(args):
+@@ -3894,7 +4009,7 @@ def gateway_command(args):
      except UserSystemdUnavailableError as e:
          # Clean, actionable message instead of a traceback when the user D-Bus
          # session is unreachable (fresh SSH shell, no linger, container, etc.).
@@ -7535,7 +7493,7 @@ index 3b828fec..3baa0751 100644
          for line in str(e).splitlines():
              print(f"  {line}")
          sys.exit(1)
-@@ -3970,7 +4085,7 @@ def _gateway_command_inner(args):
+@@ -3991,7 +4106,7 @@ def _gateway_command_inner(args):
              # Kill all stale gateway processes across all profiles before starting
              killed = kill_gateway_processes(all_profiles=True)
              if killed:
@@ -7544,7 +7502,7 @@ index 3b828fec..3baa0751 100644
                  _wait_for_gateway_exit(timeout=10.0, force_after=5.0)
  
          if is_termux():
-@@ -4026,9 +4141,9 @@ def _gateway_command_inner(args):
+@@ -4047,9 +4162,9 @@ def _gateway_command_inner(args):
              killed = kill_gateway_processes(all_profiles=True)
              total = killed + (1 if service_available else 0)
              if total:
@@ -7556,7 +7514,7 @@ index 3b828fec..3baa0751 100644
          else:
              # Default: stop only the current profile's gateway
              service_available = False
-@@ -4048,9 +4163,9 @@ def _gateway_command_inner(args):
+@@ -4069,9 +4184,9 @@ def _gateway_command_inner(args):
              if not service_available:
                  # No systemd/launchd — use profile-scoped PID file
                  if stop_profile_gateway():
@@ -7568,7 +7526,7 @@ index 3b828fec..3baa0751 100644
              else:
                  print(f"✓ Stopped {get_service_name()} service")
      
-@@ -4079,7 +4194,7 @@ def _gateway_command_inner(args):
+@@ -4100,7 +4215,7 @@ def _gateway_command_inner(args):
              killed = kill_gateway_processes(all_profiles=True)
              total = killed + (1 if service_stopped else 0)
              if total:
@@ -7578,10 +7536,10 @@ index 3b828fec..3baa0751 100644
  
              # Start the current profile's service fresh
 diff --git a/hermes_cli/main.py b/hermes_cli/main.py
-index 7de68d2c..32bb043d 100644
+index ba526354a..55aef0a1e 100644
 --- a/hermes_cli/main.py
 +++ b/hermes_cli/main.py
-@@ -51,6 +51,21 @@ import sys
+@@ -52,6 +52,21 @@ import sys
  from pathlib import Path
  from typing import Optional
  
@@ -7603,7 +7561,7 @@ index 7de68d2c..32bb043d 100644
  def _add_accept_hooks_flag(parser) -> None:
      """Attach the ``--accept-hooks`` flag.  Shared across every agent
      subparser so the flag works regardless of CLI position."""
-@@ -74,9 +89,13 @@ def _require_tty(command_name: str) -> None:
+@@ -75,9 +90,13 @@ def _require_tty(command_name: str) -> None:
      """
      if not sys.stdin.isatty():
          print(
@@ -7620,7 +7578,7 @@ index 7de68d2c..32bb043d 100644
              file=sys.stderr,
          )
          sys.exit(1)
-@@ -3364,11 +3383,11 @@ def _model_flow_copilot_acp(config, current_model=""):
+@@ -3778,11 +3797,11 @@ def _model_flow_copilot_acp(config, current_model=""):
      )
      effective_base = status.get("base_url") or pconfig.inference_base_url
  
@@ -7637,7 +7595,7 @@ index 7de68d2c..32bb043d 100644
      print()
  
      try:
-@@ -3376,7 +3395,10 @@ def _model_flow_copilot_acp(config, current_model=""):
+@@ -3790,7 +3809,10 @@ def _model_flow_copilot_acp(config, current_model=""):
      except Exception as exc:
          print(f"  ⚠ {exc}")
          print(
@@ -7649,7 +7607,7 @@ index 7de68d2c..32bb043d 100644
          )
          return
  
-@@ -4549,13 +4571,16 @@ def cmd_version(args):
+@@ -5032,13 +5054,16 @@ def cmd_version(args):
  
          behind = check_for_updates()
          if behind and behind > 0:
@@ -7671,7 +7629,7 @@ index 7de68d2c..32bb043d 100644
          pass
  
 diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
-index 5619e740..85c94379 100644
+index 6ca6f8adf..fdf66ba03 100644
 --- a/hermes_cli/skin_engine.py
 +++ b/hermes_cli/skin_engine.py
 @@ -120,6 +120,141 @@ from hermes_constants import get_hermes_home
@@ -7857,7 +7815,7 @@ index 5619e740..85c94379 100644
          tool_emojis=data.get("tool_emojis", {}),
          banner_logo=data.get("banner_logo", ""),
 diff --git a/hermes_cli/status.py b/hermes_cli/status.py
-index d07e1a82..c901e39b 100644
+index 31aa1d5c2..f4f93f0d5 100644
 --- a/hermes_cli/status.py
 +++ b/hermes_cli/status.py
 @@ -17,9 +17,14 @@ from hermes_cli.config import get_env_path, get_env_value, get_hermes_home, load
@@ -7875,16 +7833,20 @@ index d07e1a82..c901e39b 100644
  def check_mark(ok: bool) -> str:
      if ok:
          return color("✓", Colors.GREEN)
-@@ -28,7 +33,7 @@ def check_mark(ok: bool) -> str:
- def redact_key(key: str) -> str:
-     """Redact an API key for display."""
-     if not key:
--        return "(not set)"
-+        return _ui("labels.not_set", "（未设置）")
-     if len(key) < 12:
-         return "***"
-     return key[:4] + "..." + key[-4:]
-@@ -37,11 +42,11 @@ def redact_key(key: str) -> str:
+@@ -29,22 +34,20 @@ def redact_key(key: str) -> str:
+     """Redact an API key for display.
+ 
+     Thin wrapper over :func:`agent.redact.mask_secret`. Preserves the
+-    "(not set)" placeholder in dim color to match ``hermes config``'s
+-    output (previously this variant was missing the DIM color —
+-    consolidated via PR that also introduced ``mask_secret``).
++    localized empty placeholder in dim color to match ``hermes config`` output.
+     """
+     from agent.redact import mask_secret
+-    return mask_secret(key, empty=color("(not set)", Colors.DIM))
++    return mask_secret(key, empty=color(_ui("labels.not_set", "（未设置）"), Colors.DIM))
+ 
+ 
  def _format_iso_timestamp(value) -> str:
      """Format ISO timestamps for status output, converting to local timezone."""
      if not value or not isinstance(value, str):
@@ -7898,7 +7860,7 @@ index d07e1a82..c901e39b 100644
      if text.endswith("Z"):
          text = text[:-1] + "+00:00"
      try:
-@@ -62,7 +67,7 @@ def _configured_model_label(config: dict) -> str:
+@@ -65,7 +68,7 @@ def _configured_model_label(config: dict) -> str:
          model = model_cfg.strip()
      else:
          model = ""
@@ -7907,7 +7869,7 @@ index d07e1a82..c901e39b 100644
  
  
  def _effective_provider_label() -> str:
-@@ -89,33 +94,34 @@ def show_status(args):
+@@ -92,33 +95,34 @@ def show_status(args):
      
      print()
      print(color("┌─────────────────────────────────────────────────────────┐", Colors.CYAN))
@@ -7950,7 +7912,7 @@ index d07e1a82..c901e39b 100644
      
      keys = {
          "OpenRouter": "OPENROUTER_API_KEY",
-@@ -151,7 +157,7 @@ def show_status(args):
+@@ -154,7 +158,7 @@ def show_status(args):
      # Auth Providers (OAuth)
      # =========================================================================
      print()
@@ -7959,7 +7921,7 @@ index d07e1a82..c901e39b 100644
  
      try:
          from hermes_cli.auth import get_nous_auth_status, get_codex_auth_status, get_qwen_auth_status
-@@ -165,54 +171,56 @@ def show_status(args):
+@@ -168,54 +172,56 @@ def show_status(args):
  
      nous_logged_in = bool(nous_status.get("logged_in"))
      nous_error = nous_status.get("error")
@@ -8034,7 +7996,7 @@ index d07e1a82..c901e39b 100644
  
      # =========================================================================
      # Nous Subscription Features
-@@ -220,34 +228,34 @@ def show_status(args):
+@@ -223,34 +229,34 @@ def show_status(args):
      if managed_nous_tools_enabled():
          features = get_nous_subscription_features(config)
          print()
@@ -8082,7 +8044,7 @@ index d07e1a82..c901e39b 100644
          except Exception:
              pass
  
-@@ -255,7 +263,7 @@ def show_status(args):
+@@ -258,7 +264,7 @@ def show_status(args):
      # API-Key Providers
      # =========================================================================
      print()
@@ -8091,7 +8053,7 @@ index d07e1a82..c901e39b 100644
  
      apikey_providers = {
          "Z.AI / GLM":       ("GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY"),
-@@ -271,14 +279,14 @@ def show_status(args):
+@@ -274,7 +280,7 @@ def show_status(args):
              if key_val:
                  break
          configured = bool(key_val)
@@ -8099,7 +8061,8 @@ index d07e1a82..c901e39b 100644
 +        label = _ui("labels.configured", "已配置") if configured else _ui("labels.not_configured_run_model", "未配置（运行：hermes model）")
          print(f"  {pname:<16} {check_mark(configured)} {label}")
  
-     # =========================================================================
+     # LM Studio reachability — only probe when it's the active provider so
+@@ -298,7 +304,7 @@ def show_status(args):
      # Terminal Configuration
      # =========================================================================
      print()
@@ -8108,7 +8071,7 @@ index d07e1a82..c901e39b 100644
      
      terminal_env = os.getenv("TERMINAL_ENV", "")
      if not terminal_env:
-@@ -289,28 +297,29 @@ def show_status(args):
+@@ -309,28 +315,29 @@ def show_status(args):
              terminal_env = _cfg.get("terminal", {}).get("backend", "local")
          except Exception:
              terminal_env = "local"
@@ -8145,7 +8108,7 @@ index d07e1a82..c901e39b 100644
      
      platforms = {
          "Telegram": ("TELEGRAM_BOT_TOKEN", "TELEGRAM_HOME_CHANNEL"),
-@@ -340,7 +349,7 @@ def show_status(args):
+@@ -361,7 +368,7 @@ def show_status(args):
          if not home_channel and home_var == "QQBOT_HOME_CHANNEL":
              home_channel = os.getenv("QQ_HOME_CHANNEL", "")
          
@@ -8154,7 +8117,7 @@ index d07e1a82..c901e39b 100644
          if home_channel:
              status += f" (home: {home_channel})"
          
-@@ -350,43 +359,51 @@ def show_status(args):
+@@ -371,43 +378,51 @@ def show_status(args):
      # Gateway Status
      # =========================================================================
      print()
@@ -8224,7 +8187,7 @@ index d07e1a82..c901e39b 100644
      
      jobs_file = get_hermes_home() / "cron" / "jobs.json"
      if jobs_file.exists():
-@@ -396,17 +413,17 @@ def show_status(args):
+@@ -417,17 +432,17 @@ def show_status(args):
                  data = json.load(f)
                  jobs = data.get("jobs", [])
                  enabled_jobs = [j for j in jobs if j.get("enabled", True)]
@@ -8246,7 +8209,7 @@ index d07e1a82..c901e39b 100644
      
      sessions_file = get_hermes_home() / "sessions" / "sessions.json"
      if sessions_file.exists():
-@@ -414,18 +431,18 @@ def show_status(args):
+@@ -435,18 +450,18 @@ def show_status(args):
          try:
              with open(sessions_file, encoding="utf-8") as f:
                  data = json.load(f)
@@ -8269,7 +8232,7 @@ index d07e1a82..c901e39b 100644
          
          # Check OpenRouter connectivity
          openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
-@@ -438,9 +455,10 @@ def show_status(args):
+@@ -459,9 +474,10 @@ def show_status(args):
                      timeout=10
                  )
                  ok = response.status_code == 200
@@ -8282,7 +8245,7 @@ index d07e1a82..c901e39b 100644
          
          # Check gateway port
          try:
-@@ -452,12 +470,12 @@ def show_status(args):
+@@ -473,12 +489,12 @@ def show_status(args):
              # Port in use = gateway likely running
              port_in_use = result == 0
              # This is informational, not necessarily bad
@@ -8299,7 +8262,7 @@ index d07e1a82..c901e39b 100644
 +    print(color(_ui("footer.setup", "  运行 `hermes setup` 继续配置"), Colors.DIM))
      print()
 diff --git a/hermes_cli/tips.py b/hermes_cli/tips.py
-index db66e1db..c8b374e6 100644
+index 8e07323b6..4c9526237 100644
 --- a/hermes_cli/tips.py
 +++ b/hermes_cli/tips.py
 @@ -2,13 +2,15 @@
@@ -8317,9 +8280,9 @@ index db66e1db..c8b374e6 100644
 -TIPS = [
 +TIPS = get_tip_corpus([
      # --- Slash Commands ---
-     "/btw <question> asks a quick side question without tools or history — great for clarifications.",
-     "/background <prompt> runs a task in a separate session while your current one stays free.",
-@@ -333,7 +335,7 @@ TIPS = [
+     "/background <prompt> (alias /bg or /btw) runs a task in a separate session while your current one stays free.",
+     "/branch forks the current session so you can explore a different direction without losing progress.",
+@@ -331,7 +333,7 @@ TIPS = [
      "MCP ${ENV_VAR} placeholders in config are resolved at server spawn — including vars from ~/.hermes/.env.",
      "Skills from trusted repos (NousResearch) get a 'trusted' security level; community skills get extra scanning.",
      "The skills quarantine at ~/.hermes/skills/.hub/quarantine/ holds skills pending security review.",

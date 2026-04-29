@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0
+
+- Publish `releases/58a6171b-terminal-discord1/` as the current latest release.
+- Bind the package to official Hermes `58a6171bfb0ba2ca10b1b08854511736cd77a623`.
+- Re-export the terminal/Discord Chinese display patch from a clean official baseline after upstream changed CLI and gateway files.
+- Preserve the declared Discord proxy target-host exception and keep it limited to existing `NO_PROXY` handling.
+- Drop stale private `/btw` overlay bodies during conflict resolution and keep the newer upstream command/session behavior.
+
+## 1.0.1
+
+- Re-export `releases/e5647d78-terminal-discord1/patches/hermes-zh.patch` from the same official Hermes baseline after adding one declared Discord gateway stability exception.
+- Add Discord target hosts to existing Hermes proxy resolution call sites so profile-scoped `NO_PROXY` can bypass a broken macOS system proxy for permanent Discord gateways.
+- Keep the exception narrow: no message routing, command dispatch, session state, auth semantics, model prompts, or Discord protocol identifiers are changed.
+- Document the no-source alternatives that were audited and rejected: relying only on `.env` `NO_PROXY`, macOS proxy bypass domains, empty `DISCORD_PROXY`, or a permanently healthy local proxy.
+- Update README, AGENTS, manifest metadata, and maintenance skill guidance so future agents treat the proxy patch as a declared removable exception, not hidden runtime drift.
+
 ## 1.0.0
 
 - Publish `releases/e5647d78-terminal-discord1/` as the current latest release.
