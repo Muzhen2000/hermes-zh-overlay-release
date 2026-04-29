@@ -8,16 +8,18 @@
 
 这个仓库提供的是：官方 Hermes 某个 commit + 对应该 commit 的最小中文包。它不是 fork，也不是自动追最新的长期补丁系统。
 
-## 应用最新中文包
+## 应用最新中文包（推荐）
+
+生产环境推荐显式写出 `--hermes-home "$HOME/.hermes"`，这样可以确认中文包应用到默认 Hermes home，不依赖脚本默认值。
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 -
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes"
 ```
 
 ## 校验一致性
 
 ```bash
-python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
+python3 "$HOME/.hermes/hermes-zh-overlay-release/scripts/verify_release.py" --source-dir "$HOME/.hermes/hermes-agent"
 ```
 
 这两行是测试用户的标准路径：第一行应用，第二行验证。
@@ -25,7 +27,17 @@ python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-d
 ## 应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 58a6171b-terminal-discord1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 58a6171b-terminal-discord1
+```
+
+## 安全测试远端命令
+
+如果只想确认远端命令有效，但不想修改自己的 `~/.hermes`，使用临时 Hermes home：
+
+```bash
+tmp="$(mktemp -d /tmp/hermes-zh-apply.XXXXXX)"
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$tmp"
+python3 "$tmp/hermes-zh-overlay-release/scripts/verify_release.py" --repo-root "$tmp/hermes-zh-overlay-release" --source-dir "$tmp/hermes-agent"
 ```
 
 ## 这条命令会做什么

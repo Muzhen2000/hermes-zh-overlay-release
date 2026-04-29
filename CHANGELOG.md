@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Update README and install docs with the remote-verified application commands: explicit `--hermes-home "$HOME/.hermes"`, pinned release application, and a temporary-directory safety test path.
+
 ## 1.1.1
 - Complete command localization coverage for the current 58-command registry: add `busy`, `curator`, `footer`, `indicator`, and `redraw`; remove obsolete `btw` and `provider` entries.
 

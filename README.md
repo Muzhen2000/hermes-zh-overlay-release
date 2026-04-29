@@ -23,26 +23,36 @@
 - Discord slash 命令说明、参数说明、固定回复、按钮标签、model picker、approval/update 卡片
 - Discord 动态命令说明：由 Hermes 命令注册表生成的命令也会走中文说明
 
-## 两行测试命令
+## 推荐应用命令
 
-1. 应用仓库当前最新中文包：
+生产环境推荐显式写出 `--hermes-home "$HOME/.hermes"`，这样用户复制命令时不会依赖脚本默认值，也更容易确认正在修改哪个 Hermes home。
+
+1. 应用仓库当前最新中文包到默认 Hermes home：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 -
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes"
 ```
 
 2. 校验本机 Hermes 与中文包是否一致：
 
 ```bash
-python3 ~/.hermes/hermes-zh-overlay-release/scripts/verify_release.py --source-dir ~/.hermes/hermes-agent
+python3 "$HOME/.hermes/hermes-zh-overlay-release/scripts/verify_release.py" --source-dir "$HOME/.hermes/hermes-agent"
 ```
 
 第二行通过，表示本机 Hermes 源码、本地中文包、当前 release 已经对应到同一版。
 
-如果要锁定当前 release：
+如果要锁定当前 release，使用：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --release 58a6171b-terminal-discord1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 58a6171b-terminal-discord1
+```
+
+如果要先在临时目录验证远端命令，不改自己的 `~/.hermes`，使用：
+
+```bash
+tmp="$(mktemp -d /tmp/hermes-zh-apply.XXXXXX)"
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$tmp"
+python3 "$tmp/hermes-zh-overlay-release/scripts/verify_release.py" --repo-root "$tmp/hermes-zh-overlay-release" --source-dir "$tmp/hermes-agent"
 ```
 
 如果安装命令报 `curl: (6) Could not resolve host: raw.githubusercontent.com`，这是本机网络或 DNS 解析问题，不是中文包本身失败。切换网络或稍后重试同一条命令。
