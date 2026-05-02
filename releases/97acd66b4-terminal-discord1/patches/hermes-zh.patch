@@ -1266,221 +1266,32 @@ index c8446f04d..2d34ba0ed 100644
                      line += f"[dim yellow] — run [bold]{managed_cmd}[/bold][/]"
                  right_lines.append(line)
 diff --git a/hermes_cli/commands.py b/hermes_cli/commands.py
-index 41b1dad50..ebf532f3f 100644
+index 41b1dad50..9748cdf97 100644
 --- a/hermes_cli/commands.py
 +++ b/hermes_cli/commands.py
-@@ -60,141 +60,141 @@ class CommandDef:
+@@ -21,6 +21,8 @@ from typing import Any
  
- COMMAND_REGISTRY: list[CommandDef] = [
-     # Session
--    CommandDef("new", "Start a new session (fresh session ID + history)", "Session",
-+    CommandDef("new", get_command_desc("new", Start a new session (fresh session ID + history), "Session",
-                aliases=("reset",)),
--    CommandDef("clear", "Clear screen and start a new session", "Session",
-+    CommandDef("clear", get_command_desc("clear", Clear screen and start a new session, "Session",
-                cli_only=True),
--    CommandDef("redraw", "Force a full UI repaint (recovers from terminal drift)", "Session",
-+    CommandDef("redraw", get_command_desc("redraw", Force a full UI repaint (recovers from terminal drift), "Session",
-                cli_only=True),
--    CommandDef("history", "Show conversation history", "Session",
-+    CommandDef("history", get_command_desc("history", Show conversation history, "Session",
-                cli_only=True),
--    CommandDef("save", "Save the current conversation", "Session",
-+    CommandDef("save", get_command_desc("save", Save the current conversation, "Session",
-                cli_only=True),
--    CommandDef("retry", "Retry the last message (resend to agent)", "Session"),
--    CommandDef("undo", "Remove the last user/assistant exchange", "Session"),
--    CommandDef("title", "Set a title for the current session", "Session",
-+    CommandDef("retry", get_command_desc("retry", Retry the last message (resend to agent), "Session"),
-+    CommandDef("undo", get_command_desc("undo", Remove the last user/assistant exchange, "Session"),
-+    CommandDef("title", get_command_desc("title", Set a title for the current session, "Session",
-                args_hint="[name]"),
--    CommandDef("branch", "Branch the current session (explore a different path)", "Session",
-+    CommandDef("branch", get_command_desc("branch", Branch the current session (explore a different path), "Session",
-                aliases=("fork",), args_hint="[name]"),
--    CommandDef("compress", "Manually compress conversation context", "Session",
-+    CommandDef("compress", get_command_desc("compress", Manually compress conversation context, "Session",
-                args_hint="[focus topic]"),
--    CommandDef("rollback", "List or restore filesystem checkpoints", "Session",
-+    CommandDef("rollback", get_command_desc("rollback", List or restore filesystem checkpoints, "Session",
-                args_hint="[number]"),
--    CommandDef("snapshot", "Create or restore state snapshots of Hermes config/state", "Session",
-+    CommandDef("snapshot", get_command_desc("snapshot", Create or restore state snapshots of Hermes config/state, "Session",
-                cli_only=True, aliases=("snap",), args_hint="[create|restore <id>|prune]"),
--    CommandDef("stop", "Kill all running background processes", "Session"),
--    CommandDef("approve", "Approve a pending dangerous command", "Session",
-+    CommandDef("stop", get_command_desc("stop", Kill all running background processes, "Session"),
-+    CommandDef("approve", get_command_desc("approve", Approve a pending dangerous command, "Session",
-                gateway_only=True, args_hint="[session|always]"),
--    CommandDef("deny", "Deny a pending dangerous command", "Session",
-+    CommandDef("deny", get_command_desc("deny", Deny a pending dangerous command, "Session",
-                gateway_only=True),
--    CommandDef("background", "Run a prompt in the background", "Session",
-+    CommandDef("background", get_command_desc("background", Run a prompt in the background, "Session",
-                aliases=("bg", "btw"), args_hint="<prompt>"),
--    CommandDef("agents", "Show active agents and running tasks", "Session",
-+    CommandDef("agents", get_command_desc("agents", Show active agents and running tasks, "Session",
-                aliases=("tasks",)),
--    CommandDef("queue", "Queue a prompt for the next turn (doesn't interrupt)", "Session",
-+    CommandDef("queue", get_command_desc("queue", Queue a prompt for the next turn (doesn't interrupt), "Session",
-                aliases=("q",), args_hint="<prompt>"),
--    CommandDef("steer", "Inject a message after the next tool call without interrupting", "Session",
-+    CommandDef("steer", get_command_desc("steer", Inject a message after the next tool call without interrupting, "Session",
-                args_hint="<prompt>"),
--    CommandDef("goal", "Set a standing goal Hermes works on across turns until achieved", "Session",
-+    CommandDef("goal", get_command_desc("goal", Set a standing goal Hermes works on across turns until achieved, "Session",
-                args_hint="[text | pause | resume | clear | status]"),
--    CommandDef("status", "Show session info", "Session"),
--    CommandDef("profile", "Show active profile name and home directory", "Info"),
--    CommandDef("sethome", "Set this chat as the home channel", "Session",
-+    CommandDef("status", get_command_desc("status", Show session info, "Session"),
-+    CommandDef("profile", get_command_desc("profile", Show active profile name and home directory, "Info"),
-+    CommandDef("sethome", get_command_desc("sethome", Set this chat as the home channel, "Session",
-                gateway_only=True, aliases=("set-home",)),
--    CommandDef("resume", "Resume a previously-named session", "Session",
-+    CommandDef("resume", get_command_desc("resume", Resume a previously-named session, "Session",
-                args_hint="[name]"),
+ from utils import is_truthy_value
  
-     # Configuration
--    CommandDef("config", "Show current configuration", "Configuration",
-+    CommandDef("config", get_command_desc("config", Show current configuration, "Configuration",
-                cli_only=True),
--    CommandDef("model", "Switch model for this session", "Configuration",
-+    CommandDef("model", get_command_desc("model", Switch model for this session, "Configuration",
-                aliases=("provider",), args_hint="[model] [--provider name] [--global]"),
--    CommandDef("gquota", "Show Google Gemini Code Assist quota usage", "Info",
-+    CommandDef("gquota", get_command_desc("gquota", Show Google Gemini Code Assist quota usage, "Info",
-                cli_only=True),
++from hermes_cli.skin_engine import get_command_desc, get_ui_text
++
+ # prompt_toolkit is an optional CLI dependency — only needed for
+ # SlashCommandCompleter and SlashCommandAutoSuggest.  Gateway and test
+ # environments that lack it must still be able to import this module
+@@ -226,9 +228,11 @@ def resolve_command(name: str) -> CommandDef | None:
  
--    CommandDef("personality", "Set a predefined personality", "Configuration",
-+    CommandDef("personality", get_command_desc("personality", Set a predefined personality, "Configuration",
-                args_hint="[name]"),
--    CommandDef("statusbar", "Toggle the context/model status bar", "Configuration",
-+    CommandDef("statusbar", get_command_desc("statusbar", Toggle the context/model status bar, "Configuration",
-                cli_only=True, aliases=("sb",)),
--    CommandDef("verbose", "Cycle tool progress display: off -> new -> all -> verbose",
-+    CommandDef("verbose", get_command_desc("verbose", Cycle tool progress display: off -> new -> all -> verbose,
-                "Configuration", cli_only=True,
-                gateway_config_gate="display.tool_progress_command"),
--    CommandDef("footer", "Toggle gateway runtime-metadata footer on final replies",
-+    CommandDef("footer", get_command_desc("footer", Toggle gateway runtime-metadata footer on final replies,
-                "Configuration", args_hint="[on|off|status]",
-                subcommands=("on", "off", "status")),
--    CommandDef("yolo", "Toggle YOLO mode (skip all dangerous command approvals)",
-+    CommandDef("yolo", get_command_desc("yolo", Toggle YOLO mode (skip all dangerous command approvals),
-                "Configuration"),
--    CommandDef("reasoning", "Manage reasoning effort and display", "Configuration",
-+    CommandDef("reasoning", get_command_desc("reasoning", Manage reasoning effort and display, "Configuration",
-                args_hint="[level|show|hide]",
-                subcommands=("none", "minimal", "low", "medium", "high", "xhigh", "show", "hide", "on", "off")),
--    CommandDef("fast", "Toggle fast mode — OpenAI Priority Processing / Anthropic Fast Mode (Normal/Fast)", "Configuration",
-+    CommandDef("fast", get_command_desc("fast", Toggle fast mode — OpenAI Priority Processing / Anthropic Fast Mode (Normal/Fast), "Configuration",
-                args_hint="[normal|fast|status]",
-                subcommands=("normal", "fast", "status", "on", "off")),
--    CommandDef("skin", "Show or change the display skin/theme", "Configuration",
-+    CommandDef("skin", get_command_desc("skin", Show or change the display skin/theme, "Configuration",
-                cli_only=True, args_hint="[name]"),
--    CommandDef("indicator", "Pick the TUI busy-indicator style", "Configuration",
-+    CommandDef("indicator", get_command_desc("indicator", Pick the TUI busy-indicator style, "Configuration",
-                cli_only=True, args_hint="[kaomoji|emoji|unicode|ascii]",
-                subcommands=("kaomoji", "emoji", "unicode", "ascii")),
--    CommandDef("voice", "Toggle voice mode", "Configuration",
-+    CommandDef("voice", get_command_desc("voice", Toggle voice mode, "Configuration",
-                args_hint="[on|off|tts|status]", subcommands=("on", "off", "tts", "status")),
--    CommandDef("busy", "Control what Enter does while Hermes is working", "Configuration",
-+    CommandDef("busy", get_command_desc("busy", Control what Enter does while Hermes is working, "Configuration",
-                cli_only=True, args_hint="[queue|steer|interrupt|status]",
-                subcommands=("queue", "steer", "interrupt", "status")),
+ def _build_description(cmd: CommandDef) -> str:
+     """Build a CLI-facing description string including usage hint."""
++    description = get_command_desc(cmd.name, cmd.description)
+     if cmd.args_hint:
+-        return f"{cmd.description} (usage: /{cmd.name} {cmd.args_hint})"
+-    return cmd.description
++        usage_label = get_ui_text("meta.usage_label", "usage")
++        return f"{description} ({usage_label}: /{cmd.name} {cmd.args_hint})"
++    return description
  
-     # Tools & Skills
--    CommandDef("tools", "Manage tools: /tools [list|disable|enable] [name...]", "Tools & Skills",
-+    CommandDef("tools", get_command_desc("tools", Manage tools: /tools [list|disable|enable] [name...], "Tools & Skills",
-                args_hint="[list|disable|enable] [name...]", cli_only=True),
--    CommandDef("toolsets", "List available toolsets", "Tools & Skills",
-+    CommandDef("toolsets", get_command_desc("toolsets", List available toolsets, "Tools & Skills",
-                cli_only=True),
--    CommandDef("skills", "Search, install, inspect, or manage skills",
-+    CommandDef("skills", get_command_desc("skills", Search, install, inspect, or manage skills,
-                "Tools & Skills", cli_only=True,
-                subcommands=("search", "browse", "inspect", "install")),
--    CommandDef("cron", "Manage scheduled tasks", "Tools & Skills",
-+    CommandDef("cron", get_command_desc("cron", Manage scheduled tasks, "Tools & Skills",
-                cli_only=True, args_hint="[subcommand]",
-                subcommands=("list", "add", "create", "edit", "pause", "resume", "run", "remove")),
--    CommandDef("curator", "Background skill maintenance (status, run, pin, archive)",
-+    CommandDef("curator", get_command_desc("curator", Background skill maintenance (status, run, pin, archive),
-                "Tools & Skills", args_hint="[subcommand]",
-                subcommands=("status", "run", "pause", "resume", "pin", "unpin", "restore")),
--    CommandDef("kanban", "Multi-profile collaboration board (tasks, links, comments)",
-+    CommandDef("kanban", get_command_desc("kanban", Multi-profile collaboration board (tasks, links, comments),
-                "Tools & Skills", args_hint="[subcommand]",
-                subcommands=("list", "ls", "show", "create", "assign", "link", "unlink",
-                             "claim", "comment", "complete", "block", "unblock", "archive",
-                             "tail", "dispatch", "context", "init", "gc")),
--    CommandDef("reload", "Reload .env variables into the running session", "Tools & Skills",
-+    CommandDef("reload", get_command_desc("reload", Reload .env variables into the running session, "Tools & Skills",
-                cli_only=True),
--    CommandDef("reload-mcp", "Reload MCP servers from config", "Tools & Skills",
-+    CommandDef("reload-mcp", get_command_desc("reload-mcp", Reload MCP servers from config, "Tools & Skills",
-                aliases=("reload_mcp",)),
--    CommandDef("reload-skills", "Re-scan ~/.hermes/skills/ for newly installed or removed skills",
-+    CommandDef("reload-skills", get_command_desc("reload-skills", Re-scan ~/.hermes/skills/ for newly installed or removed skills,
-                "Tools & Skills", aliases=("reload_skills",)),
--    CommandDef("browser", "Connect browser tools to your live Chrome via CDP", "Tools & Skills",
-+    CommandDef("browser", get_command_desc("browser", Connect browser tools to your live Chrome via CDP, "Tools & Skills",
-                cli_only=True, args_hint="[connect|disconnect|status]",
-                subcommands=("connect", "disconnect", "status")),
--    CommandDef("plugins", "List installed plugins and their status",
-+    CommandDef("plugins", get_command_desc("plugins", List installed plugins and their status,
-                "Tools & Skills", cli_only=True),
  
-     # Info
--    CommandDef("commands", "Browse all commands and skills (paginated)", "Info",
-+    CommandDef("commands", get_command_desc("commands", Browse all commands and skills (paginated), "Info",
-                gateway_only=True, args_hint="[page]"),
--    CommandDef("help", "Show available commands", "Info"),
--    CommandDef("restart", "Gracefully restart the gateway after draining active runs", "Session",
-+    CommandDef("help", get_command_desc("help", Show available commands, "Info"),
-+    CommandDef("restart", get_command_desc("restart", Gracefully restart the gateway after draining active runs, "Session",
-                gateway_only=True),
--    CommandDef("usage", "Show token usage and rate limits for the current session", "Info"),
--    CommandDef("insights", "Show usage insights and analytics", "Info",
-+    CommandDef("usage", get_command_desc("usage", Show token usage and rate limits for the current session, "Info"),
-+    CommandDef("insights", get_command_desc("insights", Show usage insights and analytics, "Info",
-                args_hint="[days]"),
--    CommandDef("platforms", "Show gateway/messaging platform status", "Info",
-+    CommandDef("platforms", get_command_desc("platforms", Show gateway/messaging platform status, "Info",
-                cli_only=True, aliases=("gateway",)),
--    CommandDef("copy", "Copy the last assistant response to clipboard", "Info",
-+    CommandDef("copy", get_command_desc("copy", Copy the last assistant response to clipboard, "Info",
-                cli_only=True, args_hint="[number]"),
--    CommandDef("paste", "Attach clipboard image from your clipboard", "Info",
-+    CommandDef("paste", get_command_desc("paste", Attach clipboard image from your clipboard, "Info",
-                cli_only=True),
--    CommandDef("image", "Attach a local image file for your next prompt", "Info",
-+    CommandDef("image", get_command_desc("image", Attach a local image file for your next prompt, "Info",
-                cli_only=True, args_hint="<path>"),
--    CommandDef("update", "Update Hermes Agent to the latest version", "Info",
-+    CommandDef("update", get_command_desc("update", Update Hermes Agent to the latest version, "Info",
-                gateway_only=True),
--    CommandDef("debug", "Upload debug report (system info + logs) and get shareable links", "Info"),
-+    CommandDef("debug", get_command_desc("debug", Upload debug report (system info + logs) and get shareable links, "Info"),
- 
-     # Exit
--    CommandDef("quit", "Exit the CLI", "Exit",
-+    CommandDef("quit", get_command_desc("quit", Exit the CLI, "Exit",
-                cli_only=True, aliases=("exit",)),
- ]
- 
-@@ -1362,7 +1362,7 @@ class SlashCommandCompleter(Completer):
-     def _skin_completions(sub_text: str, sub_lower: str):
-         """Yield completions for /skin from available skins."""
-         try:
--            from hermes_cli.skin_engine import list_skins
-+            from hermes_cli.skin_engine import get_command_desc,  list_skins
-             for s in list_skins():
-                 name = s["name"]
-                 if name.startswith(sub_lower) and name != sub_lower:
+ # Backwards-compatible flat dict: "/command" -> description
 diff --git a/hermes_cli/debug.py b/hermes_cli/debug.py
 index 06be05a35..d1ec20f6c 100644
 --- a/hermes_cli/debug.py
