@@ -1,6 +1,6 @@
 {
   "official_repo": "https://github.com/NousResearch/hermes-agent.git",
-  "latest_release": "58a6171b-terminal-discord1",
+  "latest_release": "97acd66b4-terminal-discord1",
   "web_ui_policy": "upstream-only",
   "scope": [
     "terminal",

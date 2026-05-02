@@ -1,0 +1,144 @@
+skins:
+  default:
+    branding:
+      welcome: "Hermes 已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "会话结束。⚕"
+      help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 思考中
+        - 推演中
+        - 分析中
+        - 整理线索
+        - 校准答案
+        - 构建回应
+        - 综合判断
+        - 检查路径
+
+  ares:
+    branding:
+      welcome: "战神协议已激活。输入消息，或输入 /help 查看战术指令。"
+      goodbye: "战斗告一段落。愿你凯旋。⚔"
+      help_header: "(⚔) 战术指令"
+    spinner:
+      thinking_verbs:
+        - 锻造方案
+        - 整队推进
+        - 研判战场
+        - 固守阵线
+        - 锤炼计划
+        - 淬火成形
+        - 推演冲击
+        - 升起盾墙
+
+  mono:
+    branding:
+      welcome: "单色模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "会话结束。⚕"
+      help_header: "[?] 可用指令"
+    spinner:
+      thinking_verbs:
+        - 思考中
+        - 分析中
+        - 归纳中
+        - 校验中
+        - 排序中
+        - 压缩信息
+        - 对齐上下文
+        - 输出前检查
+
+  slate:
+    branding:
+      welcome: "石板模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "会话结束。⚕"
+      help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 梳理架构
+        - 追踪线索
+        - 分析状态
+        - 校准上下文
+        - 检查路径
+        - 组合方案
+        - 评估取舍
+        - 准备回答
+
+  daylight:
+    branding:
+      welcome: "日光模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "本次会话结束。愿你今天顺利。⚕"
+      help_header: "[?] 可用指令"
+    spinner:
+      thinking_verbs:
+        - 明晰思路
+        - 梳理要点
+        - 校准答案
+        - 检查细节
+        - 聚焦问题
+        - 整理路径
+        - 形成回应
+        - 核对结果
+
+  warm-lightmode:
+    branding:
+      welcome: "暖光模式已就绪。输入消息，或输入 /help 查看可用指令。"
+      goodbye: "本次会话结束。⚕"
+      help_header: "(^_^)? 可用指令"
+    spinner:
+      thinking_verbs:
+        - 温和梳理
+        - 细读上下文
+        - 整理思路
+        - 校准语气
+        - 核对细节
+        - 形成答案
+        - 收束判断
+        - 准备回应
+
+  poseidon:
+    branding:
+      welcome: "海神潮汐已回应。输入消息，或输入 /help 查看航海指令。"
+      goodbye: "顺风顺潮。Ψ"
+      help_header: "(Ψ) 航海指令"
+    spinner:
+      thinking_verbs:
+        - 绘制洋流
+        - 测量水深
+        - 读取浪线
+        - 驾驭三叉戟
+        - 追踪暗流
+        - 规划航道
+        - 召唤潮汐
+        - 测定海压
+
+  sisyphus:
+    branding:
+      welcome: "西西弗斯已回到山坡。输入消息，或输入 /help 查看循环指令。"
+      goodbye: "巨石仍在等待。◉"
+      help_header: "(◉) 循环指令"
+    spinner:
+      thinking_verbs:
+        - 寻找着力点
+        - 测量坡度
+        - 重置巨石
+        - 计数上行
+        - 测试杠杆
+        - 顶住肩膀
+        - 向上推动
+        - 忍受循环
+
+  charizard:
+    branding:
+      welcome: "喷火龙已展翼。输入消息，或输入 /help 查看火焰指令。"
+      goodbye: "火焰收束。下次再起飞。✦"
+      help_header: "(✦) 火焰指令"
+    spinner:
+      thinking_verbs:
+        - 切入气流
+        - 测算燃烧
+        - 读取上升气流
+        - 追踪余烬
+        - 校准翼角
+        - 稳定火核
+        - 规划热降落
+        - 蓄势再升空

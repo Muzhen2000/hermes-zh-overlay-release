@@ -1,0 +1,2267 @@
+diff --git a/agent/display.py b/agent/display.py
+index 474595d76..464a70f52 100644
+--- a/agent/display.py
++++ b/agent/display.py
+@@ -132,6 +132,14 @@ def get_skin_tool_prefix() -> str:
+     return "┊"
+ 
+ 
++def _display_ui(key: str, default: str = "", **format_args) -> str:
++    try:
++        from hermes_cli.skin_engine import get_ui_text
++        return get_ui_text(f"display.{key}", default, **format_args)
++    except Exception:
++        return default.format(**format_args) if format_args else default
++
++
+ def get_tool_emoji(tool_name: str, default: str = "⚡") -> str:
+     """Get the display emoji for a tool.
+ 
+@@ -216,7 +224,8 @@ def build_tool_preview(tool_name: str, args: dict, max_len: int | None = None) -
+ 
+     if tool_name == "session_search":
+         query = _oneline(args.get("query", ""))
+-        return f"recall: \"{query[:25]}{'...' if len(query) > 25 else ''}\""
++        prefix = _display_ui("session_search.recall_prefix", "recall:")
++        return f"{prefix} \"{query[:25]}{'...' if len(query) > 25 else ''}\""
+ 
+     if tool_name == "memory":
+         action = args.get("action", "")
+diff --git a/agent/manual_compression_feedback.py b/agent/manual_compression_feedback.py
+index 32b00f7cf..6e20c3f62 100644
+--- a/agent/manual_compression_feedback.py
++++ b/agent/manual_compression_feedback.py
+@@ -4,6 +4,12 @@ from __future__ import annotations
+ 
+ from typing import Any, Sequence
+ 
++from hermes_cli.skin_engine import get_ui_text
++
++
++def _compress_ui(key: str, default: str = "", **format_args: Any) -> str:
++    return get_ui_text(f"compression.{key}", default, **format_args)
++
+ 
+ def summarize_manual_compression(
+     before_messages: Sequence[dict[str, Any]],
+@@ -17,10 +23,10 @@ def summarize_manual_compression(
+     noop = list(after_messages) == list(before_messages)
+ 
+     if noop:
+-        headline = f"No changes from compression: {before_count} messages"
++        headline = _compress_ui("noop_headline", "No changes from compression: {count} messages", count=before_count)
+         if after_tokens == before_tokens:
+             token_line = (
+-                f"Approx request size: ~{before_tokens:,} tokens (unchanged)"
++                _compress_ui("tokens_unchanged", "Approx request size: ~{tokens} tokens (unchanged)", tokens=f"{before_tokens:,}")
+             )
+         else:
+             token_line = (
+@@ -28,10 +34,9 @@ def summarize_manual_compression(
+                 f"~{after_tokens:,} tokens"
+             )
+     else:
+-        headline = f"Compressed: {before_count} → {after_count} messages"
++        headline = _compress_ui("done_headline", "Compressed: {before} → {after} messages", before=before_count, after=after_count)
+         token_line = (
+-            f"Approx request size: ~{before_tokens:,} → "
+-            f"~{after_tokens:,} tokens"
++            _compress_ui("tokens_changed", "Approx request size: ~{before} → ~{after} tokens", before=f"{before_tokens:,}", after=f"{after_tokens:,}")
+         )
+ 
+     note = None
+diff --git a/cli.py b/cli.py
+index f0ba6fc99..acbf9e7c4 100644
+--- a/cli.py
++++ b/cli.py
+@@ -72,6 +72,12 @@ from agent.usage_pricing import (
+ # top — it transitively pulls the OpenAI SDK chain (~230 ms cold) and is only
+ # needed when the user runs `/limits`. Lazy-imported inside the handler below.
+ from hermes_cli.banner import _format_context_length, format_banner_version_label
++from hermes_cli.skin_engine import get_ui_text
++
++def _cli_ui(key: str, default: str, **format_args) -> str:
++    return get_ui_text(f"cli.{key}", default, **format_args)
++
++
+ 
+ _COMMAND_SPINNER_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
+ 
+@@ -3230,22 +3236,22 @@ class HermesCLI:
+         """Return a user-facing status message for slower slash commands."""
+         cmd_lower = command.lower().strip()
+         if cmd_lower.startswith("/skills search"):
+-            return "Searching skills..."
++            return _cli_ui("command_status.skills_search", "Searching skills...")
+         if cmd_lower.startswith("/skills browse"):
+-            return "Loading skills..."
++            return _cli_ui("command_status.skills_browse", "Loading skills...")
+         if cmd_lower.startswith("/skills inspect"):
+-            return "Inspecting skill..."
++            return _cli_ui("command_status.skills_inspect", "Inspecting skill...")
+         if cmd_lower.startswith("/skills install"):
+-            return "Installing skill..."
++            return _cli_ui("command_status.skills_install", "Installing skill...")
+         if cmd_lower.startswith("/skills"):
+-            return "Processing skills command..."
++            return _cli_ui("command_status.skills_generic", "Processing skills command...")
+         if cmd_lower == "/reload-mcp":
+-            return "Reloading MCP servers..."
++            return _cli_ui("command_status.reload_mcp", "Reloading MCP servers...")
+         if cmd_lower == "/reload-skills" or cmd_lower == "/reload_skills":
+             return "Reloading skills..."
+         if cmd_lower.startswith("/browser"):
+-            return "Configuring browser..."
+-        return "Processing command..."
++            return _cli_ui("command_status.browser", "Configuring browser...")
++        return _cli_ui("command_status.generic", "Processing command...")
+ 
+     def _command_spinner_frame(self) -> str:
+         """Return the current spinner frame for slow slash commands."""
+@@ -3998,14 +4004,14 @@ class HermesCLI:
+         from tools.checkpoint_manager import format_checkpoint_list
+ 
+         if not hasattr(self, 'agent') or not self.agent:
+-            print("  No active agent session.")
++            print(_cli_ui("rollback.no_agent", "  No active agent session."))
+             return
+ 
+         mgr = self.agent._checkpoint_mgr
+         if not mgr.enabled:
+-            print("  Checkpoints are not enabled.")
+-            print("  Enable with: hermes --checkpoints")
+-            print("  Or in config.yaml: checkpoints: { enabled: true }")
++            print(_cli_ui("rollback.disabled", "  Checkpoints are not enabled."))
++            print(_cli_ui("rollback.enable_cli", "  Enable with: hermes --checkpoints"))
++            print(_cli_ui("rollback.enable_config", "  Or in config.yaml: checkpoints: { enabled: true }"))
+             return
+ 
+         cwd = os.getenv("TERMINAL_CWD", os.getcwd())
+@@ -4114,8 +4120,8 @@ class HermesCLI:
+         if subcmd in ("list", "ls"):
+             snaps = list_quick_snapshots()
+             if not snaps:
+-                print("  No state snapshots yet.")
+-                print("  Create one: /snapshot create [label]")
++                print(_cli_ui("snapshot.no_snapshots", "  No state snapshots yet."))
++                print(_cli_ui("snapshot.create_hint", "  Create one: /snapshot create [label]"))
+                 return
+             print(f"  State snapshots ({display_hermes_home()}/state-snapshots/):\n")
+             print(f"  {'#':>3}  {'ID':<35} {'Files':>5} {'Size':>10} {'Label'}")
+@@ -4192,7 +4198,7 @@ class HermesCLI:
+         running = [p for p in processes if p.get("status") == "running"]
+ 
+         if not running:
+-            print("  No running background processes.")
++            print(_cli_ui("stop.none", "  No running background processes."))
+             return
+ 
+         print(f"  Stopping {len(running)} background process(es)...")
+@@ -4207,7 +4213,7 @@ class HermesCLI:
+         running = [p for p in processes if p.get("status") == "running"]
+         finished = [p for p in processes if p.get("status") != "running"]
+ 
+-        _cprint(f"  Running processes: {len(running)}")
++        _cprint(_cli_ui("agents.running_processes", "  Running processes: {count}", count=len(running)))
+         for p in running:
+             cmd = p.get("command", "")[:80]
+             up = format_uptime_short(p.get("uptime_seconds", 0))
+@@ -4240,9 +4246,9 @@ class HermesCLI:
+                 n = len(self._attached_images)
+                 _cprint(f"  📎 Image #{n} attached from clipboard")
+             else:
+-                _cprint(f"  {_DIM}(>_<) Clipboard has an image but extraction failed{_RST}")
++                _cprint(f"  {_DIM}{_cli_ui('paste.extract_failed', '(>_<) Clipboard has an image but extraction failed')}{_RST}")
+         else:
+-            _cprint(f"  {_DIM}(._.) No image found in clipboard{_RST}")
++            _cprint(f"  {_DIM}{_cli_ui('paste.none', '(._.) No image found in clipboard')}{_RST}")
+ 
+     def _write_osc52_clipboard(self, text: str) -> None:
+         """Copy *text* to terminal clipboard via OSC 52."""
+@@ -4299,7 +4305,7 @@ class HermesCLI:
+ 
+         assistant = [m for m in self.conversation_history if m.get("role") == "assistant"]
+         if not assistant:
+-            _cprint("  Nothing to copy yet.")
++            _cprint(_cli_ui("copy.none_yet", "  Nothing to copy yet."))
+             return
+ 
+         if arg:
+diff --git a/gateway/platforms/discord.py b/gateway/platforms/discord.py
+index 60cfb55ef..0935df217 100644
+--- a/gateway/platforms/discord.py
++++ b/gateway/platforms/discord.py
+@@ -83,6 +83,20 @@ def check_discord_requirements() -> bool:
+     return DISCORD_AVAILABLE
+ 
+ 
++def _discord_ui(key: str, default: str = "", **format_args) -> str:
++    try:
++        from hermes_cli.skin_engine import get_ui_text
++        return get_ui_text(f"gateway.discord.{key}", default, **format_args)
++    except Exception:
++        if format_args:
++            try:
++                return default.format(**format_args)
++            except Exception:
++                return default
++        return default
++
++
++
+ def _build_allowed_mentions():
+     """Build Discord ``AllowedMentions`` with safe defaults, overridable via env.
+ 
+@@ -1081,7 +1095,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         created automatically.
+         """
+         if not self._client:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         try:
+             # Determine target channel: thread_id in metadata takes precedence.
+@@ -1102,7 +1116,7 @@ class DiscordAdapter(BasePlatformAdapter):
+                 if not channel:
+                     channel = await self._client.fetch_channel(int(chat_id))
+                 if not channel:
+-                    return SendResult(success=False, error=f"Channel {chat_id} not found")
++                    return SendResult(success=False, error=_discord_ui("errors.channel_not_found", "Channel {chat_id} not found", chat_id=chat_id))
+ 
+             # Forum channels reject channel.send() — create a thread post instead.
+             if self._is_forum_parent(channel):
+@@ -1295,7 +1309,7 @@ class DiscordAdapter(BasePlatformAdapter):
+     ) -> SendResult:
+         """Edit a previously sent Discord message."""
+         if not self._client:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+         try:
+             channel = self._client.get_channel(int(chat_id))
+             if not channel:
+@@ -1323,7 +1337,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         carries the file — they reject direct POST /messages.
+         """
+         if not self._client:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         channel = self._client.get_channel(int(chat_id))
+         if not channel:
+@@ -1941,7 +1955,7 @@ class DiscordAdapter(BasePlatformAdapter):
+     ) -> SendResult:
+         """Send an image natively as a Discord file attachment."""
+         if not self._client:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         if not is_safe_url(image_url):
+             logger.warning("[%s] Blocked unsafe image URL during Discord send_image", self.name)
+@@ -2020,7 +2034,7 @@ class DiscordAdapter(BasePlatformAdapter):
+     ) -> SendResult:
+         """Send an animated GIF natively as a Discord file attachment."""
+         if not self._client:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         if not is_safe_url(animation_url):
+             logger.warning("[%s] Blocked unsafe animation URL during Discord send_animation", self.name)
+@@ -2319,46 +2333,46 @@ class DiscordAdapter(BasePlatformAdapter):
+ 
+         tree = self._client.tree
+ 
+-        @tree.command(name="new", description="Start a new conversation")
++        @tree.command(name="new", description=_discord_ui("commands.new.description", "Start a new conversation"))
+         async def slash_new(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/reset", "New conversation started~")
+ 
+-        @tree.command(name="reset", description="Reset your Hermes session")
++        @tree.command(name="reset", description=_discord_ui("commands.reset.description", "Reset your Hermes session"))
+         async def slash_reset(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/reset", "Session reset~")
+ 
+-        @tree.command(name="model", description="Show or change the model")
++        @tree.command(name="model", description=_discord_ui("commands.model.description", "Show or change the model"))
+         @discord.app_commands.describe(name="Model name (e.g. anthropic/claude-sonnet-4). Leave empty to see current.")
+         async def slash_model(interaction: discord.Interaction, name: str = ""):
+             await self._run_simple_slash(interaction, f"/model {name}".strip())
+ 
+-        @tree.command(name="reasoning", description="Show or change reasoning effort")
++        @tree.command(name="reasoning", description=_discord_ui("commands.reasoning.description", "Show or change reasoning effort"))
+         @discord.app_commands.describe(effort="Reasoning effort: none, minimal, low, medium, high, or xhigh.")
+         async def slash_reasoning(interaction: discord.Interaction, effort: str = ""):
+             await self._run_simple_slash(interaction, f"/reasoning {effort}".strip())
+ 
+-        @tree.command(name="personality", description="Set a personality")
++        @tree.command(name="personality", description=_discord_ui("commands.personality.description", "Set a personality"))
+         @discord.app_commands.describe(name="Personality name. Leave empty to list available.")
+         async def slash_personality(interaction: discord.Interaction, name: str = ""):
+             await self._run_simple_slash(interaction, f"/personality {name}".strip())
+ 
+-        @tree.command(name="retry", description="Retry your last message")
++        @tree.command(name="retry", description=_discord_ui("commands.retry.description", "Retry your last message"))
+         async def slash_retry(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/retry", "Retrying~")
+ 
+-        @tree.command(name="undo", description="Remove the last exchange")
++        @tree.command(name="undo", description=_discord_ui("commands.undo.description", "Remove the last exchange"))
+         async def slash_undo(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/undo")
+ 
+-        @tree.command(name="status", description="Show Hermes session status")
++        @tree.command(name="status", description=_discord_ui("commands.status.description", "Show Hermes session status"))
+         async def slash_status(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/status", "Status sent~")
+ 
+-        @tree.command(name="sethome", description="Set this chat as the home channel")
++        @tree.command(name="sethome", description=_discord_ui("commands.sethome.description", "Set this chat as the home channel"))
+         async def slash_sethome(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/sethome")
+ 
+-        @tree.command(name="stop", description="Stop the running Hermes agent")
++        @tree.command(name="stop", description=_discord_ui("commands.stop.description", "Stop the running Hermes agent"))
+         async def slash_stop(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/stop", "Stop requested~")
+ 
+@@ -2367,7 +2381,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         async def slash_steer(interaction: discord.Interaction, prompt: str):
+             await self._run_simple_slash(interaction, f"/steer {prompt}".strip())
+ 
+-        @tree.command(name="compress", description="Compress conversation context")
++        @tree.command(name="compress", description=_discord_ui("commands.compress.description", "Compress conversation context"))
+         async def slash_compress(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/compress")
+ 
+@@ -2385,7 +2399,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         async def slash_usage(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/usage")
+ 
+-        @tree.command(name="help", description="Show available commands")
++        @tree.command(name="help", description=_discord_ui("commands.help.description", "Show available commands"))
+         async def slash_help(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/help")
+ 
+@@ -2402,7 +2416,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         async def slash_reload_skills(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/reload-skills")
+ 
+-        @tree.command(name="voice", description="Toggle voice reply mode")
++        @tree.command(name="voice", description=_discord_ui("commands.voice.description", "Toggle voice reply mode"))
+         @discord.app_commands.describe(mode="Voice mode: on, off, tts, channel, leave, or status")
+         @discord.app_commands.choices(mode=[
+             discord.app_commands.Choice(name="channel — join your voice channel", value="channel"),
+@@ -2415,25 +2429,25 @@ class DiscordAdapter(BasePlatformAdapter):
+         async def slash_voice(interaction: discord.Interaction, mode: str = ""):
+             await self._run_simple_slash(interaction, f"/voice {mode}".strip())
+ 
+-        @tree.command(name="update", description="Update Hermes Agent to the latest version")
++        @tree.command(name="update", description=_discord_ui("commands.update.description", "Update Hermes Agent to the latest version"))
+         async def slash_update(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/update", "Update initiated~")
+ 
+-        @tree.command(name="restart", description="Gracefully restart the Hermes gateway")
++        @tree.command(name="restart", description=_discord_ui("commands.restart.description", "Gracefully restart the Hermes gateway"))
+         async def slash_restart(interaction: discord.Interaction):
+             await self._run_simple_slash(interaction, "/restart", "Restart requested~")
+ 
+-        @tree.command(name="approve", description="Approve a pending dangerous command")
++        @tree.command(name="approve", description=_discord_ui("commands.approve.description", "Approve a pending dangerous command"))
+         @discord.app_commands.describe(scope="Optional: 'all', 'session', 'always', 'all session', 'all always'")
+         async def slash_approve(interaction: discord.Interaction, scope: str = ""):
+             await self._run_simple_slash(interaction, f"/approve {scope}".strip())
+ 
+-        @tree.command(name="deny", description="Deny a pending dangerous command")
++        @tree.command(name="deny", description=_discord_ui("commands.deny.description", "Deny a pending dangerous command"))
+         @discord.app_commands.describe(scope="Optional: 'all' to deny all pending commands")
+         async def slash_deny(interaction: discord.Interaction, scope: str = ""):
+             await self._run_simple_slash(interaction, f"/deny {scope}".strip())
+ 
+-        @tree.command(name="thread", description="Create a new thread and start a Hermes session in it")
++        @tree.command(name="thread", description=_discord_ui("commands.thread.description", "Create a new thread and start a Hermes session in it"))
+         @discord.app_commands.describe(
+             name="Thread name",
+             message="Optional first message to send to Hermes in the thread",
+@@ -2448,12 +2462,12 @@ class DiscordAdapter(BasePlatformAdapter):
+             await interaction.response.defer(ephemeral=True)
+             await self._handle_thread_create_slash(interaction, name, message, auto_archive_duration)
+ 
+-        @tree.command(name="queue", description="Queue a prompt for the next turn (doesn't interrupt)")
++        @tree.command(name="queue", description=_discord_ui("commands.queue.description", "Queue a prompt for the next turn (doesn't interrupt)"))
+         @discord.app_commands.describe(prompt="The prompt to queue")
+         async def slash_queue(interaction: discord.Interaction, prompt: str):
+             await self._run_simple_slash(interaction, f"/queue {prompt}", "Queued for the next turn.")
+ 
+-        @tree.command(name="background", description="Run a prompt in the background")
++        @tree.command(name="background", description=_discord_ui("commands.background.description", "Run a prompt in the background"))
+         @discord.app_commands.describe(prompt="The prompt to run in the background")
+         async def slash_background(interaction: discord.Interaction, prompt: str):
+             await self._run_simple_slash(interaction, f"/background {prompt}", "Background task started~")
+@@ -3012,7 +3026,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         agent thread — this replaces the text-based ``/approve`` flow on Discord.
+         """
+         if not self._client or not DISCORD_AVAILABLE:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         try:
+             # Resolve channel — use thread_id from metadata if present
+@@ -3028,7 +3042,7 @@ class DiscordAdapter(BasePlatformAdapter):
+             max_desc = 4088
+             cmd_display = command if len(command) <= max_desc else command[: max_desc - 3] + "..."
+             embed = discord.Embed(
+-                title="⚠️ Command Approval Required",
++                title=_discord_ui("approval.embed_title", "⚠️ Command Approval Required"),
+                 description=f"```\n{cmd_display}\n```",
+                 color=discord.Color.orange(),
+             )
+@@ -3051,7 +3065,7 @@ class DiscordAdapter(BasePlatformAdapter):
+     ) -> SendResult:
+         """Send a three-button slash-command confirmation prompt."""
+         if not self._client or not DISCORD_AVAILABLE:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         try:
+             target_id = chat_id
+@@ -3093,7 +3107,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         needs user input (stash restore, config migration).
+         """
+         if not self._client or not DISCORD_AVAILABLE:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+         try:
+             target_id = metadata.get("thread_id") if metadata and metadata.get("thread_id") else chat_id
+             channel = self._client.get_channel(int(target_id))
+@@ -3131,7 +3145,7 @@ class DiscordAdapter(BasePlatformAdapter):
+         Uses Discord embeds + Select menus via ``ModelPickerView``.
+         """
+         if not self._client or not DISCORD_AVAILABLE:
+-            return SendResult(success=False, error="Not connected")
++            return SendResult(success=False, error=_discord_ui("errors.not_connected", "Not connected"))
+ 
+         try:
+             # Resolve target channel (use thread_id if present)
+@@ -3787,25 +3801,25 @@ if DISCORD_AVAILABLE:
+             except Exception as exc:
+                 logger.error("Failed to resolve gateway approval from button: %s", exc)
+ 
+-        @discord.ui.button(label="Allow Once", style=discord.ButtonStyle.green)
++        @discord.ui.button(label=_discord_ui("approval.button_once", "Allow Once"), style=discord.ButtonStyle.green)
+         async def allow_once(
+             self, interaction: discord.Interaction, button: discord.ui.Button
+         ):
+             await self._resolve(interaction, "once", discord.Color.green(), "Approved once")
+ 
+-        @discord.ui.button(label="Allow Session", style=discord.ButtonStyle.grey)
++        @discord.ui.button(label=_discord_ui("approval.button_session", "Allow Session"), style=discord.ButtonStyle.grey)
+         async def allow_session(
+             self, interaction: discord.Interaction, button: discord.ui.Button
+         ):
+             await self._resolve(interaction, "session", discord.Color.blue(), "Approved for session")
+ 
+-        @discord.ui.button(label="Always Allow", style=discord.ButtonStyle.blurple)
++        @discord.ui.button(label=_discord_ui("approval.button_always", "Always Allow"), style=discord.ButtonStyle.blurple)
+         async def allow_always(
+             self, interaction: discord.Interaction, button: discord.ui.Button
+         ):
+             await self._resolve(interaction, "always", discord.Color.purple(), "Approved permanently")
+ 
+-        @discord.ui.button(label="Deny", style=discord.ButtonStyle.red)
++        @discord.ui.button(label=_discord_ui("approval.button_deny", "Deny"), style=discord.ButtonStyle.red)
+         async def deny(
+             self, interaction: discord.Interaction, button: discord.ui.Button
+         ):
+@@ -3976,13 +3990,13 @@ if DISCORD_AVAILABLE:
+             except Exception as exc:
+                 logger.error("Failed to write update response: %s", exc)
+ 
+-        @discord.ui.button(label="Yes", style=discord.ButtonStyle.green, emoji="✓")
++        @discord.ui.button(label=_discord_ui("update.button_yes", "Yes"), style=discord.ButtonStyle.green, emoji="✓")
+         async def yes_btn(
+             self, interaction: discord.Interaction, button: discord.ui.Button
+         ):
+             await self._respond(interaction, "y", discord.Color.green(), "Yes")
+ 
+-        @discord.ui.button(label="No", style=discord.ButtonStyle.red, emoji="✗")
++        @discord.ui.button(label=_discord_ui("update.button_no", "No"), style=discord.ButtonStyle.red, emoji="✗")
+         async def no_btn(
+             self, interaction: discord.Interaction, button: discord.ui.Button
+         ):
+@@ -4046,7 +4060,7 @@ if DISCORD_AVAILABLE:
+                 return
+ 
+             select = discord.ui.Select(
+-                placeholder="Choose a provider...",
++                placeholder=_discord_ui("model_picker.provider_placeholder", "Choose a provider..."),
+                 options=options[:25],
+                 custom_id="model_provider_select",
+             )
+@@ -4054,7 +4068,7 @@ if DISCORD_AVAILABLE:
+             self.add_item(select)
+ 
+             cancel_btn = discord.ui.Button(
+-                label="Cancel", style=discord.ButtonStyle.red, custom_id="model_cancel"
++                label=_discord_ui("model_picker.cancel", "Cancel"), style=discord.ButtonStyle.red, custom_id="model_cancel"
+             )
+             cancel_btn.callback = self._on_cancel
+             self.add_item(cancel_btn)
+@@ -4090,13 +4104,13 @@ if DISCORD_AVAILABLE:
+             self.add_item(select)
+ 
+             back_btn = discord.ui.Button(
+-                label="◀ Back", style=discord.ButtonStyle.grey, custom_id="model_back"
++                label=_discord_ui("model_picker.back", "◀ Back"), style=discord.ButtonStyle.grey, custom_id="model_back"
+             )
+             back_btn.callback = self._on_back
+             self.add_item(back_btn)
+ 
+             cancel_btn = discord.ui.Button(
+-                label="Cancel", style=discord.ButtonStyle.red, custom_id="model_cancel2"
++                label=_discord_ui("model_picker.cancel", "Cancel"), style=discord.ButtonStyle.red, custom_id="model_cancel2"
+             )
+             cancel_btn.callback = self._on_cancel
+             self.add_item(cancel_btn)
+diff --git a/gateway/run.py b/gateway/run.py
+index 88196d692..5b85e2536 100644
+--- a/gateway/run.py
++++ b/gateway/run.py
+@@ -296,6 +296,7 @@ _hermes_home = get_hermes_home()
+ # User-managed env files should override stale shell exports on restart.
+ from dotenv import load_dotenv  # backward-compat for tests that monkeypatch this symbol
+ from hermes_cli.env_loader import load_hermes_dotenv
++from hermes_cli.skin_engine import get_ui_text
+ _env_path = _hermes_home / '.env'
+ load_hermes_dotenv(hermes_home=_hermes_home, project_env=Path(__file__).resolve().parents[1] / '.env')
+ 
+@@ -721,6 +722,11 @@ def _check_unavailable_skill(command_name: str) -> str | None:
+     return None
+ 
+ 
++
++def _gateway_ui(key: str, default: str = "", **format_args: Any) -> str:
++    return get_ui_text(f"gateway.runtime.{key}", default, **format_args)
++
++
+ def _platform_config_key(platform: "Platform") -> str:
+     """Map a Platform enum to its config.yaml key (LOCAL→"cli", rest→enum value)."""
+     return "cli" if platform == Platform.LOCAL else platform.value
+@@ -4682,7 +4688,10 @@ class GatewayRunner:
+             if event.get_command() in ("queue", "q"):
+                 queued_text = event.get_command_args().strip()
+                 if not queued_text:
+-                    return "Usage: /queue <prompt>"
++                    return _gateway_ui(
++                        "guard.queue_usage",
++                        "Usage: /queue <prompt>",
++                    )
+                 adapter = self.adapters.get(source.platform)
+                 if adapter:
+                     queued_event = MessageEvent(
+@@ -4706,7 +4715,7 @@ class GatewayRunner:
+             if _cmd_def_inner and _cmd_def_inner.name == "steer":
+                 steer_text = event.get_command_args().strip()
+                 if not steer_text:
+-                    return "Usage: /steer <prompt>"
++                    return _gateway_ui("steer.usage", "Usage: /steer <prompt>")
+                 running_agent = self._running_agents.get(_quick_key)
+                 if running_agent is _AGENT_PENDING_SENTINEL:
+                     # Agent hasn't started yet — queue as turn-boundary fallback.
+@@ -4746,7 +4755,10 @@ class GatewayRunner:
+ 
+             # /model must not be used while the agent is running.
+             if _cmd_def_inner and _cmd_def_inner.name == "model":
+-                return "Agent is running — wait or /stop first, then switch models."
++                return _gateway_ui(
++                    "guard.model_busy",
++                    "Agent is running — wait or /stop first, then switch models.",
++                )
+ 
+             # /approve and /deny must bypass the running-agent interrupt path.
+             # The agent thread is blocked on a threading.Event inside
+@@ -5110,7 +5122,11 @@ class GatewayRunner:
+             return await self._handle_voice_command(event)
+ 
+         if self._draining:
+-            return f"⏳ Gateway is {self._status_action_gerund()} and is not accepting new work right now."
++            return _gateway_ui(
++                "guard.draining_new_work",
++                "⏳ Gateway is {action} and is not accepting new work right now.",
++                action=self._status_action_gerund(),
++            )
+ 
+         # User-defined quick commands (bypass agent loop, no LLM call)
+         if command:
+@@ -6550,11 +6566,14 @@ class GatewayRunner:
+ 
+         # Format context source hint
+         if config_context_length is not None:
+-            ctx_source = "config"
++            ctx_source = _gateway_ui("session_info.context_source.config", "config")
+         elif context_length == DEFAULT_FALLBACK_CONTEXT:
+-            ctx_source = "default — set model.context_length in config to override"
++            ctx_source = _gateway_ui(
++                "session_info.context_source.default",
++                "default — set model.context_length in config to override",
++            )
+         else:
+-            ctx_source = "detected"
++            ctx_source = _gateway_ui("session_info.context_source.detected", "detected")
+ 
+         # Format context length for display
+         if context_length >= 1_000_000:
+@@ -6565,8 +6584,8 @@ class GatewayRunner:
+             ctx_display = str(context_length)
+ 
+         lines = [
+-            f"◆ Model: `{model}`",
+-            f"◆ Provider: {provider or 'openrouter'}",
++            _gateway_ui("session_info.model", "◆ Model: `{model}`", model=model),
++            _gateway_ui("session_info.provider", "◆ Provider: {provider}", provider=provider or "openrouter"),
+             f"◆ Context: {ctx_display} tokens ({ctx_source})",
+         ]
+ 
+@@ -6664,11 +6683,11 @@ class GatewayRunner:
+             session_info = ""
+ 
+         if new_entry:
+-            header = "✨ Session reset! Starting fresh."
++            header = _gateway_ui("reset.reset_started", "✨ Session reset! Starting fresh.")
+         else:
+             # No existing session, just create one
+             new_entry = self.session_store.get_or_create_session(source, force_new=True)
+-            header = "✨ New session started!"
++            header = _gateway_ui("reset.new_started", "✨ New session started!")
+ 
+         # Fire plugin on_session_reset hook (new session guaranteed to exist)
+         try:
+@@ -6825,7 +6844,7 @@ class GatewayRunner:
+                 db_total_tokens = 0
+ 
+         lines = [
+-            "📊 **Hermes Gateway Status**",
++            _gateway_ui("status.title", "📊 **Hermes Gateway Status**"),
+             "",
+             f"**Session ID:** `{session_entry.session_id}`",
+         ]
+@@ -6888,7 +6907,7 @@ class GatewayRunner:
+         ]
+ 
+         lines = [
+-            "🤖 **Active Agents & Tasks**",
++            _gateway_ui("agents.title", "🤖 **Active Agents & Tasks**"),
+             "",
+             f"**Active agents:** {len(agent_rows)}",
+         ]
+@@ -6973,7 +6992,7 @@ class GatewayRunner:
+             )
+             return EphemeralReply("⚡ Stopped. You can continue this session.")
+         else:
+-            return "No active task to stop."
++            return _gateway_ui("stop.none", "No active task to stop.")
+ 
+     async def _handle_restart_command(self, event: MessageEvent) -> Union[str, EphemeralReply]:
+         """Handle /restart command - drain active work, then restart the gateway."""
+@@ -7109,7 +7128,7 @@ class GatewayRunner:
+         """Handle /help command - list available commands."""
+         from hermes_cli.commands import gateway_help_lines
+         lines = [
+-            "📖 **Hermes Commands**\n",
++            _gateway_ui("help.title", "📖 **Hermes Commands**\n"),
+             *gateway_help_lines(),
+         ]
+         try:
+@@ -7136,7 +7155,7 @@ class GatewayRunner:
+             try:
+                 requested_page = int(raw_args)
+             except ValueError:
+-                return "Usage: `/commands [page]`"
++                return _gateway_ui("commands.usage", "Usage: `/commands [page]`")
+         else:
+             requested_page = 1
+ 
+@@ -7155,7 +7174,7 @@ class GatewayRunner:
+             pass
+ 
+         if not entries:
+-            return "No commands available."
++            return _gateway_ui("commands.none", "No commands available.")
+ 
+         from gateway.config import Platform
+         page_size = 15 if event.source.platform == Platform.TELEGRAM else 20
+@@ -7285,7 +7304,7 @@ class GatewayRunner:
+                             custom_providers=custom_provs,
+                         )
+                         if not result.success:
+-                            return f"Error: {result.error_message}"
++                            return _gateway_ui("model.error", "Error: {error}", error=result.error_message)
+ 
+                         # Update cached agent in-place
+                         cached_entry = None
+@@ -7554,7 +7573,11 @@ class GatewayRunner:
+             personalities = {}
+ 
+         if not personalities:
+-            return f"No personalities configured in `{display_hermes_home()}/config.yaml`"
++            return _gateway_ui(
++                "personality.none_configured",
++                "No personalities configured in `{home}/config.yaml`",
++                home=display_hermes_home(),
++            )
+ 
+         if not args:
+             lines = ["🎭 **Available Personalities**\n"]
+@@ -7624,7 +7647,7 @@ class GatewayRunner:
+                 break
+         
+         if not last_user_msg:
+-            return "No previous message to retry."
++            return _gateway_ui("retry.none", "No previous message to retry.")
+         
+         # Truncate history to before the last user message and persist
+         truncated = history[:last_user_idx]
+@@ -7853,7 +7876,7 @@ class GatewayRunner:
+                 break
+         
+         if last_user_idx is None:
+-            return "Nothing to undo."
++            return _gateway_ui("undo.none", "Nothing to undo.")
+         
+         removed_msg = history[last_user_idx].get("content", "")
+         removed_count = len(history) - last_user_idx
+@@ -7923,7 +7946,7 @@ class GatewayRunner:
+             self._save_voice_modes()
+             if adapter:
+                 self._set_adapter_auto_tts_disabled(adapter, chat_id, disabled=True)
+-            return "Voice mode disabled. Text-only replies."
++            return _gateway_ui("voice.disabled", "Voice mode disabled. Text-only replies.")
+         elif args == "tts":
+             self._voice_mode[voice_key] = "all"
+             self._save_voice_modes()
+@@ -8033,7 +8056,7 @@ class GatewayRunner:
+         guild_id = self._get_guild_id(event)
+ 
+         if not guild_id or not hasattr(adapter, "leave_voice_channel"):
+-            return "Not in a voice channel."
++            return _gateway_ui("voice.leave_none", "Not in a voice channel.")
+ 
+         if not hasattr(adapter, "is_in_voice_channel") or not adapter.is_in_voice_channel(guild_id):
+             return "Not in a voice channel."
+@@ -8691,7 +8714,7 @@ class GatewayRunner:
+         user_config = _load_gateway_config()
+         model = _resolve_gateway_model(user_config)
+         if not model_supports_fast_mode(model):
+-            return "⚡ /fast is only available for OpenAI models that support Priority Processing."
++            return _gateway_ui("fast.unsupported", "⚡ /fast is only available for OpenAI models that support Priority Processing.")
+ 
+         def _save_config_key(key_path: str, value):
+             """Save a dot-separated key to config.yaml."""
+@@ -8922,7 +8945,7 @@ class GatewayRunner:
+         history = self.session_store.load_transcript(session_entry.session_id)
+ 
+         if not history or len(history) < 4:
+-            return "Not enough conversation to compress (need at least 4 messages)."
++            return _gateway_ui("compress.not_enough", "Not enough conversation to compress (need at least 4 messages).")
+ 
+         # Extract optional focus topic from command args
+         focus_topic = (event.get_command_args() or "").strip() or None
+@@ -8938,7 +8961,7 @@ class GatewayRunner:
+                 session_key=session_key,
+             )
+             if not runtime_kwargs.get("api_key"):
+-                return "No provider configured -- cannot compress."
++                return _gateway_ui("compress.no_provider", "No provider configured -- cannot compress.")
+ 
+             msgs = [
+                 {"role": m.get("role"), "content": m.get("content")}
+@@ -9037,7 +9060,7 @@ class GatewayRunner:
+             return "\n".join(lines)
+         except Exception as e:
+             logger.warning("Manual compress failed: %s", e)
+-            return f"Compression failed: {e}"
++            return _gateway_ui("compress.failed", "Compression failed: {error}", error=e)
+ 
+     async def _handle_title_command(self, event: MessageEvent) -> str:
+         """Handle /title command — set or show the current session's title."""
+@@ -9046,7 +9069,7 @@ class GatewayRunner:
+         session_id = session_entry.session_id
+ 
+         if not self._session_db:
+-            return "Session database not available."
++            return _gateway_ui("title.db_unavailable", "Session database not available.")
+ 
+         # Ensure session exists in SQLite DB (it may only exist in session_store
+         # if this is the first command in a new session)
+@@ -9147,7 +9170,7 @@ class GatewayRunner:
+         # Switch the session entry to point at the old session
+         new_entry = self.session_store.switch_session(session_key, target_id)
+         if not new_entry:
+-            return "Failed to switch session."
++            return _gateway_ui("resume.switch_failed", "Failed to switch session.")
+         self._clear_session_boundary_security_state(session_key)
+ 
+         # Evict any cached agent for this session so the next message
+@@ -9557,7 +9580,7 @@ class GatewayRunner:
+             removed = old_servers - connected_servers
+             reconnected = connected_servers & old_servers
+ 
+-            lines = ["🔄 **MCP Servers Reloaded**\n"]
++            lines = [_gateway_ui("reload.title", "🔄 **MCP Servers Reloaded**\n")]
+             if reconnected:
+                 lines.append(f"♻️ Reconnected: {', '.join(sorted(reconnected))}")
+             if added:
+@@ -9597,7 +9620,7 @@ class GatewayRunner:
+ 
+         except Exception as e:
+             logger.warning("MCP reload failed: %s", e)
+-            return f"❌ MCP reload failed: {e}"
++            return _gateway_ui("reload.failed", "❌ MCP reload failed: {error}", error=e)
+ 
+     async def _handle_reload_skills_command(self, event: MessageEvent) -> str:
+         """Handle /reload-skills — rescan skills dir, queue a note for next turn.
+@@ -9808,7 +9831,7 @@ class GatewayRunner:
+             if session_key in self._pending_approvals:
+                 self._pending_approvals.pop(session_key)
+                 return "⚠️ Approval expired (agent is no longer waiting). Ask the agent to try again."
+-            return "No pending command to approve."
++            return _gateway_ui("approval.approve.no_pending", "No pending command to approve.")
+ 
+         # Parse args: support "all", "all session", "all always", "session", "always"
+         args = event.get_command_args().strip().lower().split()
+@@ -9857,7 +9880,7 @@ class GatewayRunner:
+             if session_key in self._pending_approvals:
+                 self._pending_approvals.pop(session_key)
+                 return "❌ Command denied (approval was stale)."
+-            return "No pending command to deny."
++            return _gateway_ui("approval.deny.no_pending", "No pending command to deny.")
+ 
+         args = event.get_command_args().strip().lower()
+         resolve_all = "all" in args
+@@ -9910,7 +9933,11 @@ class GatewayRunner:
+             try:
+                 urls["Report"] = upload_to_pastebin(report)
+             except Exception as exc:
+-                return f"✗ Failed to upload debug report: {exc}"
++                return _gateway_ui(
++                    "debug.upload_failed",
++                    "✗ Failed to upload debug report: {error}",
++                    error=exc,
++                )
+ 
+             # Schedule auto-deletion after 6 hours
+             _schedule_auto_delete(list(urls.values()))
+@@ -10029,7 +10056,7 @@ class GatewayRunner:
+             return f"✗ Failed to start update: {e}"
+ 
+         self._schedule_update_notification_watch()
+-        return "⚕ Starting Hermes update… I'll stream progress here."
++        return _gateway_ui("update.start", "⚕ Starting Hermes update… I'll stream progress here.")
+ 
+     def _schedule_update_notification_watch(self) -> None:
+         """Ensure a background task is watching for update completion."""
+diff --git a/hermes_cli/auth.py b/hermes_cli/auth.py
+index 1d77fffa9..502b9797b 100644
+--- a/hermes_cli/auth.py
++++ b/hermes_cli/auth.py
+@@ -42,11 +42,16 @@ import httpx
+ import yaml
+ 
+ from hermes_cli.config import get_hermes_home, get_config_path, read_raw_config
++from hermes_cli.skin_engine import get_ui_text
+ from hermes_constants import OPENROUTER_BASE_URL
+ from utils import atomic_replace, atomic_yaml_write, is_truthy_value
+ 
+ logger = logging.getLogger(__name__)
+ 
++def _ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"auth.{key}", default, **format_args)
++
++
+ try:
+     import fcntl
+ except Exception:
+@@ -3783,23 +3788,27 @@ def _prompt_model_selection(
+         else:
+             base = mid
+         if mid == current_model:
+-            base += "  ← currently in use"
++            base += _ui("model_menu.current_marker", "  ← currently in use")
+         return base
+ 
+     # Default cursor on the current model (index 0 if it was reordered to top)
+     default_idx = 0
+ 
+     # Build a pricing header hint for the menu title
+-    menu_title = "Select default model:"
++    menu_title = _ui("model_menu.title", "Select default model:")
+     if has_pricing:
+         # Align the header with the model column.
+         # Each choice is "  {label}" (2 spaces) and simple_term_menu prepends
+         # a 3-char cursor region ("-> " or "   "), so content starts at col 5.
+         pad = " " * 5
+-        header = f"\n{pad}{'':>{name_col}} {'In':>{price_col}}  {'Out':>{price_col}}"
++        header = (
++            f"\n{pad}{'':>{name_col}} "
++            f"{_ui('model_menu.price_in', 'In'):>{price_col}}  "
++            f"{_ui('model_menu.price_out', 'Out'):>{price_col}}"
++        )
+         if has_cache:
+-            header += f"  {'Cache':>{cache_col}}"
+-        menu_title += header + "  /Mtok"
++            header += f"  {_ui('model_menu.price_cache', 'Cache'):>{cache_col}}"
++        menu_title += header + f"  {_ui('model_menu.price_unit', '/Mtok')}"
+ 
+     # ANSI escape for dim text
+     _DIM = "\033[2m"
+@@ -3810,8 +3819,8 @@ def _prompt_model_selection(
+         from simple_term_menu import TerminalMenu
+ 
+         choices = [f"  {_label(mid)}" for mid in ordered]
+-        choices.append("  Enter custom model name")
+-        choices.append("  Skip (keep current)")
++        choices.append(f"  {_ui('model_menu.custom', 'Enter custom model name')}")
++        choices.append(f"  {_ui('model_menu.skip', 'Skip (keep current)')}")
+ 
+         # Print the unavailable block BEFORE the menu via regular print().
+         # simple_term_menu pads title lines to terminal width (causes wrapping),
+@@ -3849,7 +3858,7 @@ def _prompt_model_selection(
+         if idx < len(ordered):
+             return ordered[idx]
+         elif idx == len(ordered):
+-            custom = input("Enter model name: ").strip()
++            custom = input(_ui("model_menu.enter_name", "Enter model name: ")).strip()
+             return custom if custom else None
+         return None
+     except (ImportError, NotImplementedError, OSError, subprocess.SubprocessError):
+@@ -3874,7 +3883,9 @@ def _prompt_model_selection(
+ 
+     while True:
+         try:
+-            choice = input(f"Choice [1-{n + 2}] (default: skip): ").strip()
++            choice = input(
++                _ui("model_menu.choice_prompt", "Choice [1-{max_choice}] (default: skip): ", max_choice=n + 2)
++            ).strip()
+             if not choice:
+                 return None
+             idx = int(choice)
+@@ -3911,8 +3922,8 @@ def _save_model_choice(model_id: str) -> None:
+ 
+ def login_command(args) -> None:
+     """Deprecated: use 'hermes model' or 'hermes setup' instead."""
+-    print("The 'hermes login' command has been removed.")
+-    print("Use 'hermes auth' to manage credentials,")
++    print(_ui("login.removed", "The 'hermes login' command has been removed."))
++    print(_ui("login.removed_line2", "Use 'hermes auth' to manage credentials,"))
+     print("'hermes model' to select a provider, or 'hermes setup' for full setup.")
+     raise SystemExit(0)
+ 
+@@ -3937,19 +3948,19 @@ def _login_openai_codex(
+             # the user "Login successful!".
+             _resolved_key = existing.get("api_key", "")
+             if isinstance(_resolved_key, str) and _resolved_key and not _codex_access_token_is_expiring(_resolved_key, 60):
+-                print("Existing Codex credentials found in Hermes auth store.")
++                print(_ui("codex.existing_credentials", "Existing Codex credentials found in Hermes auth store."))
+                 try:
+-                    reuse = input("Use existing credentials? [Y/n]: ").strip().lower()
++                    reuse = input(_ui("codex.reuse_prompt", "Use existing credentials? [Y/n]: ")).strip().lower()
+                 except (EOFError, KeyboardInterrupt):
+                     reuse = "y"
+                 if reuse in ("", "y", "yes"):
+                     config_path = _update_config_for_provider("openai-codex", existing.get("base_url", DEFAULT_CODEX_BASE_URL))
+                     print()
+-                    print("Login successful!")
+-                    print(f"  Config updated: {config_path} (model.provider=openai-codex)")
++                    print(_ui("login.success", "Login successful!"))
++                    print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="openai-codex"))
+                     return
+             else:
+-                print("Existing Codex credentials are expired. Starting fresh login...")
++                print(_ui("codex.existing_expired", "Existing Codex credentials are expired. Starting fresh login..."))
+         except AuthError:
+             pass
+ 
+@@ -3957,7 +3968,7 @@ def _login_openai_codex(
+     if not force_new_login:
+         cli_tokens = _import_codex_cli_tokens()
+         if cli_tokens:
+-            print("Found existing Codex CLI credentials at ~/.codex/auth.json")
++            print(_ui("codex.found_cli_credentials", "Found existing Codex CLI credentials at ~/.codex/auth.json"))
+             print("Hermes will create its own session to avoid conflicts with Codex CLI / VS Code.")
+             try:
+                 do_import = input("Import these credentials? (a separate login is recommended) [y/N]: ").strip().lower()
+@@ -3968,15 +3979,15 @@ def _login_openai_codex(
+                 base_url = os.getenv("HERMES_CODEX_BASE_URL", "").strip().rstrip("/") or DEFAULT_CODEX_BASE_URL
+                 config_path = _update_config_for_provider("openai-codex", base_url)
+                 print()
+-                print("Credentials imported. Note: if Codex CLI refreshes its token,")
+-                print("Hermes will keep working independently with its own session.")
+-                print(f"  Config updated: {config_path} (model.provider=openai-codex)")
++                print(_ui("codex.imported_line1", "Credentials imported. Note: if Codex CLI refreshes its token,"))
++                print(_ui("codex.imported_line2", "Hermes will keep working independently with its own session."))
++                print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="openai-codex"))
+                 return
+ 
+     # Run a fresh device code flow — Hermes gets its own OAuth session
+     print()
+-    print("Signing in to OpenAI Codex...")
+-    print("(Hermes creates its own session — won't affect Codex CLI or VS Code)")
++    print(_ui("codex.signing_in", "Signing in to OpenAI Codex..."))
++    print(_ui("codex.signing_in_note", "(Hermes creates its own session — won't affect Codex CLI or VS Code)"))
+     print()
+ 
+     creds = _codex_device_code_login()
+@@ -3985,10 +3996,10 @@ def _login_openai_codex(
+     _save_codex_tokens(creds["tokens"], creds.get("last_refresh"))
+     config_path = _update_config_for_provider("openai-codex", creds.get("base_url", DEFAULT_CODEX_BASE_URL))
+     print()
+-    print("Login successful!")
++    print(_ui("login.success", "Login successful!"))
+     from hermes_constants import display_hermes_home as _dhh
+-    print(f"  Auth state: {_dhh()}/auth.json")
+-    print(f"  Config updated: {config_path} (model.provider=openai-codex)")
++    print(_ui("login.auth_state", "  Auth state: {path}", path=f"{_dhh()}/auth.json"))
++    print(_ui("login.config_updated", "  Config updated: {path} (model.provider={provider})", path=config_path, provider="openai-codex"))
+ 
+ 
+ def _codex_device_code_login() -> Dict[str, Any]:
+@@ -4030,12 +4041,12 @@ def _codex_device_code_login() -> Dict[str, Any]:
+         )
+ 
+     # Step 2: Show user the code
+-    print("To continue, follow these steps:\n")
+-    print("  1. Open this URL in your browser:")
++    print(_ui("codex.device_steps_intro", "To continue, follow these steps:\n"))
++    print(_ui("codex.device_step_open", "  1. Open this URL in your browser:"))
+     print(f"     \033[94m{issuer}/codex/device\033[0m\n")
+-    print("  2. Enter this code:")
++    print(_ui("codex.device_step_code", "  2. Enter this code:"))
+     print(f"     \033[94m{user_code}\033[0m\n")
+-    print("Waiting for sign-in... (press Ctrl+C to cancel)")
++    print(_ui("codex.device_waiting", "Waiting for sign-in... (press Ctrl+C to cancel)"))
+ 
+     # Step 3: Poll for authorization code
+     max_wait = 15 * 60  # 15 minutes
+@@ -4063,7 +4074,7 @@ def _codex_device_code_login() -> Dict[str, Any]:
+                         provider="openai-codex", code="device_code_poll_error",
+                     )
+     except KeyboardInterrupt:
+-        print("\nLogin cancelled.")
++        print(f"\n{_ui('login.cancelled', 'Login cancelled.')}")
+         raise SystemExit(130)
+ 
+     if code_resp is None:
+@@ -4293,9 +4304,9 @@ def _minimax_oauth_login(
+         user_code = str(code_data["user_code"])
+ 
+         print()
+-        print("To continue:")
+-        print(f"  1. Open: {verification_url}")
+-        print(f"  2. If prompted, enter code: {user_code}")
++        print(_ui("nous.continue", "To continue:"))
++        print(_ui("nous.step_open", "  1. Open: {url}", url=verification_url))
++        print(_ui("nous.step_code", "  2. If prompted, enter code: {code}", code=user_code))
+         if open_browser:
+             if webbrowser.open(verification_url):
+                 print("  (Opened browser for verification)")
+@@ -4489,8 +4500,8 @@ def _nous_device_code_login(
+     if _is_remote_session():
+         open_browser = False
+ 
+-    print(f"Starting Hermes login via {pconfig.name}...")
+-    print(f"Portal: {portal_base_url}")
++    print(_ui("nous.starting_login", "Starting Hermes login via {provider}...", provider=pconfig.name))
++    print(_ui("nous.portal", "Portal: {url}", url=portal_base_url))
+     if insecure:
+         print("TLS verification: disabled (--insecure)")
+     elif ca_bundle:
+@@ -4522,7 +4533,7 @@ def _nous_device_code_login(
+                 print("  Could not open browser automatically — use the URL above.")
+ 
+         effective_interval = max(1, min(interval, DEVICE_AUTH_POLL_INTERVAL_CAP_SECONDS))
+-        print(f"Waiting for approval (polling every {effective_interval}s)...")
++        print(_ui("nous.waiting", "Waiting for approval (polling every {seconds}s)...", seconds=effective_interval))
+ 
+         token_data = _poll_for_token(
+             client=client,
+@@ -4626,8 +4637,8 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+             saved_to = _save_auth_store(auth_store)
+ 
+         print()
+-        print("Login successful!")
+-        print(f"  Auth state: {saved_to}")
++        print(_ui("login.success", "Login successful!"))
++        print(_ui("login.auth_state", "  Auth state: {path}", path=saved_to))
+ 
+         # Resolve model BEFORE writing provider to config.yaml so we never
+         # leave the config in a half-updated state (provider=nous but model
+@@ -4695,7 +4706,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+                     auth_store.pop("active_provider", None)
+                 _save_auth_store(auth_store)
+             print()
+-            print("No provider change. Nous credentials saved for future use.")
++            print(_ui("login.no_provider_change", "No provider change. Nous credentials saved for future use."))
+             print("  Run `hermes model` again to switch to Nous Portal.")
+             return
+ 
+@@ -4711,7 +4722,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
+         print("\nLogin cancelled.")
+         raise SystemExit(130)
+     except Exception as exc:
+-        print(f"Login failed: {exc}")
++        print(_ui("login.failed", "Login failed: {error}", error=exc))
+         raise SystemExit(1)
+ 
+ 
+@@ -4720,7 +4731,7 @@ def logout_command(args) -> None:
+     provider_id = getattr(args, "provider", None)
+ 
+     if provider_id and not is_known_auth_provider(provider_id):
+-        print(f"Unknown provider: {provider_id}")
++        print(_ui("logout.unknown_provider", "Unknown provider: {provider}", provider=provider_id))
+         raise SystemExit(1)
+ 
+     active = get_active_provider()
+diff --git a/hermes_cli/banner.py b/hermes_cli/banner.py
+index c8446f04d..2d34ba0ed 100644
+--- a/hermes_cli/banner.py
++++ b/hermes_cli/banner.py
+@@ -14,6 +14,7 @@ from pathlib import Path
+ from hermes_constants import get_hermes_home
+ from typing import Dict, List, Optional
+ 
++from hermes_cli.skin_engine import get_category_description, get_ui_text
+ from rich.console import Console
+ from rich.panel import Panel
+ from rich.table import Table
+@@ -61,6 +62,10 @@ def _skin_branding(key: str, fallback: str) -> str:
+         return fallback
+ 
+ 
++def _ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"banner.{key}", default, **format_args)
++
++
+ # =========================================================================
+ # ASCII Art & Branding
+ # =========================================================================
+@@ -333,11 +338,13 @@ def format_banner_version_label() -> str:
+     local = state["local"]
+     ahead = int(state.get("ahead") or 0)
+ 
++    upstream_label = _ui("version.upstream", "upstream {hash}", hash=upstream)
+     if ahead <= 0 or upstream == local:
+-        return f"{base} · upstream {upstream}"
++        return f"{base} · {upstream_label}"
+ 
+-    carried_word = "commit" if ahead == 1 else "commits"
+-    return f"{base} · upstream {upstream} · local {local} (+{ahead} carried {carried_word})"
++    local_label = _ui("version.local", "local {hash}", hash=local)
++    carried_label = _ui("version.carried", "(+{count} carried commits)", count=ahead)
++    return f"{base} · {upstream_label} · {local_label} {carried_label}"
+ 
+ 
+ # =========================================================================
+@@ -464,10 +471,10 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
+     left_lines.append(f"[{accent}]{model_short}[/]{ctx_str} [dim {dim}]·[/] [dim {dim}]Nous Research[/]")
+     left_lines.append(f"[dim {dim}]{cwd}[/]")
+     if session_id:
+-        left_lines.append(f"[dim {session_color}]Session: {session_id}[/]")
++        left_lines.append(f"[dim {session_color}]{_ui('session_label', 'Session: {session_id}', session_id=session_id)}[/]")
+     left_content = "\n".join(left_lines)
+ 
+-    right_lines = [f"[bold {accent}]Available Tools[/]"]
++    right_lines = [f"[bold {accent}]{_ui('available_tools', 'Available Tools')}[/]"]
+     toolsets_dict: Dict[str, list] = {}
+ 
+     for tool in tools:
+@@ -521,10 +528,10 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
+                     colored_names.append(f"[{text}]{name}[/]")
+             tools_str = ", ".join(colored_names)
+ 
+-        right_lines.append(f"[dim {dim}]{toolset}:[/] {tools_str}")
++        right_lines.append(f"[dim {dim}]{_ui(f'toolset.{toolset}', toolset)}:[/] {tools_str}")
+ 
+     if remaining_toolsets > 0:
+-        right_lines.append(f"[dim {dim}](and {remaining_toolsets} more toolsets...)[/]")
++        right_lines.append(f"[dim {dim}]{_ui('and_more_toolsets', '(and {count} more toolsets...)', count=remaining_toolsets)}[/]")
+ 
+     # MCP Servers section (only if configured)
+     try:
+@@ -535,7 +542,7 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
+ 
+     if mcp_status:
+         right_lines.append("")
+-        right_lines.append(f"[bold {accent}]MCP Servers[/]")
++        right_lines.append(f"[bold {accent}]{_ui('mcp_servers', 'MCP Servers')}[/]")
+         for srv in mcp_status:
+             if srv["connected"]:
+                 right_lines.append(
+@@ -549,7 +556,7 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
+                 )
+ 
+     right_lines.append("")
+-    right_lines.append(f"[bold {accent}]Available Skills[/]")
++    right_lines.append(f"[bold {accent}]{_ui('available_skills', 'Available Skills')}[/]")
+     skills_by_category = get_available_skills()
+     total_skills = sum(len(s) for s in skills_by_category.values())
+ 
+@@ -558,27 +565,30 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
+             skill_names = sorted(skills_by_category[category])
+             if len(skill_names) > 8:
+                 display_names = skill_names[:8]
+-                skills_str = ", ".join(display_names) + f" +{len(skill_names) - 8} more"
++                skills_str = ", ".join(display_names) + f" {_ui('skills.more_suffix', '+{count} more', count=len(skill_names) - 8)}"
+             else:
+                 skills_str = ", ".join(skill_names)
+             if len(skills_str) > 50:
+                 skills_str = skills_str[:47] + "..."
+-            right_lines.append(f"[dim {dim}]{category}:[/] [{text}]{skills_str}[/]")
++            right_lines.append(f"[dim {dim}]{get_category_description(category, category)}:[/] [{text}]{skills_str}[/]")
+     else:
+-        right_lines.append(f"[dim {dim}]No skills installed[/]")
++        right_lines.append(f"[dim {dim}]{_ui('no_skills', 'No skills installed')}[/]")
+ 
+     right_lines.append("")
+     mcp_connected = sum(1 for s in mcp_status if s["connected"]) if mcp_status else 0
+-    summary_parts = [f"{len(tools)} tools", f"{total_skills} skills"]
++    summary_parts = [
++        _ui("summary.tools", "{count} tools", count=len(tools)),
++        _ui("summary.skills", "{count} skills", count=total_skills),
++    ]
+     if mcp_connected:
+-        summary_parts.append(f"{mcp_connected} MCP servers")
+-    summary_parts.append("/help for commands")
++        summary_parts.append(_ui("summary.mcp_servers", "{count} MCP servers", count=mcp_connected))
++    summary_parts.append(_ui("summary.commands_hint", "/help for commands"))
+     # Show active profile name when not 'default'
+     try:
+         from hermes_cli.profiles import get_active_profile_name
+         _profile_name = get_active_profile_name()
+         if _profile_name and _profile_name != "default":
+-            right_lines.append(f"[bold {accent}]Profile:[/] [{text}]{_profile_name}[/]")
++            right_lines.append(f"[bold {accent}]{_ui('profile_label', 'Profile:')}[/] [{text}]{_profile_name}[/]")
+     except Exception:
+         pass  # Never break the banner over a profiles.py bug
+ 
+@@ -590,17 +600,18 @@ def build_welcome_banner(console: Console, model: str, cwd: str,
+         if behind is not None and behind != 0:
+             from hermes_cli.config import get_managed_update_command, recommended_update_command
+             if behind > 0:
+-                commits_word = "commit" if behind == 1 else "commits"
++                behind_text = _ui("updates.behind", "⚠ {count} commits behind", count=behind)
++                hint_text = _ui("updates.hint", " — run {command} to update", command=f"[bold]{recommended_update_command()}[/bold]")
+                 right_lines.append(
+-                    f"[bold yellow]⚠ {behind} {commits_word} behind[/]"
+-                    f"[dim yellow] — run [bold]{recommended_update_command()}[/bold] to update[/]"
++                    f"[bold yellow]{behind_text}[/]"
++                    f"[dim yellow]{hint_text}[/]"
+                 )
+             else:
+                 # UPDATE_AVAILABLE_NO_COUNT: nix-built hermes; we know an update
+                 # exists but not by how much, and we don't know how the user
+                 # installed it (nix run, profile, system flake, home-manager).
+                 managed_cmd = get_managed_update_command()
+-                line = "[bold yellow]⚠ update available[/]"
++                line = f"[bold yellow]{_ui('updates.available', '⚠ update available')}[/]"
+                 if managed_cmd:
+                     line += f"[dim yellow] — run [bold]{managed_cmd}[/bold][/]"
+                 right_lines.append(line)
+diff --git a/hermes_cli/commands.py b/hermes_cli/commands.py
+index 41b1dad50..ebf532f3f 100644
+--- a/hermes_cli/commands.py
++++ b/hermes_cli/commands.py
+@@ -60,141 +60,141 @@ class CommandDef:
+ 
+ COMMAND_REGISTRY: list[CommandDef] = [
+     # Session
+-    CommandDef("new", "Start a new session (fresh session ID + history)", "Session",
++    CommandDef("new", get_command_desc("new", Start a new session (fresh session ID + history), "Session",
+                aliases=("reset",)),
+-    CommandDef("clear", "Clear screen and start a new session", "Session",
++    CommandDef("clear", get_command_desc("clear", Clear screen and start a new session, "Session",
+                cli_only=True),
+-    CommandDef("redraw", "Force a full UI repaint (recovers from terminal drift)", "Session",
++    CommandDef("redraw", get_command_desc("redraw", Force a full UI repaint (recovers from terminal drift), "Session",
+                cli_only=True),
+-    CommandDef("history", "Show conversation history", "Session",
++    CommandDef("history", get_command_desc("history", Show conversation history, "Session",
+                cli_only=True),
+-    CommandDef("save", "Save the current conversation", "Session",
++    CommandDef("save", get_command_desc("save", Save the current conversation, "Session",
+                cli_only=True),
+-    CommandDef("retry", "Retry the last message (resend to agent)", "Session"),
+-    CommandDef("undo", "Remove the last user/assistant exchange", "Session"),
+-    CommandDef("title", "Set a title for the current session", "Session",
++    CommandDef("retry", get_command_desc("retry", Retry the last message (resend to agent), "Session"),
++    CommandDef("undo", get_command_desc("undo", Remove the last user/assistant exchange, "Session"),
++    CommandDef("title", get_command_desc("title", Set a title for the current session, "Session",
+                args_hint="[name]"),
+-    CommandDef("branch", "Branch the current session (explore a different path)", "Session",
++    CommandDef("branch", get_command_desc("branch", Branch the current session (explore a different path), "Session",
+                aliases=("fork",), args_hint="[name]"),
+-    CommandDef("compress", "Manually compress conversation context", "Session",
++    CommandDef("compress", get_command_desc("compress", Manually compress conversation context, "Session",
+                args_hint="[focus topic]"),
+-    CommandDef("rollback", "List or restore filesystem checkpoints", "Session",
++    CommandDef("rollback", get_command_desc("rollback", List or restore filesystem checkpoints, "Session",
+                args_hint="[number]"),
+-    CommandDef("snapshot", "Create or restore state snapshots of Hermes config/state", "Session",
++    CommandDef("snapshot", get_command_desc("snapshot", Create or restore state snapshots of Hermes config/state, "Session",
+                cli_only=True, aliases=("snap",), args_hint="[create|restore <id>|prune]"),
+-    CommandDef("stop", "Kill all running background processes", "Session"),
+-    CommandDef("approve", "Approve a pending dangerous command", "Session",
++    CommandDef("stop", get_command_desc("stop", Kill all running background processes, "Session"),
++    CommandDef("approve", get_command_desc("approve", Approve a pending dangerous command, "Session",
+                gateway_only=True, args_hint="[session|always]"),
+-    CommandDef("deny", "Deny a pending dangerous command", "Session",
++    CommandDef("deny", get_command_desc("deny", Deny a pending dangerous command, "Session",
+                gateway_only=True),
+-    CommandDef("background", "Run a prompt in the background", "Session",
++    CommandDef("background", get_command_desc("background", Run a prompt in the background, "Session",
+                aliases=("bg", "btw"), args_hint="<prompt>"),
+-    CommandDef("agents", "Show active agents and running tasks", "Session",
++    CommandDef("agents", get_command_desc("agents", Show active agents and running tasks, "Session",
+                aliases=("tasks",)),
+-    CommandDef("queue", "Queue a prompt for the next turn (doesn't interrupt)", "Session",
++    CommandDef("queue", get_command_desc("queue", Queue a prompt for the next turn (doesn't interrupt), "Session",
+                aliases=("q",), args_hint="<prompt>"),
+-    CommandDef("steer", "Inject a message after the next tool call without interrupting", "Session",
++    CommandDef("steer", get_command_desc("steer", Inject a message after the next tool call without interrupting, "Session",
+                args_hint="<prompt>"),
+-    CommandDef("goal", "Set a standing goal Hermes works on across turns until achieved", "Session",
++    CommandDef("goal", get_command_desc("goal", Set a standing goal Hermes works on across turns until achieved, "Session",
+                args_hint="[text | pause | resume | clear | status]"),
+-    CommandDef("status", "Show session info", "Session"),
+-    CommandDef("profile", "Show active profile name and home directory", "Info"),
+-    CommandDef("sethome", "Set this chat as the home channel", "Session",
++    CommandDef("status", get_command_desc("status", Show session info, "Session"),
++    CommandDef("profile", get_command_desc("profile", Show active profile name and home directory, "Info"),
++    CommandDef("sethome", get_command_desc("sethome", Set this chat as the home channel, "Session",
+                gateway_only=True, aliases=("set-home",)),
+-    CommandDef("resume", "Resume a previously-named session", "Session",
++    CommandDef("resume", get_command_desc("resume", Resume a previously-named session, "Session",
+                args_hint="[name]"),
+ 
+     # Configuration
+-    CommandDef("config", "Show current configuration", "Configuration",
++    CommandDef("config", get_command_desc("config", Show current configuration, "Configuration",
+                cli_only=True),
+-    CommandDef("model", "Switch model for this session", "Configuration",
++    CommandDef("model", get_command_desc("model", Switch model for this session, "Configuration",
+                aliases=("provider",), args_hint="[model] [--provider name] [--global]"),
+-    CommandDef("gquota", "Show Google Gemini Code Assist quota usage", "Info",
++    CommandDef("gquota", get_command_desc("gquota", Show Google Gemini Code Assist quota usage, "Info",
+                cli_only=True),
+ 
+-    CommandDef("personality", "Set a predefined personality", "Configuration",
++    CommandDef("personality", get_command_desc("personality", Set a predefined personality, "Configuration",
+                args_hint="[name]"),
+-    CommandDef("statusbar", "Toggle the context/model status bar", "Configuration",
++    CommandDef("statusbar", get_command_desc("statusbar", Toggle the context/model status bar, "Configuration",
+                cli_only=True, aliases=("sb",)),
+-    CommandDef("verbose", "Cycle tool progress display: off -> new -> all -> verbose",
++    CommandDef("verbose", get_command_desc("verbose", Cycle tool progress display: off -> new -> all -> verbose,
+                "Configuration", cli_only=True,
+                gateway_config_gate="display.tool_progress_command"),
+-    CommandDef("footer", "Toggle gateway runtime-metadata footer on final replies",
++    CommandDef("footer", get_command_desc("footer", Toggle gateway runtime-metadata footer on final replies,
+                "Configuration", args_hint="[on|off|status]",
+                subcommands=("on", "off", "status")),
+-    CommandDef("yolo", "Toggle YOLO mode (skip all dangerous command approvals)",
++    CommandDef("yolo", get_command_desc("yolo", Toggle YOLO mode (skip all dangerous command approvals),
+                "Configuration"),
+-    CommandDef("reasoning", "Manage reasoning effort and display", "Configuration",
++    CommandDef("reasoning", get_command_desc("reasoning", Manage reasoning effort and display, "Configuration",
+                args_hint="[level|show|hide]",
+                subcommands=("none", "minimal", "low", "medium", "high", "xhigh", "show", "hide", "on", "off")),
+-    CommandDef("fast", "Toggle fast mode — OpenAI Priority Processing / Anthropic Fast Mode (Normal/Fast)", "Configuration",
++    CommandDef("fast", get_command_desc("fast", Toggle fast mode — OpenAI Priority Processing / Anthropic Fast Mode (Normal/Fast), "Configuration",
+                args_hint="[normal|fast|status]",
+                subcommands=("normal", "fast", "status", "on", "off")),
+-    CommandDef("skin", "Show or change the display skin/theme", "Configuration",
++    CommandDef("skin", get_command_desc("skin", Show or change the display skin/theme, "Configuration",
+                cli_only=True, args_hint="[name]"),
+-    CommandDef("indicator", "Pick the TUI busy-indicator style", "Configuration",
++    CommandDef("indicator", get_command_desc("indicator", Pick the TUI busy-indicator style, "Configuration",
+                cli_only=True, args_hint="[kaomoji|emoji|unicode|ascii]",
+                subcommands=("kaomoji", "emoji", "unicode", "ascii")),
+-    CommandDef("voice", "Toggle voice mode", "Configuration",
++    CommandDef("voice", get_command_desc("voice", Toggle voice mode, "Configuration",
+                args_hint="[on|off|tts|status]", subcommands=("on", "off", "tts", "status")),
+-    CommandDef("busy", "Control what Enter does while Hermes is working", "Configuration",
++    CommandDef("busy", get_command_desc("busy", Control what Enter does while Hermes is working, "Configuration",
+                cli_only=True, args_hint="[queue|steer|interrupt|status]",
+                subcommands=("queue", "steer", "interrupt", "status")),
+ 
+     # Tools & Skills
+-    CommandDef("tools", "Manage tools: /tools [list|disable|enable] [name...]", "Tools & Skills",
++    CommandDef("tools", get_command_desc("tools", Manage tools: /tools [list|disable|enable] [name...], "Tools & Skills",
+                args_hint="[list|disable|enable] [name...]", cli_only=True),
+-    CommandDef("toolsets", "List available toolsets", "Tools & Skills",
++    CommandDef("toolsets", get_command_desc("toolsets", List available toolsets, "Tools & Skills",
+                cli_only=True),
+-    CommandDef("skills", "Search, install, inspect, or manage skills",
++    CommandDef("skills", get_command_desc("skills", Search, install, inspect, or manage skills,
+                "Tools & Skills", cli_only=True,
+                subcommands=("search", "browse", "inspect", "install")),
+-    CommandDef("cron", "Manage scheduled tasks", "Tools & Skills",
++    CommandDef("cron", get_command_desc("cron", Manage scheduled tasks, "Tools & Skills",
+                cli_only=True, args_hint="[subcommand]",
+                subcommands=("list", "add", "create", "edit", "pause", "resume", "run", "remove")),
+-    CommandDef("curator", "Background skill maintenance (status, run, pin, archive)",
++    CommandDef("curator", get_command_desc("curator", Background skill maintenance (status, run, pin, archive),
+                "Tools & Skills", args_hint="[subcommand]",
+                subcommands=("status", "run", "pause", "resume", "pin", "unpin", "restore")),
+-    CommandDef("kanban", "Multi-profile collaboration board (tasks, links, comments)",
++    CommandDef("kanban", get_command_desc("kanban", Multi-profile collaboration board (tasks, links, comments),
+                "Tools & Skills", args_hint="[subcommand]",
+                subcommands=("list", "ls", "show", "create", "assign", "link", "unlink",
+                             "claim", "comment", "complete", "block", "unblock", "archive",
+                             "tail", "dispatch", "context", "init", "gc")),
+-    CommandDef("reload", "Reload .env variables into the running session", "Tools & Skills",
++    CommandDef("reload", get_command_desc("reload", Reload .env variables into the running session, "Tools & Skills",
+                cli_only=True),
+-    CommandDef("reload-mcp", "Reload MCP servers from config", "Tools & Skills",
++    CommandDef("reload-mcp", get_command_desc("reload-mcp", Reload MCP servers from config, "Tools & Skills",
+                aliases=("reload_mcp",)),
+-    CommandDef("reload-skills", "Re-scan ~/.hermes/skills/ for newly installed or removed skills",
++    CommandDef("reload-skills", get_command_desc("reload-skills", Re-scan ~/.hermes/skills/ for newly installed or removed skills,
+                "Tools & Skills", aliases=("reload_skills",)),
+-    CommandDef("browser", "Connect browser tools to your live Chrome via CDP", "Tools & Skills",
++    CommandDef("browser", get_command_desc("browser", Connect browser tools to your live Chrome via CDP, "Tools & Skills",
+                cli_only=True, args_hint="[connect|disconnect|status]",
+                subcommands=("connect", "disconnect", "status")),
+-    CommandDef("plugins", "List installed plugins and their status",
++    CommandDef("plugins", get_command_desc("plugins", List installed plugins and their status,
+                "Tools & Skills", cli_only=True),
+ 
+     # Info
+-    CommandDef("commands", "Browse all commands and skills (paginated)", "Info",
++    CommandDef("commands", get_command_desc("commands", Browse all commands and skills (paginated), "Info",
+                gateway_only=True, args_hint="[page]"),
+-    CommandDef("help", "Show available commands", "Info"),
+-    CommandDef("restart", "Gracefully restart the gateway after draining active runs", "Session",
++    CommandDef("help", get_command_desc("help", Show available commands, "Info"),
++    CommandDef("restart", get_command_desc("restart", Gracefully restart the gateway after draining active runs, "Session",
+                gateway_only=True),
+-    CommandDef("usage", "Show token usage and rate limits for the current session", "Info"),
+-    CommandDef("insights", "Show usage insights and analytics", "Info",
++    CommandDef("usage", get_command_desc("usage", Show token usage and rate limits for the current session, "Info"),
++    CommandDef("insights", get_command_desc("insights", Show usage insights and analytics, "Info",
+                args_hint="[days]"),
+-    CommandDef("platforms", "Show gateway/messaging platform status", "Info",
++    CommandDef("platforms", get_command_desc("platforms", Show gateway/messaging platform status, "Info",
+                cli_only=True, aliases=("gateway",)),
+-    CommandDef("copy", "Copy the last assistant response to clipboard", "Info",
++    CommandDef("copy", get_command_desc("copy", Copy the last assistant response to clipboard, "Info",
+                cli_only=True, args_hint="[number]"),
+-    CommandDef("paste", "Attach clipboard image from your clipboard", "Info",
++    CommandDef("paste", get_command_desc("paste", Attach clipboard image from your clipboard, "Info",
+                cli_only=True),
+-    CommandDef("image", "Attach a local image file for your next prompt", "Info",
++    CommandDef("image", get_command_desc("image", Attach a local image file for your next prompt, "Info",
+                cli_only=True, args_hint="<path>"),
+-    CommandDef("update", "Update Hermes Agent to the latest version", "Info",
++    CommandDef("update", get_command_desc("update", Update Hermes Agent to the latest version, "Info",
+                gateway_only=True),
+-    CommandDef("debug", "Upload debug report (system info + logs) and get shareable links", "Info"),
++    CommandDef("debug", get_command_desc("debug", Upload debug report (system info + logs) and get shareable links, "Info"),
+ 
+     # Exit
+-    CommandDef("quit", "Exit the CLI", "Exit",
++    CommandDef("quit", get_command_desc("quit", Exit the CLI, "Exit",
+                cli_only=True, aliases=("exit",)),
+ ]
+ 
+@@ -1362,7 +1362,7 @@ class SlashCommandCompleter(Completer):
+     def _skin_completions(sub_text: str, sub_lower: str):
+         """Yield completions for /skin from available skins."""
+         try:
+-            from hermes_cli.skin_engine import list_skins
++            from hermes_cli.skin_engine import get_command_desc,  list_skins
+             for s in list_skins():
+                 name = s["name"]
+                 if name.startswith(sub_lower) and name != sub_lower:
+diff --git a/hermes_cli/debug.py b/hermes_cli/debug.py
+index 06be05a35..d1ec20f6c 100644
+--- a/hermes_cli/debug.py
++++ b/hermes_cli/debug.py
+@@ -16,9 +16,14 @@ from dataclasses import dataclass
+ from pathlib import Path
+ from typing import Optional
+ 
++from hermes_cli.skin_engine import get_ui_text
+ from hermes_constants import get_hermes_home
+ from utils import atomic_replace
+ 
++def _ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"debug.{key}", default, **format_args)
++
++
+ 
+ # ---------------------------------------------------------------------------
+ # Paste services — try paste.rs first, dpaste.com as fallback.
+@@ -383,14 +388,22 @@ def _capture_log_snapshot(
+     log_path = _resolve_log_path(log_name)
+     if log_path is None:
+         primary = _primary_log_path(log_name)
+-        tail = "(file empty)" if primary and primary.exists() else "(file not found)"
++        tail = (
++            _ui("log.empty", "(file empty)")
++            if primary and primary.exists()
++            else _ui("log.missing", "(file not found)")
++        )
+         return LogSnapshot(path=None, tail_text=tail, full_text=None)
+ 
+     try:
+         size = log_path.stat().st_size
+         if size == 0:
+             # race: file was truncated between _resolve_log_path and stat
+-            return LogSnapshot(path=log_path, tail_text="(file empty)", full_text=None)
++            return LogSnapshot(
++                path=log_path,
++                tail_text=_ui("log.empty", "(file empty)"),
++                full_text=None,
++            )
+ 
+         with open(log_path, "rb") as f:
+             if size <= max_bytes:
+@@ -534,9 +547,9 @@ def run_debug_share(args):
+     local_only = getattr(args, "local", False)
+ 
+     if not local_only:
+-        print(_PRIVACY_NOTICE)
++        print(_ui("privacy_notice", _PRIVACY_NOTICE))
+ 
+-    print("Collecting debug report...")
++    print(_ui("collecting", "Collecting debug report..."))
+ 
+     # Capture dump once — prepended to every paste for context.
+     dump_text = _capture_dump()
+@@ -570,7 +583,7 @@ def run_debug_share(args):
+             print(gateway_log)
+         return
+ 
+-    print("Uploading...")
++    print(_ui("uploading", "Uploading..."))
+     urls: dict[str, str] = {}
+     failures: list[str] = []
+ 
+@@ -578,7 +591,7 @@ def run_debug_share(args):
+     try:
+         urls["Report"] = upload_to_pastebin(report, expiry_days=expiry)
+     except RuntimeError as exc:
+-        print(f"\nUpload failed: {exc}", file=sys.stderr)
++        print(f"\n{_ui('upload_failed', 'Upload failed')}: {exc}", file=sys.stderr)
+         print("\nFull report printed below — copy-paste it manually:\n")
+         print(report)
+         sys.exit(1)
+@@ -599,7 +612,7 @@ def run_debug_share(args):
+ 
+     # Print results
+     label_width = max(len(k) for k in urls)
+-    print(f"\nDebug report uploaded:")
++    print(f"\n{_ui('uploaded', 'Debug report uploaded:')}")
+     for label, url in urls.items():
+         print(f"  {label:<{label_width}}  {url}")
+ 
+@@ -608,20 +621,20 @@ def run_debug_share(args):
+ 
+     # Schedule auto-deletion after 6 hours
+     _schedule_auto_delete(list(urls.values()))
+-    print(f"\n⏱  Pastes will auto-delete in 6 hours.")
++    print(_ui("auto_delete_hint", "\n⏱  Pastes will auto-delete in 6 hours."))
+ 
+     # Manual delete fallback
+-    print(f"To delete now:  hermes debug delete <url>")
++    print(_ui("delete_now_hint", "To delete now:  hermes debug delete <url>"))
+ 
+-    print(f"\nShare these links with the Hermes team for support.")
++    print(f"\n{_ui('share_hint', 'Share these links with the Hermes team for support.')}")
+ 
+ 
+ def run_debug_delete(args):
+     """Delete one or more paste URLs uploaded by /debug."""
+     urls = getattr(args, "urls", [])
+     if not urls:
+-        print("Usage: hermes debug delete <url> [<url> ...]")
+-        print("  Deletes paste.rs pastes uploaded by 'hermes debug share'.")
++        print(_ui("delete_usage", "Usage: hermes debug delete <url> [<url> ...]"))
++        print(_ui("delete_help", "  Deletes paste.rs pastes uploaded by 'hermes debug share'."))
+         return
+ 
+     for url in urls:
+@@ -656,9 +669,9 @@ def run_debug(args):
+         run_debug_delete(args)
+     else:
+         # Default: show help
+-        print("Usage: hermes debug <command>")
++        print(_ui("usage", "Usage: hermes debug <command>"))
+         print()
+-        print("Commands:")
++        print(_ui("commands_label", "Commands:"))
+         print("  share    Upload debug report to a paste service and print URL")
+         print("  delete   Delete a previously uploaded paste")
+         print()
+diff --git a/hermes_cli/gateway.py b/hermes_cli/gateway.py
+index af4044492..cc3b8346b 100644
+--- a/hermes_cli/gateway.py
++++ b/hermes_cli/gateway.py
+@@ -37,6 +37,11 @@ from hermes_cli.setup import (
+     prompt, prompt_choice, prompt_yes_no,
+ )
+ from hermes_cli.colors import Colors, color
++from hermes_cli.skin_engine import get_ui_text
++
++
++def _ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"gateway.{key}", default, **format_args)
+ 
+ 
+ # =============================================================================
+@@ -2404,7 +2409,7 @@ def launchd_status(deep: bool = False):
+         loaded = False
+         loaded_output = ""
+ 
+-    print(f"Launchd plist: {plist_path}")
++    print(_ui("launchd.plist", "Launchd plist: {path}", path=plist_path))
+     if launchd_plist_is_current():
+         print("✓ Service definition matches the current Hermes install")
+     else:
+@@ -2446,10 +2451,10 @@ def run_gateway(verbose: int = 0, quiet: bool = False, replace: bool = False):
+     from gateway.run import start_gateway
+     
+     print("┌─────────────────────────────────────────────────────────┐")
+-    print("│           ⚕ Hermes Gateway Starting...                 │")
++    print(f"│{_ui('run.banner_title', '           ⚕ Hermes Gateway Starting...                 '):57}│")
+     print("├─────────────────────────────────────────────────────────┤")
+-    print("│  Messaging platforms + cron scheduler                    │")
+-    print("│  Press Ctrl+C to stop                                   │")
++    print(f"│{_ui('run.banner_subtitle', '  Messaging platforms + cron scheduler                    '):57}│")
++    print(f"│{_ui('run.banner_stop_hint', '  Press Ctrl+C to stop                                   '):57}│")
+     print("└─────────────────────────────────────────────────────────┘")
+     print()
+     
+@@ -3954,7 +3959,7 @@ def gateway_setup():
+ 
+     print()
+     print(color("┌─────────────────────────────────────────────────────────┐", Colors.MAGENTA))
+-    print(color("│             ⚕ Gateway Setup                            │", Colors.MAGENTA))
++    print(color(f"│             {_ui('setup.title', '⚕ Gateway Setup'):<40}│", Colors.MAGENTA))
+     print(color("├─────────────────────────────────────────────────────────┤", Colors.MAGENTA))
+     print(color("│  Configure messaging platforms and the gateway service. │", Colors.MAGENTA))
+     print(color("│  Press Ctrl+C at any time to exit.                     │", Colors.MAGENTA))
+@@ -4004,7 +4009,7 @@ def gateway_setup():
+             f"{p['emoji']} {p['label']}  ({_platform_status(p)})"
+             for p in platforms
+         ]
+-        menu_items.append("Done")
++        menu_items.append(_ui("setup.done", "Done"))
+ 
+         choice = prompt_choice("Select a platform to configure:", menu_items, len(menu_items) - 1)
+         if choice == len(platforms):
+diff --git a/hermes_cli/goals.py b/hermes_cli/goals.py
+index 0f0f3abd9..2e8748f25 100644
+--- a/hermes_cli/goals.py
++++ b/hermes_cli/goals.py
+@@ -35,6 +35,7 @@ import re
+ import time
+ from dataclasses import dataclass, asdict
+ from typing import Any, Dict, Optional, Tuple
++from hermes_cli.skin_engine import get_ui_text
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -87,6 +88,11 @@ JUDGE_USER_PROMPT_TEMPLATE = (
+ 
+ 
+ @dataclass
++
++def _goal_ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"goals.{key}", default, **format_args)
++
++
+ class GoalState:
+     """Serializable goal state stored per session."""
+ 
+diff --git a/hermes_cli/main.py b/hermes_cli/main.py
+index 856d85c63..53276c05a 100644
+--- a/hermes_cli/main.py
++++ b/hermes_cli/main.py
+@@ -52,6 +52,21 @@ import sys
+ from pathlib import Path
+ from typing import Optional
+ 
++def _ui(key: str, default: str = "", **format_args) -> str:
++    fallback = default
++    if format_args:
++        try:
++            fallback = default.format(**format_args)
++        except Exception:
++            fallback = default
++    try:
++        from hermes_cli.skin_engine import get_ui_text
++        return get_ui_text(f"main.{key}", default, **format_args)
++    except Exception:
++        return fallback
++
++
++
+ def _add_accept_hooks_flag(parser) -> None:
+     """Attach the ``--accept-hooks`` flag.  Shared across every agent
+     subparser so the flag works regardless of CLI position."""
+@@ -75,9 +90,13 @@ def _require_tty(command_name: str) -> None:
+     """
+     if not sys.stdin.isatty():
+         print(
+-            f"Error: 'hermes {command_name}' requires an interactive terminal.\n"
+-            f"It cannot be run through a pipe or non-interactive subprocess.\n"
+-            f"Run it directly in your terminal instead.",
++            _ui(
++                "require_tty.message",
++                "Error: 'hermes {command_name}' requires an interactive terminal.\n"
++                "It cannot be run through a pipe or non-interactive subprocess.\n"
++                "Run it directly in your terminal instead.",
++                command_name=command_name,
++            ),
+             file=sys.stderr,
+         )
+         sys.exit(1)
+diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
+index 6ca6f8adf..85399ed52 100644
+--- a/hermes_cli/skin_engine.py
++++ b/hermes_cli/skin_engine.py
+@@ -120,6 +120,91 @@ from hermes_constants import get_hermes_home
+ 
+ logger = logging.getLogger(__name__)
+ 
++# =============================================================================
++# Localization (zh-CN overlay)
++# =============================================================================
++
++_LOCALIZATION_DIR = get_hermes_home() / "localization"
++
++
++def _load_localization(filename: str) -> dict:
++    """Load a YAML localization file from ~/.hermes/localization/"""
++    path = _LOCALIZATION_DIR / filename
++    if path.is_file():
++        try:
++            import yaml
++            with open(path, "r", encoding="utf-8") as f:
++                data = yaml.safe_load(f)
++            if isinstance(data, dict):
++                return data
++        except Exception as e:
++            logger.debug("Failed to load localization %s: %s", filename, e)
++    return {}
++
++
++def get_ui_text(key: str, default: str = "", **format_args) -> str:
++    """Look up a UI text from ui.zh-CN.yaml"""
++    _ui_cache = getattr(get_ui_text, '_cache', None)
++    if _ui_cache is None:
++        _ui_cache = _load_localization("ui.zh-CN.yaml")
++        get_ui_text._cache = _ui_cache
++    messages = _ui_cache.get("messages", {})
++    value = messages.get(key, default)
++    if value and format_args:
++        try:
++            return value.format(**format_args)
++        except (KeyError, IndexError):
++            return value
++    return value
++
++
++def get_command_desc(command_name: str, default: str = "") -> str:
++    """Look up command description from commands.zh-CN.yaml"""
++    _cache = getattr(get_command_desc, '_cache', None)
++    if _cache is None:
++        _cache = _load_localization("commands.zh-CN.yaml")
++        get_command_desc._cache = _cache
++    return _cache.get(command_name, default) or default
++
++
++def get_tip_text(tip_text: str) -> str:
++    """Look up tip translation from tips.zh-CN.yaml"""
++    _cache = getattr(get_tip_text, '_cache', None)
++    if _cache is None:
++        _cache = _load_localization("tips.zh-CN.yaml")
++        get_tip_text._cache = _cache
++    return _cache.get(tip_text, tip_text) or tip_text
++
++
++def get_skill_desc(skill_name: str, default: str = "") -> str:
++    """Look up skill description from skills.zh-CN.yaml"""
++    _cache = getattr(get_skill_desc, '_cache', None)
++    if _cache is None:
++        _cache = _load_localization("skills.zh-CN.yaml")
++        get_skill_desc._cache = _cache
++    return _cache.get(skill_name, default) or default
++
++
++def get_skin_text(skin_name: str, key: str, default: str = "") -> str:
++    """Look up skin text from skins.zh-CN.yaml"""
++    _cache = getattr(get_skin_text, '_cache', None)
++    if _cache is None:
++        _cache = _load_localization("skins.zh-CN.yaml")
++        get_skin_text._cache = _cache
++    skin_data = _cache.get("skins", {}).get(skin_name, {})
++    if not skin_data:
++        return default
++    # Navigate nested keys like "branding.welcome"
++    parts = key.split(".")
++    obj = skin_data
++    for part in parts:
++        if isinstance(obj, dict):
++            obj = obj.get(part)
++        else:
++            return default
++    return str(obj) if obj is not None else default
++
++
+ 
+ # =============================================================================
+ # Skin data structure
+diff --git a/hermes_cli/status.py b/hermes_cli/status.py
+index 38b22a03e..dc1450dd8 100644
+--- a/hermes_cli/status.py
++++ b/hermes_cli/status.py
+@@ -18,10 +18,15 @@ from hermes_cli.config import get_env_path, get_env_value, get_hermes_home, load
+ from hermes_cli.models import provider_label
+ from hermes_cli.nous_subscription import get_nous_subscription_features
+ from hermes_cli.runtime_provider import resolve_requested_provider
++from hermes_cli.skin_engine import get_ui_text
+ from hermes_cli.vercel_auth import describe_vercel_auth
+ from hermes_constants import OPENROUTER_MODELS_URL
+ from tools.tool_backend_helpers import managed_nous_tools_enabled
+ 
++
++def _ui(key: str, default: str = "", **format_args) -> str:
++    return get_ui_text(f"status.{key}", default, **format_args)
++
+ def check_mark(ok: bool) -> str:
+     if ok:
+         return color("✓", Colors.GREEN)
+@@ -36,17 +41,17 @@ def redact_key(key: str) -> str:
+     consolidated via PR that also introduced ``mask_secret``).
+     """
+     from agent.redact import mask_secret
+-    return mask_secret(key, empty=color("(not set)", Colors.DIM))
++    return mask_secret(key, empty=color(_ui("labels.not_set", "(not set)"), Colors.DIM))
+ 
+ 
+ def _format_iso_timestamp(value) -> str:
+     """Format ISO timestamps for status output, converting to local timezone."""
+     if not value or not isinstance(value, str):
+-        return "(unknown)"
++        return _ui("labels.unknown", "(unknown)")
+     from datetime import datetime, timezone
+     text = value.strip()
+     if not text:
+-        return "(unknown)"
++        return _ui("labels.unknown", "(unknown)")
+     if text.endswith("Z"):
+         text = text[:-1] + "+00:00"
+     try:
+@@ -67,7 +72,7 @@ def _configured_model_label(config: dict) -> str:
+         model = model_cfg.strip()
+     else:
+         model = ""
+-    return model or "(not set)"
++    return model or _ui("labels.not_set", "(not set)")
+ 
+ 
+ def _effective_provider_label() -> str:
+@@ -94,33 +99,34 @@ def show_status(args):
+ 
+     print()
+     print(color("┌─────────────────────────────────────────────────────────┐", Colors.CYAN))
+-    print(color("│                 ⚕ Hermes Agent Status                  │", Colors.CYAN))
++    print(color("│                   " + _ui("banner.title", "⚕ Hermes Agent Status").center(35) + "│", Colors.CYAN))
+     print(color("└─────────────────────────────────────────────────────────┘", Colors.CYAN))
+ 
+     # =========================================================================
+     # Environment
+     # =========================================================================
+     print()
+-    print(color("◆ Environment", Colors.CYAN, Colors.BOLD))
+-    print(f"  Project:      {PROJECT_ROOT}")
+-    print(f"  Python:       {sys.version.split()[0]}")
++    print(color(_ui("sections.environment", "◆ Environment"), Colors.CYAN, Colors.BOLD))
++    print(f"  {_ui('labels.project', 'Project:'):<12} {PROJECT_ROOT}")
++    print(f"  {_ui('labels.python', 'Python:'):<12} {sys.version.split()[0]}")
+ 
+     env_path = get_env_path()
+-    print(f"  .env file:    {check_mark(env_path.exists())} {'exists' if env_path.exists() else 'not found'}")
++    env_state = _ui("env_file.exists", "exists") if env_path.exists() else _ui("env_file.missing", "not found")
++    print(f"  {_ui('labels.env_file', '.env file:'):<12} {check_mark(env_path.exists())} {env_state}")
+ 
+     try:
+         config = load_config()
+     except Exception:
+         config = {}
+ 
+-    print(f"  Model:        {_configured_model_label(config)}")
+-    print(f"  Provider:     {_effective_provider_label()}")
++    print(f"  {_ui('labels.model', 'Model:'):<12} {_configured_model_label(config)}")
++    print(f"  {_ui('labels.provider', 'Provider:'):<12} {_effective_provider_label()}")
+ 
+     # =========================================================================
+     # API Keys
+     # =========================================================================
+     print()
+-    print(color("◆ API Keys", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.api_keys", "◆ API Keys"), Colors.CYAN, Colors.BOLD))
+ 
+     keys = {
+         "OpenRouter": "OPENROUTER_API_KEY",
+@@ -157,7 +163,7 @@ def show_status(args):
+     # Auth Providers (OAuth)
+     # =========================================================================
+     print()
+-    print(color("◆ Auth Providers", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.auth_providers", "◆ Auth Providers"), Colors.CYAN, Colors.BOLD))
+ 
+     try:
+         from hermes_cli.auth import (
+@@ -178,16 +184,15 @@ def show_status(args):
+ 
+     nous_logged_in = bool(nous_status.get("logged_in"))
+     nous_error = nous_status.get("error")
+-    nous_label = "logged in" if nous_logged_in else "not logged in (run: hermes auth add nous --type oauth)"
+     print(
+         f"  {'Nous Portal':<12}  {check_mark(nous_logged_in)} "
+-        f"{nous_label}"
++        f"{_ui('auth.logged_in', 'logged in') if nous_logged_in else _ui('auth.not_logged_in_nous', 'not logged in (run: hermes auth add nous --type oauth)')}"
+     )
+-    portal_url = nous_status.get("portal_base_url") or "(unknown)"
++    portal_url = nous_status.get("portal_base_url") or _ui("labels.unknown", "(unknown)")
+     access_exp = _format_iso_timestamp(nous_status.get("access_expires_at"))
+     key_exp = _format_iso_timestamp(nous_status.get("agent_key_expires_at"))
+-    refresh_label = "yes" if nous_status.get("has_refresh_token") else "no"
+-    if nous_logged_in or portal_url != "(unknown)" or nous_error:
++    refresh_label = _ui("labels.yes", "yes") if nous_status.get("has_refresh_token") else _ui("labels.no", "no")
++    if nous_logged_in or portal_url != _ui("labels.unknown", "(unknown)") or nous_error:
+         print(f"    Portal URL: {portal_url}")
+     if nous_logged_in or nous_status.get("access_expires_at"):
+         print(f"    Access exp: {access_exp}")
+@@ -201,7 +206,7 @@ def show_status(args):
+     codex_logged_in = bool(codex_status.get("logged_in"))
+     print(
+         f"  {'OpenAI Codex':<12}  {check_mark(codex_logged_in)} "
+-        f"{'logged in' if codex_logged_in else 'not logged in (run: hermes model)'}"
++        f"{_ui('auth.logged_in', 'logged in') if codex_logged_in else _ui('auth.not_logged_in_run_model', 'not logged in (run: hermes model)')}"
+     )
+     codex_auth_file = codex_status.get("auth_store")
+     if codex_auth_file:
+@@ -215,7 +220,7 @@ def show_status(args):
+     qwen_logged_in = bool(qwen_status.get("logged_in"))
+     print(
+         f"  {'Qwen OAuth':<12}  {check_mark(qwen_logged_in)} "
+-        f"{'logged in' if qwen_logged_in else 'not logged in (run: qwen auth qwen-oauth)'}"
++        f"{_ui('auth.logged_in', 'logged in') if qwen_logged_in else _ui('auth.qwen_not_logged_in', 'not logged in (run: qwen auth qwen-oauth)')}"
+     )
+     qwen_auth_file = qwen_status.get("auth_file")
+     if qwen_auth_file:
+@@ -230,7 +235,7 @@ def show_status(args):
+     minimax_logged_in = bool(minimax_status.get("logged_in"))
+     print(
+         f"  {'MiniMax OAuth':<12}  {check_mark(minimax_logged_in)} "
+-        f"{'logged in' if minimax_logged_in else 'not logged in (run: hermes auth add minimax-oauth)'}"
++        f"{_ui('auth.logged_in', 'logged in') if minimax_logged_in else _ui('auth.minimax_not_logged_in', 'not logged in (run: hermes auth add minimax-oauth)')}"
+     )
+     minimax_region = minimax_status.get("region")
+     if minimax_logged_in and minimax_region:
+@@ -247,34 +252,34 @@ def show_status(args):
+     if managed_nous_tools_enabled():
+         features = get_nous_subscription_features(config)
+         print()
+-        print(color("◆ Nous Tool Gateway", Colors.CYAN, Colors.BOLD))
++        print(color(_ui("sections.nous_features", "◆ Nous Tool Gateway"), Colors.CYAN, Colors.BOLD))
+         if not features.nous_auth_present:
+-            print("  Nous Portal   ✗ not logged in")
++            print(_ui("nous.not_logged_in", "  Nous Portal   ✗ not logged in"))
+         else:
+-            print("  Nous Portal   ✓ managed tools available")
++            print(_ui("nous.managed_tools_available", "  Nous Portal   ✓ managed tools available"))
+         for feature in features.items():
+             if feature.managed_by_nous:
+-                state = "active via Nous subscription"
++                state = _ui("nous.active_subscription", "active via Nous subscription")
+             elif feature.active:
+-                current = feature.current_provider or "configured provider"
+-                state = f"active via {current}"
++                current = feature.current_provider or _ui("labels.configured", "configured provider")
++                state = _ui("nous.active_via_provider", "active via {provider}", provider=current)
+             elif feature.included_by_default and features.nous_auth_present:
+-                state = "included by subscription, not currently selected"
++                state = _ui("nous.included_not_selected", "included by subscription, not currently selected")
+             elif feature.key == "modal" and features.nous_auth_present:
+-                state = "available via subscription (optional)"
++                state = _ui("nous.available_optional", "available via subscription (optional)")
+             else:
+-                state = "not configured"
++                state = _ui("labels.not_configured", "not configured")
+             print(f"  {feature.label:<15} {check_mark(feature.available or feature.active or feature.managed_by_nous)} {state}")
+     elif nous_logged_in:
+         # Logged into Nous but on the free tier — show upgrade nudge
+         print()
+-        print(color("◆ Nous Tool Gateway", Colors.CYAN, Colors.BOLD))
+-        print("  Your free-tier Nous account does not include Tool Gateway access.")
+-        print("  Upgrade your subscription to unlock managed web, image, TTS, and browser tools.")
++        print(color(_ui("sections.nous_features", "◆ Nous Tool Gateway"), Colors.CYAN, Colors.BOLD))
++        print(_ui("nous.free_tier_notice", "  Your free-tier Nous account does not include Tool Gateway access."))
++        print(_ui("nous.upgrade_notice", "  Upgrade your subscription to unlock managed web, image, TTS, and browser tools."))
+         try:
+             portal_url = nous_status.get("portal_base_url", "").rstrip("/")
+             if portal_url:
+-                print(f"  Upgrade: {portal_url}")
++                print(_ui("nous.upgrade_link", "  Upgrade: {url}", url=portal_url))
+         except Exception:
+             pass
+ 
+@@ -282,7 +287,7 @@ def show_status(args):
+     # API-Key Providers
+     # =========================================================================
+     print()
+-    print(color("◆ API-Key Providers", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.api_key_providers", "◆ API-Key Providers"), Colors.CYAN, Colors.BOLD))
+ 
+     apikey_providers = {
+         "Z.AI / GLM":       ("GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY"),
+@@ -298,7 +303,7 @@ def show_status(args):
+             if key_val:
+                 break
+         configured = bool(key_val)
+-        label = "configured" if configured else "not configured (run: hermes model)"
++        label = _ui("labels.configured", "configured") if configured else _ui("labels.not_configured_run_model", "not configured (run: hermes model)")
+         print(f"  {pname:<16} {check_mark(configured)} {label}")
+ 
+     # LM Studio reachability — only probe when it's the active provider so
+@@ -322,25 +327,25 @@ def show_status(args):
+     # Terminal Configuration
+     # =========================================================================
+     print()
+-    print(color("◆ Terminal Backend", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.terminal_backend", "◆ Terminal Backend"), Colors.CYAN, Colors.BOLD))
+ 
+     terminal_cfg = config.get("terminal", {}) if isinstance(config.get("terminal"), dict) else {}
+     terminal_env = os.getenv("TERMINAL_ENV", "")
+     if not terminal_env:
+         terminal_env = terminal_cfg.get("backend", "local")
+-    print(f"  Backend:      {terminal_env}")
++    print(f"  {_ui('labels.backend', 'Backend:'):<12} {terminal_env}")
+ 
+     if terminal_env == "ssh":
+         ssh_host = os.getenv("TERMINAL_SSH_HOST", "")
+         ssh_user = os.getenv("TERMINAL_SSH_USER", "")
+-        print(f"  SSH Host:     {ssh_host or '(not set)'}")
+-        print(f"  SSH User:     {ssh_user or '(not set)'}")
++        print(f"  {_ui('labels.ssh_host', 'SSH Host:'):<12} {ssh_host or _ui('labels.not_set', '(not set)')}")
++        print(f"  {_ui('labels.ssh_user', 'SSH User:'):<12} {ssh_user or _ui('labels.not_set', '(not set)')}")
+     elif terminal_env == "docker":
+         docker_image = os.getenv("TERMINAL_DOCKER_IMAGE", "python:3.11-slim")
+-        print(f"  Docker Image: {docker_image}")
++        print(f"  {_ui('labels.docker_image', 'Docker Image:'):<12} {docker_image}")
+     elif terminal_env == "daytona":
+         daytona_image = os.getenv("TERMINAL_DAYTONA_IMAGE", "nikolaik/python-nodejs:python3.11-nodejs20")
+-        print(f"  Daytona Image: {daytona_image}")
++        print(f"  {_ui('labels.daytona_image', 'Daytona Image:'):<12} {daytona_image}")
+     elif terminal_env == "vercel_sandbox":
+         runtime = os.getenv("TERMINAL_VERCEL_RUNTIME") or terminal_cfg.get("vercel_runtime") or "node24"
+         persist = os.getenv("TERMINAL_CONTAINER_PERSISTENT")
+@@ -360,13 +365,14 @@ def show_status(args):
+         print("  Processes:    live processes do not survive cleanup, snapshots, or sandbox recreation")
+ 
+     sudo_password = os.getenv("SUDO_PASSWORD", "")
+-    print(f"  Sudo:         {check_mark(bool(sudo_password))} {'enabled' if sudo_password else 'disabled'}")
++    sudo_state = _ui("labels.enabled", "enabled") if sudo_password else _ui("labels.disabled", "disabled")
++    print(f"  {_ui('labels.sudo', 'Sudo:'):<12} {check_mark(bool(sudo_password))} {sudo_state}")
+ 
+     # =========================================================================
+     # Messaging Platforms
+     # =========================================================================
+     print()
+-    print(color("◆ Messaging Platforms", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.messaging_platforms", "◆ Messaging Platforms"), Colors.CYAN, Colors.BOLD))
+ 
+     platforms = {
+         "Telegram": ("TELEGRAM_BOT_TOKEN", "TELEGRAM_HOME_CHANNEL"),
+@@ -397,7 +403,7 @@ def show_status(args):
+         if not home_channel and home_var == "QQBOT_HOME_CHANNEL":
+             home_channel = os.getenv("QQ_HOME_CHANNEL", "")
+         
+-        status = "configured" if has_token else "not configured"
++        status = _ui("labels.configured", "configured") if has_token else _ui("labels.not_configured", "not configured")
+         if home_channel:
+             status += f" (home: {home_channel})"
+         
+@@ -408,7 +414,7 @@ def show_status(args):
+         from gateway.platform_registry import platform_registry
+         for entry in platform_registry.plugin_entries():
+             configured = entry.check_fn()
+-            status_str = "configured" if configured else "not configured"
++            status_str = _ui("labels.configured", "configured") if configured else _ui("labels.not_configured", "not configured")
+             label = entry.label
+             print(f"  {label:<12}  {check_mark(configured)} {status_str} (plugin)")
+     except Exception:
+@@ -418,43 +424,43 @@ def show_status(args):
+     # Gateway Status
+     # =========================================================================
+     print()
+-    print(color("◆ Gateway Service", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.gateway_service", "◆ Gateway Service"), Colors.CYAN, Colors.BOLD))
+ 
+     try:
+         from hermes_cli.gateway import get_gateway_runtime_snapshot, _format_gateway_pids
+ 
+         snapshot = get_gateway_runtime_snapshot()
+         is_running = snapshot.running
+-        print(f"  Status:       {check_mark(is_running)} {'running' if is_running else 'stopped'}")
+-        print(f"  Manager:      {snapshot.manager}")
++        print(f"  {_ui('labels.status', 'Status:'):<12} {check_mark(is_running)} {_ui('gateway.running', 'running') if is_running else _ui('gateway.stopped', 'stopped')}")
++        print(f"  {_ui('labels.manager', 'Manager:'):<12} {snapshot.manager}")
+         if snapshot.gateway_pids:
+-            print(f"  PID(s):       {_format_gateway_pids(snapshot.gateway_pids)}")
++            print(f"  {_ui('labels.pids', 'PID(s):'):<12} {_format_gateway_pids(snapshot.gateway_pids)}")
+         if snapshot.has_process_service_mismatch:
+-            print("  Service:      installed but not managing the current running gateway")
++            print(_ui("gateway.service_mismatch", "  Service:      installed but not managing the current running gateway"))
+         elif _is_termux() and not snapshot.gateway_pids:
+-            print("  Start with:   hermes gateway")
+-            print("  Note:         Android may stop background jobs when Termux is suspended")
++            print(_ui("gateway.termux_start", "  Start with:   hermes gateway"))
++            print(_ui("gateway.termux_note", "  Note:         Android may stop background jobs when Termux is suspended"))
+         elif snapshot.service_installed and not snapshot.service_running:
+-            print("  Service:      installed but stopped")
++            print(_ui("gateway.service_stopped", "  Service:      installed but stopped"))
+     except Exception:
+         if _is_termux():
+-            print(f"  Status:       {color('unknown', Colors.DIM)}")
+-            print("  Manager:      Termux / manual process")
++            print(f"  {_ui('labels.status', 'Status:'):<12} {color(_ui('labels.unknown', 'unknown'), Colors.DIM)}")
++            print(_ui("gateway.termux_manager", "  Manager:      Termux / manual process"))
+         elif sys.platform.startswith('linux'):
+-            print(f"  Status:       {color('unknown', Colors.DIM)}")
+-            print("  Manager:      systemd/manual")
++            print(f"  {_ui('labels.status', 'Status:'):<12} {color(_ui('labels.unknown', 'unknown'), Colors.DIM)}")
++            print(_ui("gateway.systemd_manual_manager", "  Manager:      systemd/manual"))
+         elif sys.platform == 'darwin':
+-            print(f"  Status:       {color('unknown', Colors.DIM)}")
+-            print("  Manager:      launchd")
++            print(f"  {_ui('labels.status', 'Status:'):<12} {color(_ui('labels.unknown', 'unknown'), Colors.DIM)}")
++            print(_ui("gateway.launchd_manager", "  Manager:      launchd"))
+         else:
+-            print(f"  Status:       {color('N/A', Colors.DIM)}")
+-            print("  Manager:      (not supported on this platform)")
++            print(f"  {_ui('labels.status', 'Status:'):<12} {color(_ui('labels.na', 'N/A'), Colors.DIM)}")
++            print(_ui("gateway.unsupported_manager", "  Manager:      (not supported on this platform)"))
+ 
+     # =========================================================================
+     # Cron Jobs
+     # =========================================================================
+     print()
+-    print(color("◆ Scheduled Jobs", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.scheduled_jobs", "◆ Scheduled Jobs"), Colors.CYAN, Colors.BOLD))
+ 
+     jobs_file = get_hermes_home() / "cron" / "jobs.json"
+     if jobs_file.exists():
+@@ -464,17 +470,17 @@ def show_status(args):
+                 data = json.load(f)
+                 jobs = data.get("jobs", [])
+                 enabled_jobs = [j for j in jobs if j.get("enabled", True)]
+-                print(f"  Jobs:         {len(enabled_jobs)} active, {len(jobs)} total")
++                print(f"  {_ui('labels.jobs', 'Jobs:'):<12} {len(enabled_jobs)} active, {len(jobs)} total")
+         except Exception:
+-            print("  Jobs:         (error reading jobs file)")
++            print(_ui("jobs.read_error", "  Jobs:         (error reading jobs file)"))
+     else:
+-        print("  Jobs:         0")
++        print(f"  {_ui('labels.jobs', 'Jobs:'):<12} 0")
+ 
+     # =========================================================================
+     # Sessions
+     # =========================================================================
+     print()
+-    print(color("◆ Sessions", Colors.CYAN, Colors.BOLD))
++    print(color(_ui("sections.sessions", "◆ Sessions"), Colors.CYAN, Colors.BOLD))
+ 
+     sessions_file = get_hermes_home() / "sessions" / "sessions.json"
+     if sessions_file.exists():
+@@ -482,18 +488,18 @@ def show_status(args):
+         try:
+             with open(sessions_file, encoding="utf-8") as f:
+                 data = json.load(f)
+-                print(f"  Active:       {len(data)} session(s)")
++                print(f"  {_ui('labels.active_sessions', 'Active:'):<12} {len(data)} session(s)")
+         except Exception:
+-            print("  Active:       (error reading sessions file)")
++            print(_ui("sessions.read_error", "  Active:       (error reading sessions file)"))
+     else:
+-        print("  Active:       0")
++        print(f"  {_ui('labels.active_sessions', 'Active:'):<12} 0")
+ 
+     # =========================================================================
+     # Deep checks
+     # =========================================================================
+     if deep:
+         print()
+-        print(color("◆ Deep Checks", Colors.CYAN, Colors.BOLD))
++        print(color(_ui("sections.deep_checks", "◆ Deep Checks"), Colors.CYAN, Colors.BOLD))
+         
+         # Check OpenRouter connectivity
+         openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
+@@ -506,9 +512,10 @@ def show_status(args):
+                     timeout=10
+                 )
+                 ok = response.status_code == 200
+-                print(f"  OpenRouter:   {check_mark(ok)} {'reachable' if ok else f'error ({response.status_code})'}")
++                state = _ui("deep.openrouter_reachable", "reachable") if ok else _ui("deep.openrouter_error", "error ({code})", code=response.status_code)
++                print(f"  OpenRouter:   {check_mark(ok)} {state}")
+             except Exception as e:
+-                print(f"  OpenRouter:   {check_mark(False)} error: {e}")
++                print(_ui("deep.openrouter_exception", "  OpenRouter:   ✗ error: {error}", error=e))
+         
+         # Check gateway port
+         try:
+@@ -520,12 +527,12 @@ def show_status(args):
+             # Port in use = gateway likely running
+             port_in_use = result == 0
+             # This is informational, not necessarily bad
+-            print(f"  Port 18789:   {'in use' if port_in_use else 'available'}")
++            print(f"  Port 18789:   {_ui('deep.port_in_use', 'in use') if port_in_use else _ui('deep.port_available', 'available')}")
+         except OSError:
+             pass
+ 
+     print()
+     print(color("─" * 60, Colors.DIM))
+-    print(color("  Run 'hermes doctor' for detailed diagnostics", Colors.DIM))
+-    print(color("  Run 'hermes setup' to configure", Colors.DIM))
++    print(color(_ui("footer.doctor", "  Run 'hermes doctor' for detailed diagnostics"), Colors.DIM))
++    print(color(_ui("footer.setup", "  Run 'hermes setup' to configure"), Colors.DIM))
+     print()
+diff --git a/hermes_cli/tips.py b/hermes_cli/tips.py
+index 62fad2eb6..2c5a1ed8f 100644
+--- a/hermes_cli/tips.py
++++ b/hermes_cli/tips.py
+@@ -2,6 +2,8 @@
+ 
+ import random
+ 
++from hermes_cli.skin_engine import get_tip_text
++
+ 
+ # ---------------------------------------------------------------------------
+ # Tip corpus — one-liners covering slash commands, CLI flags, config,
+@@ -337,6 +339,11 @@ TIPS = [
+ ]
+ 
+ 
++# zh-CN: translate tips at load time
++for _i, _tip in enumerate(TIPS):
++    TIPS[_i] = get_tip_text(_tip)
++
++
+ def get_random_tip(exclude_recent: int = 0) -> str:
+     """Return a random tip string.
+ 
