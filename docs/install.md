@@ -27,7 +27,7 @@ python3 "$HOME/.hermes/hermes-zh-overlay-release/scripts/verify_release.py" --so
 ## 应用指定版本
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 58a6171b-terminal-discord1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 97acd66b4-terminal-discord1
 ```
 
 ## 安全测试远端命令

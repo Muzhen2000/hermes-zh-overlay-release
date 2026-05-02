@@ -6,8 +6,8 @@
 
 ## 当前版本
 
-- 官方 Hermes commit：`58a6171bfb0ba2ca10b1b08854511736cd77a623`
-- 中文包 release：`58a6171b-terminal-discord1`
+- 官方 Hermes commit：`97acd66b4c58c7945f573a6efd6059e781eb4f8f`
+- 中文包 release：`97acd66b4-terminal-discord1`
 - 范围：终端 + Discord 中用户可见、非 LLM 生成的固定文案
 - 不处理：Web UI、Telegram、飞书、模型路由、provider 协议、用户配置、登录态
 
@@ -44,7 +44,7 @@ python3 "$HOME/.hermes/hermes-zh-overlay-release/scripts/verify_release.py" --so
 如果要锁定当前 release，使用：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 58a6171b-terminal-discord1
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 97acd66b4-terminal-discord1
 ```
 
 如果要先在临时目录验证远端命令，不改自己的 `~/.hermes`，使用：
