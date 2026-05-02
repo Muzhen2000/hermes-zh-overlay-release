@@ -1,0 +1,16 @@
+{
+  "version": "5d3be898a-discord1",
+  "base_commit": "5d3be898a",
+  "description": "Discord斜杠命令中文本地化补丁",
+  "scope": "discord-slash-commands",
+  "patches": [
+    {
+      "path": "gateway/platforms/discord.py",
+      "description": "汉化Discord斜杠命令名称、描述和固定回复"
+    }
+  ],
+  "applied_patches": [
+    "patches/discord-commands-zh.patch"
+  ],
+  "notes": "仅汉化Discord斜杠命令名称、描述和触发后的固定回复文案。终端界面不汉化。"
+}

@@ -4,71 +4,45 @@
 
 目标只有一个：为某一个指定官方 Hermes commit 提供一份最小、可复现、可验证的中文包。
 
-## 当前版本（已冻结）
+## 当前版本
 
-- 官方 Hermes commit：`97acd66b4c58c7945f573a6efd6059e781eb4f8f`
-- 中文包 release：`97acd66b4-terminal-discord1`
-- 状态：**冻结** — 不再跟进官方更新
+- 官方 Hermes commit：`5d3be898a`
+- 中文包 release：`5d3be898a-discord1`
+- 状态：**活跃维护中**
 
-### 冻结规则
+## 汉化范围
 
-- 本地停在 97acd66b4-terminal-discord1，保留远端仓库
-- 下次更新时：删除本地中文，从官方源码重新开始
-- 未来汉化范围：**仅限终端与 Discord 斜杠命令的说明文字**
-- 不再维护：皮肤详细文案、其他平台提示语等扩大范围
+**仅汉化 Discord 斜杠命令相关内容：**
 
-当前 release 带有一份受控 Hermes 源码 patch。主体只做显示层中文取词钩子和 CJK 终端显示适配，不改命令分发、会话状态机、模型请求或 Discord 协议字段。
+- 斜杠命令名称（如 `/新会话`、`/重置`）
+- 斜杠命令描述（如 "开始新会话"）
+- 触发斜杠命令后的固定回复（如 "新会话已开始~"）
 
-本 release 额外登记一个非汉化运行面例外：Discord 网关代理解析会把 `discord.com` / `discord.gg` / `gateway.discord.gg` 传入 Hermes 既有 `NO_PROXY` 逻辑。原因是永久常驻网关在 macOS 系统代理端口失效时会静默掉线，而原 Discord 调用点没有传目标 host，导致只写 `.env` 的 `NO_PROXY` 无法生效。这个补丁不改消息路由、命令协议、认证、模型请求或回复内容；如果上游提供等价修复或官方 direct/no-proxy 配置，应删除该例外。
+**不汉化：**
+- 终端界面
+- 皮肤/主题
+- 其他平台（飞书、Telegram等）
+- 工具说明
+- 提示文案
 
-## 覆盖内容
-
-- 终端启动页、欢迎语、状态栏、等待提示、工具/记忆检索短状态行
-- 终端 slash 命令说明、固定回复、空状态、用法提示、成功/失败消息
-- 全部内置皮肤和本包附带皮肤的固定欢迎语、帮助头、spinner 词组
-- Discord slash 命令说明、参数说明、固定回复、按钮标签、model picker、approval/update 卡片
-- Discord 动态命令说明：由 Hermes 命令注册表生成的命令也会走中文说明
-
-## 推荐应用命令
-
-生产环境推荐显式写出 `--hermes-home "$HOME/.hermes"`，这样用户复制命令时不会依赖脚本默认值，也更容易确认正在修改哪个 Hermes home。
-
-1. 应用仓库当前最新中文包到默认 Hermes home：
+## 应用命令
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes"
 ```
 
-2. 校验本机 Hermes 与中文包是否一致：
+锁定版本：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 5d3be898a-discord1
+```
+
+## 校验
 
 ```bash
 python3 "$HOME/.hermes/hermes-zh-overlay-release/scripts/verify_release.py" --source-dir "$HOME/.hermes/hermes-agent"
 ```
 
-第二行通过，表示本机 Hermes 源码、本地中文包、当前 release 已经对应到同一版。
-
-如果要锁定当前 release，使用：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$HOME/.hermes" --release 97acd66b4-terminal-discord1
-```
-
-如果要先在临时目录验证远端命令，不改自己的 `~/.hermes`，使用：
-
-```bash
-tmp="$(mktemp -d /tmp/hermes-zh-apply.XXXXXX)"
-curl -fsSL https://raw.githubusercontent.com/Muzhen2000/hermes-zh-overlay-release/main/scripts/apply_release.py | python3 - --hermes-home "$tmp"
-python3 "$tmp/hermes-zh-overlay-release/scripts/verify_release.py" --repo-root "$tmp/hermes-zh-overlay-release" --source-dir "$tmp/hermes-agent"
-```
-
-如果安装命令报 `curl: (6) Could not resolve host: raw.githubusercontent.com`，这是本机网络或 DNS 解析问题，不是中文包本身失败。切换网络或稍后重试同一条命令。
-
 ## LLM Agent 入口
 
-后续更新、审计、继续汉化、校验三者一致性，先看：
-
 - [AGENTS.md](./AGENTS.md)
-- [docs/audit-2026-04-25.md](./docs/audit-2026-04-25.md)
-- [docs/audit-2026-04-26-discord-proxy.md](./docs/audit-2026-04-26-discord-proxy.md)
-
-本仓库只保留当前可验证 release。历史 Kimi、飞书、Telegram、旧 gateway release 目录已删除，避免未来 agent 把旧补丁当成新基线。
