@@ -1538,10 +1538,10 @@ index 856d85c63..53276c05a 100644
          )
          sys.exit(1)
 diff --git a/hermes_cli/skin_engine.py b/hermes_cli/skin_engine.py
-index 6ca6f8adf..85399ed52 100644
+index 6ca6f8adf..f224055de 100644
 --- a/hermes_cli/skin_engine.py
 +++ b/hermes_cli/skin_engine.py
-@@ -120,6 +120,91 @@ from hermes_constants import get_hermes_home
+@@ -120,6 +120,96 @@ from hermes_constants import get_hermes_home
  
  logger = logging.getLogger(__name__)
  
@@ -1628,6 +1628,11 @@ index 6ca6f8adf..85399ed52 100644
 +        else:
 +            return default
 +    return str(obj) if obj is not None else default
++
++
++def get_category_description(category: str, default: str = "") -> str:
++    """Look up category description from ui.zh-CN.yaml"""
++    return get_ui_text(f"cli.help.category.{category}", default)
 +
 +
  
