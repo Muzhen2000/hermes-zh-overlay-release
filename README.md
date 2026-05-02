@@ -4,12 +4,18 @@
 
 目标只有一个：为某一个指定官方 Hermes commit 提供一份最小、可复现、可验证的中文包。
 
-## 当前版本
+## 当前版本（已冻结）
 
 - 官方 Hermes commit：`97acd66b4c58c7945f573a6efd6059e781eb4f8f`
 - 中文包 release：`97acd66b4-terminal-discord1`
-- 范围：终端 + Discord 中用户可见、非 LLM 生成的固定文案
-- 不处理：Web UI、Telegram、飞书、模型路由、provider 协议、用户配置、登录态
+- 状态：**冻结** — 不再跟进官方更新
+
+### 冻结规则
+
+- 本地停在 97acd66b4-terminal-discord1，保留远端仓库
+- 下次更新时：删除本地中文，从官方源码重新开始
+- 未来汉化范围：**仅限终端与 Discord 斜杠命令的说明文字**
+- 不再维护：皮肤详细文案、其他平台提示语等扩大范围
 
 当前 release 带有一份受控 Hermes 源码 patch。主体只做显示层中文取词钩子和 CJK 终端显示适配，不改命令分发、会话状态机、模型请求或 Discord 协议字段。
 
