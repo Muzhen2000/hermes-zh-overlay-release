@@ -1,5 +1,5 @@
 diff --git a/gateway/platforms/discord.py b/gateway/platforms/discord.py
-index e30c4478e..e91188a4a 100644
+index e30c4478e..25b2254b1 100644
 --- a/gateway/platforms/discord.py
 +++ b/gateway/platforms/discord.py
 @@ -2570,130 +2570,130 @@ class DiscordAdapter(BasePlatformAdapter):
@@ -207,6 +207,15 @@ index e30c4478e..e91188a4a 100644
  
          # ── Auto-register any gateway-available commands not yet on the tree ──
          # This ensures new commands added to COMMAND_REGISTRY in
+@@ -2727,7 +2727,7 @@ class DiscordAdapter(BasePlatformAdapter):
+ 
+             if has_args:
+                 def _make_args_handler(__name: str, __hint: str):
+-                    @discord.app_commands.describe(args=f"Arguments: {__hint}"[:100])
++                    @discord.app_commands.describe(args=f"参数：{__hint}"[:100])
+                     async def _handler(interaction: discord.Interaction, args: str = ""):
+                         await self._run_simple_slash(
+                             interaction, f"/{__name} {args}".strip()
 @@ -2760,6 +2760,17 @@ class DiscordAdapter(BasePlatformAdapter):
              except Exception:
                  pass

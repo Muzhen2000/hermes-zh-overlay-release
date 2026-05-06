@@ -6,7 +6,11 @@
   "patches": [
     {
       "path": "gateway/platforms/discord.py",
-      "description": "汉化Discord斜杠命令名称、描述和固定回复"
+      "description": "汉化Discord斜杠命令名称、描述和固定回复，防止自动注册重复英文命令"
+    },
+    {
+      "path": "hermes_cli/commands.py",
+      "description": "汉化COMMAND_REGISTRY中13个自动注册命令的描述"
     },
     {
       "path": "ui-tui/src/app/slash/commands/core.ts",
@@ -31,6 +35,7 @@
   ],
   "applied_patches": [
     "patches/discord-commands-zh.patch",
+    "patches/registry-commands-zh.patch",
     "patches/tui-commands-zh.patch"
   ],
   "notes": "汉化Discord和终端(TUI)斜杠命令名称、描述和固定回复。不涉及皮肤和其他平台。"
