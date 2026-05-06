@@ -1,0 +1,1475 @@
+diff --git a/ui-tui/src/app/slash/commands/core.ts b/ui-tui/src/app/slash/commands/core.ts
+index c40307dc4..7e49dd1d7 100644
+--- a/ui-tui/src/app/slash/commands/core.ts
++++ b/ui-tui/src/app/slash/commands/core.ts
+@@ -48,14 +48,15 @@ const RESET_WORDS = new Set(['reset', 'clear', 'default'])
+ const CYCLE_WORDS = new Set(['cycle', 'toggle'])
+ 
+ const DETAILS_USAGE =
+-  'usage: /details [hidden|collapsed|expanded|cycle]  or  /details <section> [hidden|collapsed|expanded|reset]'
++  '用法：/details [hidden|collapsed|expanded|cycle] 或 /details <分区> [hidden|collapsed|expanded|reset]'
+ 
+-const DETAILS_SECTION_USAGE = 'usage: /details <section> [hidden|collapsed|expanded|reset]'
++const DETAILS_SECTION_USAGE = '用法：/details <分区> [hidden|collapsed|expanded|reset]'
+ 
+ export const coreCommands: SlashCommand[] = [
+   {
+-    help: 'list commands + hotkeys',
+-    name: 'help',
++    help: '列出命令和快捷键',
++    name: '帮助',
++    aliases: ['help'],
+     run: (_arg, ctx) => {
+       const sections: PanelSection[] = (ctx.local.catalog?.categories ?? []).map(cat => ({
+         rows: cat.pairs,
+@@ -63,7 +64,7 @@ export const coreCommands: SlashCommand[] = [
+       }))
+ 
+       if (ctx.local.catalog?.skillCount) {
+-        sections.push({ text: `${ctx.local.catalog.skillCount} skill commands available — /skills to browse` })
++        sections.push({ text: `${ctx.local.catalog.skillCount} 个技能命令可用 — /skills 浏览` })
+       }
+ 
+       sections.push(
+@@ -76,7 +77,7 @@ export const coreCommands: SlashCommand[] = [
+             ],
+             ['/fortune [random|daily]', 'show a random or daily local fortune']
+           ],
+-          title: 'TUI'
++          title: '终端'
+         },
+         { rows: HOTKEYS, title: 'Hotkeys' }
+       )
+@@ -86,35 +87,35 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    aliases: ['exit', 'q'],
+-    help: 'exit hermes',
+-    name: 'quit',
++    aliases: ['exit', 'q', 'quit'],
++    help: '退出 Hermes',
++    name: '退出',
+     run: (_arg, ctx) => ctx.session.die()
+   },
+ 
+   {
+-    aliases: ['scroll'],
+-    help: 'toggle mouse/wheel tracking [on|off|toggle]',
+-    name: 'mouse',
++    aliases: ['scroll', 'mouse'],
++    help: '切换鼠标/滚轮追踪 [on|off|toggle]',
++    name: '鼠标',
+     run: (arg, ctx) => {
+       const current = ctx.ui.mouseTracking
+       const next = flagFromArg(arg, current)
+ 
+       if (next === null) {
+-        return ctx.transcript.sys('usage: /mouse [on|off|toggle]')
++        return ctx.transcript.sys('用法：/mouse [on|off|toggle]')
+       }
+ 
+       patchUiState({ mouseTracking: next })
+       ctx.gateway.rpc<ConfigSetResponse>('config.set', { key: 'mouse', value: next ? 'on' : 'off' }).catch(() => {})
+ 
+-      queueMicrotask(() => ctx.transcript.sys(`mouse tracking ${next ? 'on' : 'off'}`))
++      queueMicrotask(() => ctx.transcript.sys(`鼠标追踪${next ? '已开启' : '已关闭'}`))
+     }
+   },
+ 
+   {
+-    aliases: ['new'],
+-    help: 'start a new session',
+-    name: 'clear',
++    aliases: ['new', 'clear'],
++    help: '开始新会话',
++    name: '清屏',
+     run: (arg, ctx, cmd) => {
+       if (ctx.session.guardBusySessionSwitch('switch sessions')) {
+         return
+@@ -124,8 +125,8 @@ export const coreCommands: SlashCommand[] = [
+       const requestedTitle = isNew ? arg.trim() : ''
+ 
+       const commit = () => {
+-        patchUiState({ status: 'forging session…' })
+-        ctx.session.newSession(isNew ? 'new session started' : undefined, requestedTitle || undefined)
++        patchUiState({ status: '正在创建会话…' })
++        ctx.session.newSession(isNew ? '新会话已开始' : undefined, requestedTitle || undefined)
+       }
+ 
+       if (NO_CONFIRM_DESTRUCTIVE) {
+@@ -134,44 +135,47 @@ export const coreCommands: SlashCommand[] = [
+ 
+       patchOverlayState({
+         confirm: {
+-          cancelLabel: 'No, keep going',
+-          confirmLabel: isNew ? 'Yes, start a new session' : 'Yes, clear the session',
++          cancelLabel: '不，继续',
++          confirmLabel: isNew ? '是的，开始新会话' : '是的，清空会话',
+           danger: true,
+-          detail: 'This ends the current conversation and clears the transcript.',
++          detail: '这将结束当前对话并清空记录。',
+           onConfirm: commit,
+-          title: isNew ? 'Start a new session?' : 'Clear the current session?'
++          title: isNew ? '开始新会话？' : '清空当前会话？'
+         }
+       })
+     }
+   },
+ 
+   {
+-    help: 'force a full UI repaint',
+-    name: 'redraw',
++    help: '强制完整重绘界面',
++    name: '重绘',
++    aliases: ['redraw'],
+     run: (_arg, ctx) => {
+       forceRedraw(process.stdout)
+-      ctx.transcript.sys('ui redrawn')
++      ctx.transcript.sys('界面已重绘')
+     }
+   },
+ 
+   {
+-    help: 'show live session info',
+-    name: 'status',
++    help: '显示实时会话信息',
++    name: '状态',
++    aliases: ['status'],
+     run: (_arg, ctx) => {
+       if (!ctx.sid) {
+-        return ctx.transcript.sys('no active session')
++        return ctx.transcript.sys('没有活动会话')
+       }
+ 
+       ctx.gateway
+         .rpc<SessionStatusResponse>('session.status', { session_id: ctx.sid })
+-        .then(ctx.guarded<SessionStatusResponse>(r => ctx.transcript.page(r.output || '(no status)', 'Status')))
++        .then(ctx.guarded<SessionStatusResponse>(r => ctx.transcript.page(r.output || '(无状态)', '状态')))
+         .catch(ctx.guardedErr)
+     }
+   },
+ 
+   {
+-    help: 'resume a prior session',
+-    name: 'resume',
++    help: '恢复之前的会话',
++    name: '恢复',
++    aliases: ['resume'],
+     run: (arg, ctx) => {
+       if (ctx.session.guardBusySessionSwitch('switch sessions')) {
+         return
+@@ -182,11 +186,12 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'set or show current session title',
+-    name: 'title',
++    help: '设置或查看当前会话标题',
++    name: '标题',
++    aliases: ['title'],
+     run: (arg, ctx) => {
+       if (!ctx.sid) {
+-        return ctx.transcript.sys('no active session')
++        return ctx.transcript.sys('没有活动会话')
+       }
+ 
+       const title = arg.trim()
+@@ -197,7 +202,7 @@ export const coreCommands: SlashCommand[] = [
+           .then(
+             ctx.guarded<SessionTitleResponse>(r => {
+               const current = (r?.title ?? '').trim()
+-              ctx.transcript.sys(current ? `title: ${current}` : 'no title set')
++              ctx.transcript.sys(current ? `标题：${current}` : '未设置标题')
+             })
+           )
+           .catch(ctx.guardedErr)
+@@ -206,7 +211,7 @@ export const coreCommands: SlashCommand[] = [
+       }
+ 
+       if (!title) {
+-        return ctx.transcript.sys('usage: /title <your session title>')
++        return ctx.transcript.sys('用法：/title <会话标题>')
+       }
+ 
+       ctx.gateway
+@@ -214,8 +219,8 @@ export const coreCommands: SlashCommand[] = [
+         .then(
+           ctx.guarded<SessionTitleResponse>(r => {
+             const next = (r?.title ?? title).trim()
+-            const suffix = r?.pending ? ' (queued while session initializes)' : ''
+-            ctx.transcript.sys(`session title set: ${next}${suffix}`)
++            const suffix = r?.pending ? '（会话初始化时排队）' : ''
++            ctx.transcript.sys(`会话标题已设置：${next}${suffix}`)
+           })
+         )
+         .catch(ctx.guardedErr)
+@@ -223,26 +228,27 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'toggle compact transcript',
+-    name: 'compact',
++    help: '切换紧凑对话模式',
++    name: '紧凑',
++    aliases: ['compact'],
+     run: (arg, ctx) => {
+       const next = flagFromArg(arg, ctx.ui.compact)
+ 
+       if (next === null) {
+-        return ctx.transcript.sys('usage: /compact [on|off|toggle]')
++        return ctx.transcript.sys('用法：/compact [on|off|toggle]')
+       }
+ 
+       patchUiState({ compact: next })
+       ctx.gateway.rpc<ConfigSetResponse>('config.set', { key: 'compact', value: next ? 'on' : 'off' }).catch(() => {})
+ 
+-      queueMicrotask(() => ctx.transcript.sys(`compact ${next ? 'on' : 'off'}`))
++      queueMicrotask(() => ctx.transcript.sys(`紧凑模式${next ? '已开启' : '已关闭'}`))
+     }
+   },
+ 
+   {
+-    aliases: ['detail'],
+-    help: 'control agent detail visibility (global or per-section)',
+-    name: 'details',
++    aliases: ['detail', 'details'],
++    help: '控制代理详情可见性（全局或按分区）',
++    name: '详情',
+     run: (arg, ctx) => {
+       const { gateway, transcript, ui } = ctx
+ 
+@@ -304,8 +310,9 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'local fortune',
+-    name: 'fortune',
++    help: '本地签语',
++    name: '签语',
++    aliases: ['fortune'],
+     run: (arg, ctx) => {
+       const key = arg.trim().toLowerCase()
+ 
+@@ -317,13 +324,14 @@ export const coreCommands: SlashCommand[] = [
+         return ctx.transcript.sys(dailyFortune(ctx.sid))
+       }
+ 
+-      ctx.transcript.sys('usage: /fortune [random|daily]')
++      ctx.transcript.sys('用法：/fortune [random|daily]')
+     }
+   },
+ 
+   {
+-    help: 'copy selection or assistant message',
+-    name: 'copy',
++    help: '复制选区或助手消息',
++    name: '复制',
++    aliases: ['copy'],
+     run: async (arg, ctx) => {
+       const { sys } = ctx.transcript
+ 
+@@ -331,23 +339,23 @@ export const coreCommands: SlashCommand[] = [
+         const text = await ctx.composer.selection.copySelection()
+ 
+         if (text) {
+-          return sys(`copied ${text.length} characters`)
++          return sys(`已复制 ${text.length} 个字符`)
+         } else {
+           return sys(
+-            'clipboard copy failed — try HERMES_TUI_FORCE_OSC52=1 to force the escape sequence; HERMES_TUI_DEBUG_CLIPBOARD=1 for details'
++            '剪贴板复制失败 — 尝试 HERMES_TUI_FORCE_OSC52=1 强制转义序列；HERMES_TUI_DEBUG_CLIPBOARD=1 查看详情'
+           )
+         }
+       }
+ 
+       if (arg && Number.isNaN(parseInt(arg, 10))) {
+-        return sys('usage: /copy [number]')
++        return sys('用法：/copy [编号]')
+       }
+ 
+       const all = ctx.local.getHistoryItems().filter(m => m.role === 'assistant')
+       const target = all[arg ? Math.min(parseInt(arg, 10), all.length) - 1 : all.length - 1]
+ 
+       if (!target) {
+-        return sys('nothing to copy — start a conversation first')
++        return sys('没有可复制的内容 — 请先开始对话')
+       }
+ 
+       void writeClipboardText(target.text)
+@@ -357,34 +365,36 @@ export const coreCommands: SlashCommand[] = [
+           }
+ 
+           if (nativeOk) {
+-            sys('copied to clipboard')
++            sys('已复制到剪贴板')
+           } else {
+             writeOsc52Clipboard(target.text)
+-            sys('sent OSC52 copy sequence (terminal support required)')
++            sys('已发送 OSC52 复制序列（需要终端支持）')
+           }
+         })
+         .catch(error => {
+           if (!ctx.stale()) {
+-            sys(`copy failed: ${String(error)}`)
++            sys(`复制失败：${String(error)}`)
+           }
+         })
+     }
+   },
+ 
+   {
+-    help: 'attach clipboard image',
+-    name: 'paste',
+-    run: (arg, ctx) => (arg ? ctx.transcript.sys('usage: /paste') : ctx.composer.paste())
++    help: '粘贴剪贴板图片',
++    name: '粘贴',
++    aliases: ['paste'],
++    run: (arg, ctx) => (arg ? ctx.transcript.sys('用法：/paste') : ctx.composer.paste())
+   },
+ 
+   {
+-    help: 'configure IDE terminal keybindings for multiline + undo/redo',
+-    name: 'terminal-setup',
++    help: '配置 IDE 终端快捷键（多行编辑 + 撤销/重做）',
++    name: '终端设置',
++    aliases: ['terminal-setup'],
+     run: (arg, ctx) => {
+       const target = arg.trim().toLowerCase()
+ 
+       if (target && !['auto', 'cursor', 'vscode', 'windsurf'].includes(target)) {
+-        return ctx.transcript.sys('usage: /terminal-setup [auto|vscode|cursor|windsurf]')
++        return ctx.transcript.sys('用法：/terminal-setup [auto|vscode|cursor|windsurf]')
+       }
+ 
+       const runner =
+@@ -401,30 +411,32 @@ export const coreCommands: SlashCommand[] = [
+           ctx.transcript.sys(result.message)
+ 
+           if (result.success && result.requiresRestart) {
+-            ctx.transcript.sys('restart the IDE terminal for the new keybindings to take effect')
++            ctx.transcript.sys('重启 IDE 终端以使新快捷键生效')
+           }
+         })
+         .catch(error => {
+           if (!ctx.stale()) {
+-            ctx.transcript.sys(`terminal setup failed: ${String(error)}`)
++            ctx.transcript.sys(`终端设置失败：${String(error)}`)
+           }
+         })
+     }
+   },
+ 
+   {
+-    help: 'view gateway logs',
+-    name: 'logs',
++    help: '查看网关日志',
++    name: '日志',
++    aliases: ['logs'],
+     run: (arg, ctx) => {
+       const text = ctx.gateway.gw.getLogTail(Math.min(80, Math.max(1, parseInt(arg, 10) || 20)))
+ 
+-      text ? ctx.transcript.page(text, 'Logs') : ctx.transcript.sys('no gateway logs')
++      text ? ctx.transcript.page(text, '日志') : ctx.transcript.sys('暂无网关日志')
+     }
+   },
+ 
+   {
+-    help: 'view current transcript (user + assistant messages)',
+-    name: 'history',
++    help: '查看当前对话记录',
++    name: '历史',
++    aliases: ['history'],
+     run: (arg, ctx) => {
+       // The CLI-side `/history` runs in a detached slash-worker subprocess
+       // that never sees the TUI's turns — it only surfaces whatever was
+@@ -433,37 +445,38 @@ export const coreCommands: SlashCommand[] = [
+       const items = ctx.local.getHistoryItems().filter(m => m.role === 'user' || m.role === 'assistant')
+ 
+       if (!items.length) {
+-        return ctx.transcript.sys('no conversation yet')
++        return ctx.transcript.sys('暂无对话')
+       }
+ 
+       const preview = Math.max(80, parseInt(arg, 10) || 400)
+ 
+       const lines = items.map((m, i) => {
+-        const tag = m.role === 'user' ? `You #${i + 1}` : `Hermes #${i + 1}`
++        const tag = m.role === 'user' ? `你 #${i + 1}` : `Hermes #${i + 1}`
+         const body = m.text.trim() || (m.tools?.length ? `(${m.tools.length} tool calls)` : '(empty)')
+         const clipped = body.length > preview ? `${body.slice(0, preview).trimEnd()}…` : body
+ 
+         return `[${tag}]\n${clipped}`
+       })
+ 
+-      ctx.transcript.page(lines.join('\n\n'), 'History')
++      ctx.transcript.page(lines.join('\n\n'), '历史')
+     }
+   },
+ 
+   {
+-    help: 'save the current transcript to JSON',
+-    name: 'save',
++    help: '保存当前对话为 JSON',
++    name: '保存',
++    aliases: ['save'],
+     run: (_arg, ctx) => {
+       const hasConversation = ctx.local
+         .getHistoryItems()
+         .some(m => m.role === 'user' || m.role === 'assistant' || m.role === 'tool')
+ 
+       if (!hasConversation) {
+-        return ctx.transcript.sys('no conversation yet')
++        return ctx.transcript.sys('暂无对话')
+       }
+ 
+       if (!ctx.sid) {
+-        return ctx.transcript.sys('no active session — nothing to save')
++        return ctx.transcript.sys('没有活动会话 — 无内容可保存')
+       }
+ 
+       ctx.gateway
+@@ -473,9 +486,9 @@ export const coreCommands: SlashCommand[] = [
+             const file = r?.file
+ 
+             if (file) {
+-              ctx.transcript.sys(`conversation saved to: ${file}`)
++              ctx.transcript.sys(`对话已保存到：${file}`)
+             } else {
+-              ctx.transcript.sys('failed to save')
++              ctx.transcript.sys('保存失败')
+             }
+           })
+         )
+@@ -484,9 +497,9 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    aliases: ['sb'],
+-    help: 'status bar position (on|off|top|bottom)',
+-    name: 'statusbar',
++    aliases: ['sb', 'statusbar'],
++    help: '状态栏位置 (on|off|top|bottom)',
++    name: '状态栏',
+     run: (arg, ctx) => {
+       const mode = arg.trim().toLowerCase()
+       const toggle: StatusBarMode = ctx.ui.statusBar === 'off' ? 'top' : 'off'
+@@ -501,19 +514,20 @@ export const coreCommands: SlashCommand[] = [
+               : null
+ 
+       if (!next) {
+-        return ctx.transcript.sys('usage: /statusbar [on|off|top|bottom|toggle]')
++        return ctx.transcript.sys('用法：/statusbar [on|off|top|bottom|toggle]')
+       }
+ 
+       patchUiState({ statusBar: next })
+       ctx.gateway.rpc<ConfigSetResponse>('config.set', { key: 'statusbar', value: next }).catch(() => {})
+ 
+-      queueMicrotask(() => ctx.transcript.sys(`status bar ${next}`))
++      queueMicrotask(() => ctx.transcript.sys(`状态栏 ${next}`))
+     }
+   },
+ 
+   {
+-    help: 'inspect or enqueue a message',
+-    name: 'queue',
++    help: '查看或排队消息',
++    name: '排队',
++    aliases: ['queue'],
+     run: (arg, ctx) => {
+       if (!arg) {
+         return ctx.transcript.sys(`${ctx.composer.queueRef.current.length} queued message(s)`)
+diff --git a/ui-tui/src/app/slash/commands/debug.ts b/ui-tui/src/app/slash/commands/debug.ts
+index b4bfc16bf..0e445b435 100644
+--- a/ui-tui/src/app/slash/commands/debug.ts
++++ b/ui-tui/src/app/slash/commands/debug.ts
+@@ -3,12 +3,13 @@ import type { SlashCommand } from '../types.js'
+ 
+ export const debugCommands: SlashCommand[] = [
+   {
+-    help: 'write a V8 heap snapshot + memory diagnostics (see HERMES_HEAPDUMP_DIR)',
+-    name: 'heapdump',
++    help: '写入 V8 堆快照 + 内存诊断（参见 HERMES_HEAPDUMP_DIR）',
++    name: '堆快照',
++    aliases: ['heapdump'],
+     run: (_arg, ctx) => {
+       const { heapUsed, rss } = process.memoryUsage()
+ 
+-      ctx.transcript.sys(`writing heap dump (heap ${formatBytes(heapUsed)} · rss ${formatBytes(rss)})…`)
++      ctx.transcript.sys(`正在写入堆快照（堆 ${formatBytes(heapUsed)} · rss ${formatBytes(rss)}）…`)
+ 
+       void performHeapDump('manual').then(r => {
+         if (ctx.stale()) {
+@@ -16,30 +17,31 @@ export const debugCommands: SlashCommand[] = [
+         }
+ 
+         if (!r.success) {
+-          return ctx.transcript.sys(`heapdump failed: ${r.error ?? 'unknown error'}`)
++          return ctx.transcript.sys(`堆快照失败：${r.error ?? '未知错误'}`)
+         }
+ 
+-        ctx.transcript.sys(`heapdump: ${r.heapPath}`)
+-        ctx.transcript.sys(`diagnostics: ${r.diagPath}`)
++        ctx.transcript.sys(`堆快照：${r.heapPath}`)
++        ctx.transcript.sys(`诊断：${r.diagPath}`)
+       })
+     }
+   },
+ 
+   {
+-    help: 'print live V8 heap + rss numbers',
+-    name: 'mem',
++    help: '打印实时 V8 堆和 rss 数据',
++    name: '内存',
++    aliases: ['mem'],
+     run: (_arg, ctx) => {
+       const { arrayBuffers, external, heapTotal, heapUsed, rss } = process.memoryUsage()
+ 
+-      ctx.transcript.panel('Memory', [
++      ctx.transcript.panel('内存', [
+         {
+           rows: [
+-            ['heap used', formatBytes(heapUsed)],
+-            ['heap total', formatBytes(heapTotal)],
+-            ['external', formatBytes(external)],
+-            ['array buffers', formatBytes(arrayBuffers)],
++            ['堆已用', formatBytes(heapUsed)],
++            ['堆总量', formatBytes(heapTotal)],
++            ['外部', formatBytes(external)],
++            ['数组缓冲区', formatBytes(arrayBuffers)],
+             ['rss', formatBytes(rss)],
+-            ['uptime', `${process.uptime().toFixed(0)}s`]
++            ['运行时间', `${process.uptime().toFixed(0)}s`]
+           ]
+         }
+       ])
+diff --git a/ui-tui/src/app/slash/commands/ops.ts b/ui-tui/src/app/slash/commands/ops.ts
+index d8f6522dc..a3cfd8c56 100644
+--- a/ui-tui/src/app/slash/commands/ops.ts
++++ b/ui-tui/src/app/slash/commands/ops.ts
+@@ -63,16 +63,16 @@ interface SkillsReloadResponse {
+ 
+ export const opsCommands: SlashCommand[] = [
+   {
+-    help: 'stop background processes',
+-    name: 'stop',
++    help: '停止后台进程',
++    name: '停止',
++    aliases: ['stop'],
+     run: (_arg, ctx) => {
+       ctx.gateway
+         .rpc<ProcessStopResponse>('process.stop', {})
+         .then(
+           ctx.guarded<ProcessStopResponse>(r => {
+             const killed = Number(r.killed ?? 0)
+-            const noun = killed === 1 ? 'process' : 'processes'
+-            ctx.transcript.sys(`stopped ${killed} background ${noun}`)
++            ctx.transcript.sys(`已停止 ${killed} 个后台进程`)
+           })
+         )
+         .catch(ctx.guardedErr)
+@@ -80,9 +80,9 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    aliases: ['reload_mcp'],
+-    help: 'reload MCP servers in the live session (warns about prompt cache invalidation)',
+-    name: 'reload-mcp',
++    aliases: ['reload_mcp', 'reload-mcp'],
++    help: '重载当前会话的 MCP 服务器（会提示缓存失效）',
++    name: '重载MCP',
+     run: (arg, ctx) => {
+       // Parse arg: `now` / `always` skip the confirmation gate.
+       // `always` additionally persists approvals.mcp_reload_confirm=false.
+@@ -102,18 +102,18 @@ export const opsCommands: SlashCommand[] = [
+         .then(
+           ctx.guarded<ReloadMcpResponse>(r => {
+             if (r.status === 'confirm_required') {
+-              ctx.transcript.sys(r.message || '/reload-mcp requires confirmation')
++              ctx.transcript.sys(r.message || '/reload-mcp 需要确认')
+               return
+             }
+             if (r.status === 'reloaded') {
+               ctx.transcript.sys(
+                 params.always
+-                  ? 'MCP servers reloaded · future /reload-mcp will run without confirmation'
+-                  : 'MCP servers reloaded'
++                  ? 'MCP 服务器已重载 · 以后 /reload-mcp 将无需确认'
++                  : 'MCP 服务器已重载'
+               )
+               return
+             }
+-            ctx.transcript.sys('reload complete')
++            ctx.transcript.sys('重载完成')
+           })
+         )
+         .catch(ctx.guardedErr)
+@@ -121,17 +121,17 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 're-read ~/.hermes/.env into the running gateway (CLI parity)',
+-    name: 'reload',
++    help: '重新读取 ~/.hermes/.env 到运行中的网关',
++    name: '重载',
++    aliases: ['reload'],
+     run: (_arg, ctx) => {
+       ctx.gateway
+         .rpc<ReloadEnvResponse>('reload.env', {})
+         .then(
+           ctx.guarded<ReloadEnvResponse>(r => {
+             const n = Number(r.updated ?? 0)
+-            const noun = n === 1 ? 'var' : 'vars'
+ 
+-            ctx.transcript.sys(`reloaded .env (${n} ${noun} updated)`)
++            ctx.transcript.sys(`已重载 .env（${n} 个变量已更新）`)
+           })
+         )
+         .catch(ctx.guardedErr)
+@@ -139,15 +139,16 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'manage browser CDP connection [connect|disconnect|status]',
+-    name: 'browser',
++    help: '管理浏览器 CDP 连接 [connect|disconnect|status]',
++    name: '浏览器',
++    aliases: ['browser'],
+     run: (arg, ctx) => {
+       const [rawAction = 'status', ...rest] = arg.trim().split(/\s+/).filter(Boolean)
+       const action = rawAction.toLowerCase()
+ 
+       if (!['connect', 'disconnect', 'status'].includes(action)) {
+         return ctx.transcript.sys(
+-          'usage: /browser [connect|disconnect|status] [url] · persistent: set browser.cdp_url in config.yaml'
++          '用法：/browser [connect|disconnect|status] [url] · 持久化：在 config.yaml 中设置 browser.cdp_url'
+         )
+       }
+ 
+@@ -155,7 +156,7 @@ export const opsCommands: SlashCommand[] = [
+       const url = action === 'connect' ? rest.join(' ').trim() || 'http://127.0.0.1:9222' : undefined
+ 
+       if (url) {
+-        ctx.transcript.sys(`checking Chrome remote debugging at ${url}...`)
++        ctx.transcript.sys(`正在检查 Chrome 远程调试 ${url}...`)
+       }
+ 
+       ctx.gateway
+@@ -171,19 +172,19 @@ export const opsCommands: SlashCommand[] = [
+             if (action === 'status') {
+               return ctx.transcript.sys(
+                 r.connected
+-                  ? `browser connected: ${r.url || '(url unavailable)'}`
+-                  : 'browser not connected (try /browser connect <url> or set browser.cdp_url in config.yaml)'
++                  ? `浏览器已连接：${r.url || '(url 不可用)'}`
++                  : '浏览器未连接（尝试 /browser connect <url> 或在 config.yaml 中设置 browser.cdp_url）'
+               )
+             }
+ 
+             if (action === 'disconnect') {
+-              return ctx.transcript.sys('browser disconnected')
++              return ctx.transcript.sys('浏览器已断开')
+             }
+ 
+             if (r.connected) {
+-              ctx.transcript.sys('Browser connected to live Chrome via CDP')
+-              ctx.transcript.sys(`Endpoint: ${r.url || '(url unavailable)'}`)
+-              ctx.transcript.sys('next browser tool call will use this CDP endpoint')
++              ctx.transcript.sys('浏览器已通过 CDP 连接到 Chrome')
++              ctx.transcript.sys(`端点：${r.url || '(url 不可用)'}`)
++              ctx.transcript.sys('下次浏览器工具调用将使用此 CDP 端点')
+             }
+           })
+         )
+@@ -192,11 +193,12 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'list, diff, or restore checkpoints',
+-    name: 'rollback',
++    help: '列出、比较或恢复检查点',
++    name: '回滚',
++    aliases: ['rollback'],
+     run: (arg, ctx) => {
+       if (!ctx.sid) {
+-        return ctx.transcript.sys('no active session — nothing to rollback')
++        return ctx.transcript.sys('没有活动会话 — 无内容可回滚')
+       }
+ 
+       const trimmed = arg.trim()
+@@ -209,20 +211,20 @@ export const opsCommands: SlashCommand[] = [
+           .then(
+             ctx.guarded<RollbackListResponse>(r => {
+               if (!r.enabled) {
+-                return ctx.transcript.sys('checkpoints are not enabled')
++                return ctx.transcript.sys('检查点未启用')
+               }
+ 
+               const checkpoints = r.checkpoints ?? []
+ 
+               if (!checkpoints.length) {
+-                return ctx.transcript.sys('no checkpoints found')
++                return ctx.transcript.sys('未找到检查点')
+               }
+ 
+-              ctx.transcript.panel('Rollback checkpoints', [
++              ctx.transcript.panel('回滚检查点', [
+                 {
+                   rows: checkpoints.map((c, idx) => [
+                     `${idx + 1}. ${c.hash.slice(0, 10)}`,
+-                    [c.timestamp, c.message].filter(Boolean).join(' · ') || '(no metadata)'
++                    [c.timestamp, c.message].filter(Boolean).join(' · ') || '（无元数据）'
+                   ])
+                 }
+               ])
+@@ -235,7 +237,7 @@ export const opsCommands: SlashCommand[] = [
+         const hash = rest[0]
+ 
+         if (!hash) {
+-          return ctx.transcript.sys('usage: /rollback diff <checkpoint>')
++          return ctx.transcript.sys('用法：/rollback diff <检查点>')
+         }
+ 
+         return ctx.gateway
+@@ -245,11 +247,11 @@ export const opsCommands: SlashCommand[] = [
+               const body = (r.rendered || r.diff || '').trim()
+ 
+               if (!body && !r.stat) {
+-                return ctx.transcript.sys('no changes since this checkpoint')
++                return ctx.transcript.sys('自此检查点以来无变更')
+               }
+ 
+               const text = [r.stat || '', body].filter(Boolean).join('\n\n')
+-              ctx.transcript.page(text, 'Rollback diff')
++              ctx.transcript.page(text, '回滚差异')
+             })
+           )
+           .catch(ctx.guardedErr)
+@@ -267,12 +269,12 @@ export const opsCommands: SlashCommand[] = [
+         .then(
+           ctx.guarded<RollbackRestoreResponse>(r => {
+             if (!r.success) {
+-              return ctx.transcript.sys(`rollback failed: ${r.error || r.message || 'unknown error'}`)
++              return ctx.transcript.sys(`回滚失败：${r.error || r.message || '未知错误'}`)
+             }
+ 
+             const target = filePath || 'workspace'
+             const detail = r.reason || r.message || r.restored_to || 'restored'
+-            ctx.transcript.sys(`rollback restored ${target}: ${detail}`)
++            ctx.transcript.sys(`回滚已恢复 ${target}：${detail}`)
+ 
+             if ((r.history_removed ?? 0) > 0) {
+               ctx.transcript.setHistoryItems(prev => ctx.transcript.trimLastExchange(prev))
+@@ -284,9 +286,9 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    aliases: ['tasks'],
+-    help: 'open the spawn-tree dashboard (live audit + kill/pause controls)',
+-    name: 'agents',
++    aliases: ['tasks', 'agents'],
++    help: '打开代理树仪表板（实时审计 + 暂停/终止控制）',
++    name: '代理',
+     run: (arg, ctx) => {
+       const sub = arg.trim().toLowerCase()
+ 
+@@ -299,7 +301,7 @@ export const opsCommands: SlashCommand[] = [
+           .request<DelegationPauseResponse>('delegation.pause', { paused })
+           .then(r => {
+             applyDelegationStatus({ paused: r?.paused })
+-            ctx.transcript.sys(`delegation · ${r?.paused ? 'paused' : 'resumed'}`)
++            ctx.transcript.sys(`委派 · ${r?.paused ? '已暂停' : '已恢复'}`)
+           })
+           .catch(ctx.guardedErr)
+ 
+@@ -309,7 +311,7 @@ export const opsCommands: SlashCommand[] = [
+       if (sub === 'status') {
+         const d = getDelegationState()
+         ctx.transcript.sys(
+-          `delegation · ${d.paused ? 'paused' : 'active'} · caps d${d.maxSpawnDepth ?? '?'}/${d.maxConcurrentChildren ?? '?'}`
++          `委派 · ${d.paused ? '已暂停' : '活跃'} · 上限 d${d.maxSpawnDepth ?? '?'}/${d.maxConcurrentChildren ?? '?'}`
+         )
+ 
+         return
+@@ -320,8 +322,9 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'replay a completed spawn tree · `/replay [N|last|list|load <path>]`',
+-    name: 'replay',
++    help: '回放已完成的代理树 · `/回放 [N|last|list|load <路径>]`',
++    name: '回放',
++    aliases: ['replay'],
+     run: (arg, ctx) => {
+       const history = getSpawnHistory()
+       const raw = arg.trim()
+@@ -339,7 +342,7 @@ export const opsCommands: SlashCommand[] = [
+               const entries = r.entries ?? []
+ 
+               if (!entries.length) {
+-                return ctx.transcript.sys('no archived spawn trees on disk for this session')
++                return ctx.transcript.sys('本次会话没有存档的代理树')
+               }
+ 
+               const rows: [string, string][] = entries.map(e => {
+@@ -349,7 +352,7 @@ export const opsCommands: SlashCommand[] = [
+                 return [`${ts} · ${e.count}×`, `${label}\n  ${e.path}`]
+               })
+ 
+-              ctx.transcript.panel('Archived spawn trees', [{ rows }])
++              ctx.transcript.panel('存档的代理树', [{ rows }])
+             })
+           )
+           .catch(ctx.guardedErr)
+@@ -362,7 +365,7 @@ export const opsCommands: SlashCommand[] = [
+         const path = raw.slice(5).trim()
+ 
+         if (!path) {
+-          return ctx.transcript.sys('usage: /replay load <path>')
++          return ctx.transcript.sys('用法：/replay load <路径>')
+         }
+ 
+         ctx.gateway
+@@ -370,7 +373,7 @@ export const opsCommands: SlashCommand[] = [
+           .then(
+             ctx.guarded<SpawnTreeLoadResponse>(r => {
+               if (!r.subagents?.length) {
+-                return ctx.transcript.sys('snapshot empty or unreadable')
++                return ctx.transcript.sys('快照为空或不可读')
+               }
+ 
+               // Push onto the in-memory history so the overlay picks it up
+@@ -386,7 +389,7 @@ export const opsCommands: SlashCommand[] = [
+ 
+       // ── In-memory nav (same-session) ─────────────────────────────
+       if (!history.length) {
+-        return ctx.transcript.sys('no completed spawn trees this session · try /replay list')
++        return ctx.transcript.sys('本次会话没有已完成的代理树 · 尝试 /replay list')
+       }
+ 
+       let index = 1
+@@ -395,7 +398,7 @@ export const opsCommands: SlashCommand[] = [
+         const parsed = parseInt(raw, 10)
+ 
+         if (Number.isNaN(parsed) || parsed < 1 || parsed > history.length) {
+-          return ctx.transcript.sys(`replay: index out of range 1..${history.length} · use /replay list for disk`)
++          return ctx.transcript.sys(`回放：索引超出范围 1..${history.length} · 使用 /replay list 查看磁盘`)
+         }
+ 
+         index = parsed
+@@ -406,13 +409,14 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'diff two completed spawn trees · `/replay-diff <baseline> <candidate>` (indexes from /replay list or history N)',
+-    name: 'replay-diff',
++    help: '比较两个已完成的代理树 · `/回放差异 <基准> <候选>`',
++    name: '回放差异',
++    aliases: ['replay-diff'],
+     run: (arg, ctx) => {
+       const parts = arg.trim().split(/\s+/).filter(Boolean)
+ 
+       if (parts.length !== 2) {
+-        return ctx.transcript.sys('usage: /replay-diff <a> <b>  (e.g. /replay-diff 1 2 for last two)')
++        return ctx.transcript.sys('用法：/replay-diff <a> <b>（如 /replay-diff 1 2 比较最近两个）')
+       }
+ 
+       const [a, b] = parts
+@@ -432,7 +436,7 @@ export const opsCommands: SlashCommand[] = [
+       const candidate = resolve(b!)
+ 
+       if (!baseline || !candidate) {
+-        return ctx.transcript.sys(`replay-diff: could not resolve indices · history has ${history.length} entries`)
++        return ctx.transcript.sys(`回放差异：无法解析索引 · 历史有 ${history.length} 条记录`)
+       }
+ 
+       setDiffPair({ baseline, candidate })
+@@ -441,15 +445,15 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    aliases: ['reload_skills'],
+-    help: 're-scan installed skills in the live TUI gateway',
+-    name: 'reload-skills',
++    aliases: ['reload_skills', 'reload-skills'],
++    help: '重新扫描当前会话的已安装技能',
++    name: '重载技能',
+     run: (_arg, ctx) => {
+       ctx.gateway
+         .rpc<SkillsReloadResponse>('skills.reload', {})
+         .then(
+           ctx.guarded<SkillsReloadResponse>(r => {
+-            ctx.transcript.page(r.output || 'skills reloaded', 'Reload Skills')
++            ctx.transcript.page(r.output || '技能已重载', '重载技能')
+             ctx.gateway
+               .rpc<CommandsCatalogResponse>('commands.catalog', {})
+               .then(
+@@ -475,8 +479,9 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'browse, inspect, install skills',
+-    name: 'skills',
++    help: '浏览、查看、安装技能',
++    name: '技能',
++    aliases: ['skills'],
+     run: (arg, ctx, cmd) => {
+       const text = arg.trim()
+ 
+@@ -500,7 +505,7 @@ export const opsCommands: SlashCommand[] = [
+             const formatted = r?.warning ? `warning: ${r.warning}\n${body}` : body
+             const long = formatted.length > 180 || formatted.split('\n').filter(Boolean).length > 2
+ 
+-            long ? ctx.transcript.page(formatted, 'Skills') : ctx.transcript.sys(formatted)
++            long ? ctx.transcript.page(formatted, '技能') : ctx.transcript.sys(formatted)
+           })
+           .catch(ctx.guardedErr)
+       }
+@@ -512,11 +517,11 @@ export const opsCommands: SlashCommand[] = [
+               const cats = Object.entries(r.skills ?? {}).sort()
+ 
+               if (!cats.length) {
+-                return sys('no skills available')
++                return sys('暂无可用技能')
+               }
+ 
+               panel(
+-                'Skills',
++                '技能',
+                 cats.map<PanelSection>(([title, items]) => ({ items, title }))
+               )
+             })
+@@ -528,7 +533,7 @@ export const opsCommands: SlashCommand[] = [
+ 
+       if (sub === 'inspect') {
+         if (!query) {
+-          return sys('usage: /skills inspect <name>')
++          return sys('用法：/skills inspect <名称>')
+         }
+ 
+         rpc<SkillsInspectResponse>('skills.manage', { action: 'inspect', query })
+@@ -541,9 +546,9 @@ export const opsCommands: SlashCommand[] = [
+               }
+ 
+               const rows: [string, string][] = [
+-                ['Name', String(info.name)],
+-                ['Category', String(info.category ?? '')],
+-                ['Path', String(info.path ?? '')]
++                ['名称', String(info.name)],
++                ['分类', String(info.category ?? '')],
++                ['路径', String(info.path ?? '')]
+               ]
+ 
+               const sections: PanelSection[] = [{ rows }]
+@@ -552,7 +557,7 @@ export const opsCommands: SlashCommand[] = [
+                 sections.push({ text: String(info.description) })
+               }
+ 
+-              panel('Skill', sections)
++              panel('技能', sections)
+             })
+           )
+           .catch(ctx.guardedErr)
+@@ -562,7 +567,7 @@ export const opsCommands: SlashCommand[] = [
+ 
+       if (sub === 'search') {
+         if (!query) {
+-          return sys('usage: /skills search <query>')
++          return sys('用法：/skills search <查询>')
+         }
+ 
+         rpc<SkillsSearchResponse>('skills.manage', { action: 'search', query })
+@@ -571,10 +576,10 @@ export const opsCommands: SlashCommand[] = [
+               const results = r.results ?? []
+ 
+               if (!results.length) {
+-                return sys(`no results for: ${query}`)
++                return sys(`未找到结果：${query}`)
+               }
+ 
+-              panel(`Search: ${query}`, [{ rows: results.map(s => [s.name, s.description ?? '']) }])
++              panel(`搜索：${query}`, [{ rows: results.map(s => [s.name, s.description ?? '']) }])
+             })
+           )
+           .catch(ctx.guardedErr)
+@@ -584,10 +589,10 @@ export const opsCommands: SlashCommand[] = [
+ 
+       if (sub === 'install') {
+         if (!query) {
+-          return sys('usage: /skills install <name or url>')
++          return sys('用法：/skills install <名称或 URL>')
+         }
+ 
+-        sys(`installing ${query}…`)
++        sys(`正在安装 ${query}…`)
+ 
+         rpc<SkillsInstallResponse>('skills.manage', { action: 'install', query })
+           .then(
+diff --git a/ui-tui/src/app/slash/commands/session.ts b/ui-tui/src/app/slash/commands/session.ts
+index 9dddd8537..eb8437561 100644
+--- a/ui-tui/src/app/slash/commands/session.ts
++++ b/ui-tui/src/app/slash/commands/session.ts
+@@ -39,12 +39,12 @@ const modelValueForConfigSet = (arg: string) => {
+ 
+ export const sessionCommands: SlashCommand[] = [
+   {
+-    aliases: ['bg', 'btw'],
+-    help: 'launch a background prompt',
+-    name: 'background',
++    aliases: ['bg', 'btw', 'background'],
++    help: '启动后台提示',
++    name: '后台',
+     run: (arg, ctx) => {
+       if (!arg) {
+-        return ctx.transcript.sys('/background <prompt>')
++        return ctx.transcript.sys('/后台 <提示>')
+       }
+ 
+       ctx.gateway.rpc<BackgroundStartResponse>('prompt.background', { session_id: ctx.sid, text: arg }).then(
+@@ -54,15 +54,16 @@ export const sessionCommands: SlashCommand[] = [
+           }
+ 
+           patchUiState(state => ({ ...state, bgTasks: new Set(state.bgTasks).add(r.task_id!) }))
+-          ctx.transcript.sys(`bg ${r.task_id} started`)
++          ctx.transcript.sys(`后台任务 ${r.task_id} 已启动`)
+         })
+       )
+     }
+   },
+ 
+   {
+-    help: 'change or show model',
+-    name: 'model',
++    help: '切换或查看模型',
++    name: '模型',
++    aliases: ['model'],
+     run: (arg, ctx) => {
+       if (ctx.session.guardBusySessionSwitch('change models')) {
+         return
+@@ -77,10 +78,10 @@ export const sessionCommands: SlashCommand[] = [
+         .then(
+           ctx.guarded<ConfigSetResponse>(r => {
+             if (!r.value) {
+-              return ctx.transcript.sys('error: invalid response: model switch')
++              return ctx.transcript.sys('错误：无效响应：模型切换')
+             }
+ 
+-            ctx.transcript.sys(`model → ${r.value}`)
++            ctx.transcript.sys(`模型 → ${r.value}`)
+             ctx.local.maybeWarn(r)
+ 
+             patchUiState(state => ({
+@@ -93,8 +94,9 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'attach an image',
+-    name: 'image',
++    help: '附加图片',
++    name: '图片',
++    aliases: ['image'],
+     run: (arg, ctx) => {
+       ctx.gateway.rpc<ImageAttachResponse>('image.attach', { path: arg, session_id: ctx.sid }).then(
+         ctx.guarded<ImageAttachResponse>(r => {
+@@ -109,8 +111,9 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'switch or reset personality (history reset on set)',
+-    name: 'personality',
++    help: '切换或重置人格（设置时重置历史）',
++    name: '人格',
++    aliases: ['personality'],
+     run: (arg, ctx) => {
+       if (!arg) {
+         return
+@@ -122,7 +125,7 @@ export const sessionCommands: SlashCommand[] = [
+             ctx.session.resetVisibleHistory(r.info ?? null)
+           }
+ 
+-          ctx.transcript.sys(`personality: ${r.value || 'default'}${r.history_reset ? ' · transcript cleared' : ''}`)
++          ctx.transcript.sys(`人格：${r.value || 'default'}${r.history_reset ? ' · 记录已清空' : ''}`)
+           ctx.local.maybeWarn(r)
+         })
+       )
+@@ -130,8 +133,9 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'compress transcript',
+-    name: 'compress',
++    help: '压缩对话记录',
++    name: '压缩',
++    aliases: ['compress'],
+     run: (arg, ctx) => {
+       ctx.gateway
+         .rpc<SessionCompressResponse>('session.compress', {
+@@ -171,11 +175,11 @@ export const sessionCommands: SlashCommand[] = [
+             }
+ 
+             if ((r.removed ?? 0) <= 0) {
+-              return ctx.transcript.sys('nothing to compress')
++              return ctx.transcript.sys('没有可压缩的内容')
+             }
+ 
+             ctx.transcript.sys(
+-              `compressed ${r.removed} messages${r.usage?.total ? ` · ${fmtK(r.usage.total)} tok` : ''}`
++              `已压缩 ${r.removed} 条消息${r.usage?.total ? ` · ${fmtK(r.usage.total)} tok` : ''}`
+             )
+           })
+         )
+@@ -184,9 +188,9 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    aliases: ['fork'],
+-    help: 'branch the session',
+-    name: 'branch',
++    aliases: ['fork', 'branch'],
++    help: '分支当前会话',
++    name: '分支',
+     run: (arg, ctx) => {
+       const prevSid = ctx.sid
+ 
+@@ -200,15 +204,16 @@ export const sessionCommands: SlashCommand[] = [
+           patchUiState({ sid: r.session_id })
+           ctx.session.setSessionStartedAt(Date.now())
+           ctx.transcript.setHistoryItems([])
+-          ctx.transcript.sys(`branched → ${r.title ?? ''}`)
++          ctx.transcript.sys(`已分支 → ${r.title ?? ''}`)
+         })
+       )
+     }
+   },
+ 
+   {
+-    help: 'voice mode: [on|off|tts|status]',
+-    name: 'voice',
++    help: '语音模式：[on|off|tts|status]',
++    name: '语音',
++    aliases: ['voice'],
+     run: (arg, ctx) => {
+       const normalized = (arg ?? '').trim().toLowerCase()
+ 
+@@ -251,17 +256,17 @@ export const sessionCommands: SlashCommand[] = [
+           if (action === 'status') {
+             const mode = r.enabled ? 'ON' : 'OFF'
+             const tts = r.tts ? 'ON' : 'OFF'
+-            ctx.transcript.sys('Voice Mode Status')
+-            ctx.transcript.sys(`  Mode:       ${mode}`)
+-            ctx.transcript.sys(`  TTS:        ${tts}`)
+-            ctx.transcript.sys(`  Record key: ${recordKeyLabel}`)
++            ctx.transcript.sys('语音模式状态')
++            ctx.transcript.sys(`  模式：       ${mode}`)
++            ctx.transcript.sys(`  TTS：        ${tts}`)
++            ctx.transcript.sys(`  录音键：${recordKeyLabel}`)
+ 
+             // CLI's "Requirements:" block — surfaces STT/audio setup issues
+             // so the user sees "STT provider: MISSING ..." instead of
+             // silently failing on every record-key press.
+             if (r.details) {
+               ctx.transcript.sys('')
+-              ctx.transcript.sys('  Requirements:')
++              ctx.transcript.sys('  要求：')
+ 
+               for (const line of r.details.split('\n')) {
+                 if (line.trim()) {
+@@ -274,20 +279,20 @@ export const sessionCommands: SlashCommand[] = [
+           }
+ 
+           if (action === 'tts') {
+-            ctx.transcript.sys(`Voice TTS ${r.tts ? 'enabled' : 'disabled'}.`)
++            ctx.transcript.sys(`语音 TTS ${r.tts ? '已启用' : '已禁用'}。`)
+ 
+             return
+           }
+ 
+           // on/off — mirror cli.py:_enable_voice_mode's 3-line output
+           if (r.enabled) {
+-            const tts = r.tts ? ' (TTS enabled)' : ''
+-            ctx.transcript.sys(`Voice mode enabled${tts}`)
+-            ctx.transcript.sys(`  ${recordKeyLabel} to start/stop recording`)
+-            ctx.transcript.sys('  /voice tts  to toggle speech output')
+-            ctx.transcript.sys('  /voice off  to disable voice mode')
++            const tts = r.tts ? '（TTS 已启用）' : ''
++            ctx.transcript.sys(`语音模式已启用${tts}`)
++            ctx.transcript.sys(`  ${recordKeyLabel} 开始/停止录音`)
++            ctx.transcript.sys('  /voice tts  切换语音输出')
++            ctx.transcript.sys('  /voice off  关闭语音模式')
+           } else {
+-            ctx.transcript.sys('Voice mode disabled.')
++            ctx.transcript.sys('语音模式已关闭。')
+           }
+         })
+       )
+@@ -295,24 +300,26 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'switch theme skin (fires skin.changed)',
+-    name: 'skin',
++    help: '切换主题皮肤（触发 skin.changed）',
++    name: '皮肤',
++    aliases: ['skin'],
+     run: (arg, ctx) => {
+       if (!arg) {
+         return ctx.gateway
+           .rpc<ConfigGetValueResponse>('config.get', { key: 'skin' })
+-          .then(ctx.guarded<ConfigGetValueResponse>(r => ctx.transcript.sys(`skin: ${r.value || 'default'}`)))
++          .then(ctx.guarded<ConfigGetValueResponse>(r => ctx.transcript.sys(`皮肤：${r.value || 'default'}`)))
+       }
+ 
+       ctx.gateway
+         .rpc<ConfigSetResponse>('config.set', { key: 'skin', value: arg })
+-        .then(ctx.guarded<ConfigSetResponse>(r => r.value && ctx.transcript.sys(`skin → ${r.value}`)))
++        .then(ctx.guarded<ConfigSetResponse>(r => r.value && ctx.transcript.sys(`皮肤 → ${r.value}`)))
+     }
+   },
+ 
+   {
+-    help: 'pick the busy indicator: kaomoji (default), emoji, unicode (braille), or ascii',
+-    name: 'indicator',
++    help: '选择忙碌指示器样式：kaomoji（默认）、emoji、unicode（盲文）或 ascii',
++    name: '指示器',
++    aliases: ['indicator'],
+     usage: `/indicator [${INDICATOR_STYLES.join('|')}]`,
+     run: (arg, ctx) => {
+       const value = arg.trim().toLowerCase()
+@@ -322,13 +329,13 @@ export const sessionCommands: SlashCommand[] = [
+           .rpc<ConfigGetValueResponse>('config.get', { key: 'indicator' })
+           .then(
+             ctx.guarded<ConfigGetValueResponse>(r =>
+-              ctx.transcript.sys(`indicator: ${r.value || DEFAULT_INDICATOR_STYLE}`)
++              ctx.transcript.sys(`指示器：${r.value || DEFAULT_INDICATOR_STYLE}`)
+             )
+           )
+       }
+ 
+       if (!(INDICATOR_STYLES as readonly string[]).includes(value)) {
+-        return ctx.transcript.sys(`usage: /indicator [${INDICATOR_STYLES.join('|')}]`)
++        return ctx.transcript.sys(`用法：/indicator [${INDICATOR_STYLES.join('|')}]`)
+       }
+ 
+       ctx.gateway.rpc<ConfigSetResponse>('config.set', { key: 'indicator', value }).then(
+@@ -341,32 +348,34 @@ export const sessionCommands: SlashCommand[] = [
+           // uses the new style without waiting for the 5s mtime poll
+           // to re-apply config.full.
+           patchUiState({ indicatorStyle: value as IndicatorStyle })
+-          ctx.transcript.sys(`indicator → ${r.value}`)
++          ctx.transcript.sys(`指示器 → ${r.value}`)
+         })
+       )
+     }
+   },
+ 
+   {
+-    help: 'toggle yolo mode (per-session approvals)',
+-    name: 'yolo',
++    help: '切换全自动模式（跳过所有危险命令审批）',
++    name: '全自动',
++    aliases: ['yolo'],
+     run: (_arg, ctx) => {
+       ctx.gateway
+         .rpc<ConfigSetResponse>('config.set', { key: 'yolo', session_id: ctx.sid })
+-        .then(ctx.guarded<ConfigSetResponse>(r => ctx.transcript.sys(`yolo ${r.value === '1' ? 'on' : 'off'}`)))
++        .then(ctx.guarded<ConfigSetResponse>(r => ctx.transcript.sys(`全自动${r.value === '1' ? '已开启' : '已关闭'}`)))
+     }
+   },
+ 
+   {
+-    help: 'inspect or set reasoning effort (updates live agent)',
+-    name: 'reasoning',
++    help: '查看或设置推理力度（实时更新代理）',
++    name: '推理',
++    aliases: ['reasoning'],
+     run: (arg, ctx) => {
+       if (!arg) {
+         return ctx.gateway
+           .rpc<ConfigGetValueResponse>('config.get', { key: 'reasoning' })
+           .then(
+             ctx.guarded<ConfigGetValueResponse>(
+-              r => r.value && ctx.transcript.sys(`reasoning: ${r.value} · display ${r.display || 'hide'}`)
++              r => r.value && ctx.transcript.sys(`推理：${r.value} · 显示 ${r.display || 'hide'}`)
+             )
+           )
+       }
+@@ -393,21 +402,22 @@ export const sessionCommands: SlashCommand[] = [
+               }))
+             }
+ 
+-            ctx.transcript.sys(`reasoning: ${r.value}`)
++            ctx.transcript.sys(`推理：${r.value}`)
+           })
+         )
+     }
+   },
+ 
+   {
+-    help: 'toggle fast mode [normal|fast|status|on|off|toggle]',
+-    name: 'fast',
++    help: '切换快速模式 [normal|fast|status|on|off|toggle]',
++    name: '快速',
++    aliases: ['fast'],
+     run: (arg, ctx) => {
+       const mode = arg.trim().toLowerCase()
+       const valid = new Set(['', 'status', 'normal', 'fast', 'on', 'off', 'toggle'])
+ 
+       if (!valid.has(mode)) {
+-        return ctx.transcript.sys('usage: /fast [normal|fast|status|on|off|toggle]')
++        return ctx.transcript.sys('用法：/fast [normal|fast|status|on|off|toggle]')
+       }
+ 
+       if (!mode || mode === 'status') {
+@@ -415,7 +425,7 @@ export const sessionCommands: SlashCommand[] = [
+           .rpc<ConfigGetValueResponse>('config.get', { key: 'fast', session_id: ctx.sid })
+           .then(
+             ctx.guarded<ConfigGetValueResponse>(r =>
+-              ctx.transcript.sys(`fast mode: ${r.value === 'fast' ? 'fast' : 'normal'}`)
++              ctx.transcript.sys(`快速模式：${r.value === 'fast' ? '快速' : '普通'}`)
+             )
+           )
+           .catch(ctx.guardedErr)
+@@ -426,7 +436,7 @@ export const sessionCommands: SlashCommand[] = [
+         .then(
+           ctx.guarded<ConfigSetResponse>(r => {
+             const next = r.value === 'fast' ? 'fast' : 'normal'
+-            ctx.transcript.sys(`fast mode: ${next}`)
++            ctx.transcript.sys(`快速模式：${next === 'fast' ? '快速' : '普通'}`)
+             patchUiState(state => ({
+               ...state,
+               info: state.info
+@@ -444,14 +454,15 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'control busy enter mode [queue|steer|interrupt|status]',
+-    name: 'busy',
++    help: '控制忙碌时回车行为 [queue|steer|interrupt|status]',
++    name: '忙碌',
++    aliases: ['busy'],
+     run: (arg, ctx) => {
+       const mode = arg.trim().toLowerCase()
+       const valid = new Set(['', 'status', 'queue', 'steer', 'interrupt'])
+ 
+       if (!valid.has(mode)) {
+-        return ctx.transcript.sys('usage: /busy [queue|steer|interrupt|status]')
++        return ctx.transcript.sys('用法：/busy [queue|steer|interrupt|status]')
+       }
+ 
+       if (!mode || mode === 'status') {
+@@ -460,7 +471,7 @@ export const sessionCommands: SlashCommand[] = [
+           .then(
+             ctx.guarded<ConfigGetValueResponse>(r => {
+               const current = r.value || 'interrupt'
+-              ctx.transcript.sys(`busy input mode: ${current}`)
++              ctx.transcript.sys(`忙碌输入模式：${current}`)
+             })
+           )
+           .catch(ctx.guardedErr)
+@@ -471,7 +482,7 @@ export const sessionCommands: SlashCommand[] = [
+         .then(
+           ctx.guarded<ConfigSetResponse>(r => {
+             const next = r.value || mode
+-            ctx.transcript.sys(`busy input mode: ${next}`)
++            ctx.transcript.sys(`忙碌输入模式：${next}`)
+           })
+         )
+         .catch(ctx.guardedErr)
+@@ -479,18 +490,20 @@ export const sessionCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'cycle verbose tool-output mode (updates live agent)',
+-    name: 'verbose',
++    help: '循环切换工具输出详细程度（实时更新代理）',
++    name: '详细',
++    aliases: ['verbose'],
+     run: (arg, ctx) => {
+       ctx.gateway
+         .rpc<ConfigSetResponse>('config.set', { key: 'verbose', session_id: ctx.sid, value: arg || 'cycle' })
+-        .then(ctx.guarded<ConfigSetResponse>(r => r.value && ctx.transcript.sys(`verbose: ${r.value}`)))
++        .then(ctx.guarded<ConfigSetResponse>(r => r.value && ctx.transcript.sys(`详细程度：${r.value}`)))
+     }
+   },
+ 
+   {
+-    help: 'session usage (live counts — worker sees zeros)',
+-    name: 'usage',
++    help: '会话用量（实时计数 — worker 显示零）',
++    name: '用量',
++    aliases: ['usage'],
+     run: (_arg, ctx) => {
+       ctx.gateway.rpc<SessionUsageResponse>('session.usage', { session_id: ctx.sid }).then(r => {
+         if (ctx.stale()) {
+@@ -504,37 +517,37 @@ export const sessionCommands: SlashCommand[] = [
+         }
+ 
+         if (!r?.calls) {
+-          return ctx.transcript.sys('no API calls yet')
++          return ctx.transcript.sys('暂无 API 调用')
+         }
+ 
+         const f = (v: number | undefined) => (v ?? 0).toLocaleString()
+         const cost = r.cost_usd != null ? `${r.cost_status === 'estimated' ? '~' : ''}$${r.cost_usd.toFixed(4)}` : null
+ 
+         const rows: [string, string][] = [
+-          ['Model', r.model ?? ''],
+-          ['Input tokens', f(r.input)],
+-          ['Cache read tokens', f(r.cache_read)],
+-          ['Cache write tokens', f(r.cache_write)],
+-          ['Output tokens', f(r.output)],
+-          ['Total tokens', f(r.total)],
+-          ['API calls', f(r.calls)]
++          ['模型', r.model ?? ''],
++          ['输入 token', f(r.input)],
++          ['缓存读取 token', f(r.cache_read)],
++          ['缓存写入 token', f(r.cache_write)],
++          ['输出 token', f(r.output)],
++          ['总计 token', f(r.total)],
++          ['API 调用', f(r.calls)]
+         ]
+ 
+         if (cost) {
+-          rows.push(['Cost', cost])
++          rows.push(['费用', cost])
+         }
+ 
+         const sections: PanelSection[] = [{ rows }]
+ 
+         if (r.context_max) {
+-          sections.push({ text: `Context: ${f(r.context_used)} / ${f(r.context_max)} (${r.context_percent}%)` })
++          sections.push({ text: `上下文：${f(r.context_used)} / ${f(r.context_max)} (${r.context_percent}%)` })
+         }
+ 
+         if (r.compressions) {
+-          sections.push({ text: `Compressions: ${r.compressions}` })
++          sections.push({ text: `压缩次数：${r.compressions}` })
+         }
+ 
+-        ctx.transcript.panel('Usage', sections)
++        ctx.transcript.panel('用量', sections)
+       })
+     }
+   }
+diff --git a/ui-tui/src/app/slash/commands/setup.ts b/ui-tui/src/app/slash/commands/setup.ts
+index bf1a29c68..2ac3a769a 100644
+--- a/ui-tui/src/app/slash/commands/setup.ts
++++ b/ui-tui/src/app/slash/commands/setup.ts
+@@ -6,13 +6,14 @@ import type { SlashCommand } from '../types.js'
+ 
+ export const setupCommands: SlashCommand[] = [
+   {
+-    help: 'run full setup wizard (launches `hermes setup`)',
+-    name: 'setup',
++    help: '运行完整设置向导（启动 `hermes setup`）',
++    name: '设置',
++    aliases: ['setup'],
+     run: (arg, ctx) =>
+       void runExternalSetup({
+         args: ['setup', ...arg.split(/\s+/).filter(Boolean)],
+         ctx,
+-        done: 'setup complete — starting session…',
++        done: '设置完成 — 正在启动会话…',
+         launcher: launchHermesCommand,
+         suspend: withInkSuspended
+       })

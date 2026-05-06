@@ -1,0 +1,37 @@
+{
+  "version": "946ef0ea1-terminal-discord1",
+  "base_commit": "946ef0ea1",
+  "description": "Discord + 终端斜杠命令中文本地化补丁",
+  "scope": ["discord", "terminal"],
+  "patches": [
+    {
+      "path": "gateway/platforms/discord.py",
+      "description": "汉化Discord斜杠命令名称、描述和固定回复"
+    },
+    {
+      "path": "ui-tui/src/app/slash/commands/core.ts",
+      "description": "汉化TUI核心斜杠命令"
+    },
+    {
+      "path": "ui-tui/src/app/slash/commands/session.ts",
+      "description": "汉化TUI会话斜杠命令"
+    },
+    {
+      "path": "ui-tui/src/app/slash/commands/ops.ts",
+      "description": "汉化TUI运维斜杠命令"
+    },
+    {
+      "path": "ui-tui/src/app/slash/commands/debug.ts",
+      "description": "汉化TUI调试斜杠命令"
+    },
+    {
+      "path": "ui-tui/src/app/slash/commands/setup.ts",
+      "description": "汉化TUI设置斜杠命令"
+    }
+  ],
+  "applied_patches": [
+    "patches/discord-commands-zh.patch",
+    "patches/tui-commands-zh.patch"
+  ],
+  "notes": "汉化Discord和终端(TUI)斜杠命令名称、描述和固定回复。不涉及皮肤和其他平台。"
+}

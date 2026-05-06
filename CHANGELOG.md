@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+- 升级官方基准从 `5d3be898a` 到 `946ef0ea1`。
+- 发布 `releases/946ef0ea1-terminal-discord1/` 作为当前最新 release。
+- 扩展汉化范围：从仅 Discord 斜杠命令扩展到 **Discord + 终端(TUI)** 斜杠命令。
+- Discord：28 个命令名称、描述、参数描述、语音选项标签和固定回复。
+- 终端(TUI)：5 个 TypeScript 源文件中的 ~50 个命令名称、help 文本和固定回复字符串。
+- 采用简单直接字符串替换补丁（非 hook 架构），保持最小侵入性。
+- 终端命令保留英文原名作为 alias，方便双语言使用。
+
 ## 1.1.2
 
 - Update README and install docs with the remote-verified application commands: explicit `--hermes-home "$HOME/.hermes"`, pinned release application, and a temporary-directory safety test path.
