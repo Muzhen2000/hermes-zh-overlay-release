@@ -1,5 +1,5 @@
 diff --git a/gateway/platforms/discord.py b/gateway/platforms/discord.py
-index e30c4478e..edc69b3bf 100644
+index e30c4478e..e91188a4a 100644
 --- a/gateway/platforms/discord.py
 +++ b/gateway/platforms/discord.py
 @@ -2570,130 +2570,130 @@ class DiscordAdapter(BasePlatformAdapter):
@@ -207,7 +207,25 @@ index e30c4478e..edc69b3bf 100644
  
          # ── Auto-register any gateway-available commands not yet on the tree ──
          # This ensures new commands added to COMMAND_REGISTRY in
-@@ -2963,8 +2963,8 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2760,6 +2760,17 @@ class DiscordAdapter(BasePlatformAdapter):
+             except Exception:
+                 pass
+ 
++            # 手动注册的命令已使用中文名，这里加入对应英文原名，
++            # 防止 COMMAND_REGISTRY 自动注册重复命令。
++            already_registered |= {
++                "new", "reset", "model", "reasoning", "personality",
++                "retry", "undo", "status", "sethome", "stop", "steer",
++                "compress", "title", "resume", "usage", "help",
++                "insights", "reload-mcp", "reload-skills", "voice",
++                "update", "restart", "approve", "deny", "thread",
++                "queue", "background",
++            }
++
+             config_overrides = _resolve_config_gates()
+ 
+             for cmd_def in COMMAND_REGISTRY:
+@@ -2963,8 +2974,8 @@ class DiscordAdapter(BasePlatformAdapter):
                  return choices
  
              @discord.app_commands.describe(
@@ -218,7 +236,7 @@ index e30c4478e..edc69b3bf 100644
              )
              @discord.app_commands.autocomplete(name=_autocomplete_name)
              async def _skill_handler(
-@@ -2990,8 +2990,8 @@ class DiscordAdapter(BasePlatformAdapter):
+@@ -2990,8 +3001,8 @@ class DiscordAdapter(BasePlatformAdapter):
                  )
  
              cmd = discord.app_commands.Command(
