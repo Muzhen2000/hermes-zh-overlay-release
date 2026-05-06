@@ -1,5 +1,5 @@
 diff --git a/gateway/platforms/discord.py b/gateway/platforms/discord.py
-index e30c4478e..66e0f8620 100644
+index e30c4478e..1f9a9f414 100644
 --- a/gateway/platforms/discord.py
 +++ b/gateway/platforms/discord.py
 @@ -2570,130 +2570,130 @@ class DiscordAdapter(BasePlatformAdapter):
@@ -191,11 +191,11 @@ index e30c4478e..66e0f8620 100644
  
 -        @tree.command(name="queue", description="Queue a prompt for the next turn (doesn't interrupt)")
 -        @discord.app_commands.describe(prompt="The prompt to queue")
-+        @tree.command(name="队列", description="将提示加入下一轮队列（不打断）")
++        @tree.command(name="排队", description="将提示加入下一轮队列（不打断）")
 +        @discord.app_commands.describe(prompt="要排队的提示内容")
          async def slash_queue(interaction: discord.Interaction, prompt: str):
 -            await self._run_simple_slash(interaction, f"/queue {prompt}", "Queued for the next turn.")
-+            await self._run_simple_slash(interaction, f"/queue {prompt}", "已加入下一轮队列。")
++            await self._run_simple_slash(interaction, f"/queue {prompt}", "已排队。")
  
 -        @tree.command(name="background", description="Run a prompt in the background")
 -        @discord.app_commands.describe(prompt="The prompt to run in the background")
