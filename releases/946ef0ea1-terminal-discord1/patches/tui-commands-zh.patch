@@ -1,5 +1,5 @@
 diff --git a/ui-tui/src/app/slash/commands/core.ts b/ui-tui/src/app/slash/commands/core.ts
-index c40307dc4..7e49dd1d7 100644
+index c40307dc4..e01ccde52 100644
 --- a/ui-tui/src/app/slash/commands/core.ts
 +++ b/ui-tui/src/app/slash/commands/core.ts
 @@ -48,14 +48,15 @@ const RESET_WORDS = new Set(['reset', 'clear', 'default'])
@@ -454,7 +454,7 @@ index c40307dc4..7e49dd1d7 100644
      run: (arg, ctx) => {
        const mode = arg.trim().toLowerCase()
        const toggle: StatusBarMode = ctx.ui.statusBar === 'off' ? 'top' : 'off'
-@@ -501,19 +514,20 @@ export const coreCommands: SlashCommand[] = [
+@@ -501,37 +514,39 @@ export const coreCommands: SlashCommand[] = [
                : null
  
        if (!next) {
@@ -478,7 +478,107 @@ index c40307dc4..7e49dd1d7 100644
 +    aliases: ['queue'],
      run: (arg, ctx) => {
        if (!arg) {
-         return ctx.transcript.sys(`${ctx.composer.queueRef.current.length} queued message(s)`)
+-        return ctx.transcript.sys(`${ctx.composer.queueRef.current.length} queued message(s)`)
++        return ctx.transcript.sys(`${ctx.composer.queueRef.current.length} 条排队消息`)
+       }
+ 
+       ctx.composer.enqueue(arg)
+-      ctx.transcript.sys(`queued: "${arg.slice(0, 50)}${arg.length > 50 ? '…' : ''}"`)
++      ctx.transcript.sys(`已排队："${arg.slice(0, 50)}${arg.length > 50 ? '…' : ''}"`)
+     }
+   },
+ 
+   {
+-    help: 'inject a message after the next tool call (no interrupt)',
+-    name: 'steer',
++    help: '在下一次工具调用后注入消息（不打断）',
++    name: '注入',
++    aliases: ['steer'],
+     run: (arg, ctx) => {
+       const payload = arg?.trim() ?? ''
+ 
+       if (!payload) {
+-        return ctx.transcript.sys('usage: /steer <prompt>')
++        return ctx.transcript.sys('用法：/steer <提示>')
+       }
+ 
+       // If the agent isn't running, fall back to the queue so the user's
+@@ -539,7 +554,7 @@ export const coreCommands: SlashCommand[] = [
+       if (!ctx.ui.busy || !ctx.sid) {
+         ctx.composer.enqueue(payload)
+         ctx.transcript.sys(
+-          `no active turn — queued for next: "${payload.slice(0, 50)}${payload.length > 50 ? '…' : ''}"`
++          `无活动回合 — 已排队等待："${payload.slice(0, 50)}${payload.length > 50 ? '…' : ''}"`
+         )
+ 
+         return
+@@ -551,10 +566,10 @@ export const coreCommands: SlashCommand[] = [
+           ctx.guarded<SessionSteerResponse>(r => {
+             if (r?.status === 'queued') {
+               ctx.transcript.sys(
+-                `steer queued — arrives after next tool call: "${payload.slice(0, 50)}${payload.length > 50 ? '…' : ''}"`
++                `注入已排队 — 下次工具调用后到达："${payload.slice(0, 50)}${payload.length > 50 ? '…' : ''}"`
+               )
+             } else {
+-              ctx.transcript.sys('steer rejected')
++              ctx.transcript.sys('注入被拒绝')
+             }
+           })
+         )
+@@ -563,20 +578,21 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'undo last exchange',
+-    name: 'undo',
++    help: '撤销最后一轮对话',
++    name: '撤销',
++    aliases: ['undo'],
+     run: (_arg, ctx) => {
+       if (!ctx.sid) {
+-        return ctx.transcript.sys('nothing to undo')
++        return ctx.transcript.sys('没有可撤销的内容')
+       }
+ 
+       ctx.gateway.rpc<SessionUndoResponse>('session.undo', { session_id: ctx.sid }).then(
+         ctx.guarded<SessionUndoResponse>(r => {
+           if ((r.removed ?? 0) > 0) {
+             ctx.transcript.setHistoryItems((prev: Msg[]) => ctx.transcript.trimLastExchange(prev))
+-            ctx.transcript.sys(`undid ${r.removed} messages`)
++            ctx.transcript.sys(`已撤销 ${r.removed} 条消息`)
+           } else {
+-            ctx.transcript.sys('nothing to undo')
++            ctx.transcript.sys('没有可撤销的内容')
+           }
+         })
+       )
+@@ -584,13 +600,14 @@ export const coreCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'retry last user message',
+-    name: 'retry',
++    help: '重试上一条用户消息',
++    name: '重试',
++    aliases: ['retry'],
+     run: (_arg, ctx) => {
+       const last = ctx.local.getLastUserMsg()
+ 
+       if (!last) {
+-        return ctx.transcript.sys('nothing to retry')
++        return ctx.transcript.sys('没有可重试的内容')
+       }
+ 
+       if (!ctx.sid) {
+@@ -600,7 +617,7 @@ export const coreCommands: SlashCommand[] = [
+       ctx.gateway.rpc<SessionUndoResponse>('session.undo', { session_id: ctx.sid }).then(
+         ctx.guarded<SessionUndoResponse>(r => {
+           if ((r.removed ?? 0) <= 0) {
+-            return ctx.transcript.sys('nothing to retry')
++            return ctx.transcript.sys('没有可重试的内容')
+           }
+ 
+           ctx.transcript.setHistoryItems((prev: Msg[]) => ctx.transcript.trimLastExchange(prev))
 diff --git a/ui-tui/src/app/slash/commands/debug.ts b/ui-tui/src/app/slash/commands/debug.ts
 index b4bfc16bf..0e445b435 100644
 --- a/ui-tui/src/app/slash/commands/debug.ts
@@ -544,7 +644,7 @@ index b4bfc16bf..0e445b435 100644
          }
        ])
 diff --git a/ui-tui/src/app/slash/commands/ops.ts b/ui-tui/src/app/slash/commands/ops.ts
-index d8f6522dc..a3cfd8c56 100644
+index d8f6522dc..6432ba006 100644
 --- a/ui-tui/src/app/slash/commands/ops.ts
 +++ b/ui-tui/src/app/slash/commands/ops.ts
 @@ -63,16 +63,16 @@ interface SkillsReloadResponse {
@@ -948,7 +1048,12 @@ index d8f6522dc..a3cfd8c56 100644
          }
  
          rpc<SkillsInspectResponse>('skills.manage', { action: 'inspect', query })
-@@ -541,9 +546,9 @@ export const opsCommands: SlashCommand[] = [
+@@ -537,13 +542,13 @@ export const opsCommands: SlashCommand[] = [
+               const info = r.info ?? {}
+ 
+               if (!info.name) {
+-                return sys(`unknown skill: ${query}`)
++                return sys(`未知技能：${query}`)
                }
  
                const rows: [string, string][] = [
@@ -992,7 +1097,7 @@ index d8f6522dc..a3cfd8c56 100644
              })
            )
            .catch(ctx.guardedErr)
-@@ -584,10 +589,10 @@ export const opsCommands: SlashCommand[] = [
+@@ -584,15 +589,15 @@ export const opsCommands: SlashCommand[] = [
  
        if (sub === 'install') {
          if (!query) {
@@ -1005,6 +1110,121 @@ index d8f6522dc..a3cfd8c56 100644
  
          rpc<SkillsInstallResponse>('skills.manage', { action: 'install', query })
            .then(
+             ctx.guarded<SkillsInstallResponse>(r =>
+-              sys(r.installed ? `installed ${r.name ?? query}` : 'install failed')
++              sys(r.installed ? `已安装 ${r.name ?? query}` : '安装失败')
+             )
+           )
+           .catch(ctx.guardedErr)
+@@ -604,10 +609,10 @@ export const opsCommands: SlashCommand[] = [
+         const pageNum = query ? parseInt(query, 10) : 1
+ 
+         if (Number.isNaN(pageNum) || pageNum < 1) {
+-          return sys('usage: /skills browse [page]  (page must be a positive number)')
++          return sys('用法：/skills browse [页码]')
+         }
+ 
+-        sys('fetching community skills (scans 6 sources, may take ~15s)…')
++        sys('正在获取社区技能（扫描 6 个来源，可能需要约 15 秒）…')
+ 
+         rpc<SkillsBrowseResponse>('skills.manage', { action: 'browse', page: pageNum })
+           .then(
+@@ -615,7 +620,7 @@ export const opsCommands: SlashCommand[] = [
+               const items = r.items ?? []
+ 
+               if (!items.length) {
+-                return sys(`no skills on page ${pageNum}${r.total ? ` (total ${r.total})` : ''}`)
++                return sys(`第 ${pageNum} 页没有技能${r.total ? `（共 ${r.total} 个）` : ''}`)
+               }
+ 
+               const rows: [string, string][] = items.map(s => [
+@@ -626,18 +631,18 @@ export const opsCommands: SlashCommand[] = [
+               const footer: string[] = []
+ 
+               if (r.page && r.total_pages) {
+-                footer.push(`page ${r.page} of ${r.total_pages}`)
++                footer.push(`第 ${r.page} 页，共 ${r.total_pages} 页`)
+               }
+ 
+               if (r.total) {
+-                footer.push(`${r.total} skills total`)
++                footer.push(`共 ${r.total} 个技能`)
+               }
+ 
+               if (r.page && r.total_pages && r.page < r.total_pages) {
+-                footer.push(`/skills browse ${r.page + 1} for more`)
++                footer.push(`/skills browse ${r.page + 1} 查看更多`)
+               }
+ 
+-              panel(`Browse Skills${pageNum > 1 ? ` — p${pageNum}` : ''}`, [
++              panel(`浏览技能${pageNum > 1 ? ` — p${pageNum}` : ''}`, [
+                 { rows },
+                 ...(footer.length ? [{ text: footer.join(' · ') }] : [])
+               ])
+@@ -653,8 +658,9 @@ export const opsCommands: SlashCommand[] = [
+   },
+ 
+   {
+-    help: 'enable or disable tools (client-side history reset on change)',
+-    name: 'tools',
++    help: '启用或禁用工具（变更时客户端重置历史）',
++    name: '工具',
++    aliases: ['tools'],
+     run: (arg, ctx, cmd) => {
+       const [subcommand, ...names] = arg.trim().split(/\s+/).filter(Boolean)
+ 
+@@ -666,11 +672,11 @@ export const opsCommands: SlashCommand[] = [
+               return
+             }
+ 
+-            const body = r?.output || '/tools: no output'
+-            const text = r?.warning ? `warning: ${r.warning}\n${body}` : body
++            const body = r?.output || '/tools: 无输出'
++            const text = r?.warning ? `警告：${r.warning}\n${body}` : body
+             const long = text.length > 180 || text.split('\n').filter(Boolean).length > 2
+ 
+-            long ? ctx.transcript.page(text, 'Tools') : ctx.transcript.sys(text)
++            long ? ctx.transcript.page(text, '工具') : ctx.transcript.sys(text)
+           })
+           .catch(ctx.guardedErr)
+ 
+@@ -678,9 +684,9 @@ export const opsCommands: SlashCommand[] = [
+       }
+ 
+       if (!names.length) {
+-        ctx.transcript.sys(`usage: /tools ${subcommand} <name> [name ...]`)
+-        ctx.transcript.sys(`built-in toolset: /tools ${subcommand} web`)
+-        ctx.transcript.sys(`MCP tool: /tools ${subcommand} github:create_issue`)
++        ctx.transcript.sys(`用法：/tools ${subcommand} <名称> [名称 ...]`)
++        ctx.transcript.sys(`内置工具集：/tools ${subcommand} web`)
++        ctx.transcript.sys(`MCP 工具：/tools ${subcommand} github:create_issue`)
+ 
+         return
+       }
+@@ -695,19 +701,19 @@ export const opsCommands: SlashCommand[] = [
+             }
+ 
+             if (r.changed?.length) {
+-              ctx.transcript.sys(`${subcommand === 'disable' ? 'disabled' : 'enabled'}: ${r.changed.join(', ')}`)
++              ctx.transcript.sys(`${subcommand === 'disable' ? '已禁用' : '已启用'}：${r.changed.join(', ')}`)
+             }
+ 
+             if (r.unknown?.length) {
+-              ctx.transcript.sys(`unknown toolsets: ${r.unknown.join(', ')}`)
++              ctx.transcript.sys(`未知工具集：${r.unknown.join(', ')}`)
+             }
+ 
+             if (r.missing_servers?.length) {
+-              ctx.transcript.sys(`missing MCP servers: ${r.missing_servers.join(', ')}`)
++              ctx.transcript.sys(`缺少 MCP 服务器：${r.missing_servers.join(', ')}`)
+             }
+ 
+             if (r.reset) {
+-              ctx.transcript.sys('session reset. new tool configuration is active.')
++              ctx.transcript.sys('会话已重置。新工具配置已生效。')
+             }
+           })
+         )
 diff --git a/ui-tui/src/app/slash/commands/session.ts b/ui-tui/src/app/slash/commands/session.ts
 index 9dddd8537..eb8437561 100644
 --- a/ui-tui/src/app/slash/commands/session.ts
