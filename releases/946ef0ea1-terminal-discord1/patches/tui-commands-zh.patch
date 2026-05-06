@@ -684,7 +684,7 @@ index b4bfc16bf..0e445b435 100644
          }
        ])
 diff --git a/ui-tui/src/app/slash/commands/ops.ts b/ui-tui/src/app/slash/commands/ops.ts
-index d8f6522dc..cb0197edd 100644
+index d8f6522dc..b36f296da 100644
 --- a/ui-tui/src/app/slash/commands/ops.ts
 +++ b/ui-tui/src/app/slash/commands/ops.ts
 @@ -63,16 +63,16 @@ interface SkillsReloadResponse {
@@ -717,7 +717,7 @@ index d8f6522dc..cb0197edd 100644
 -    name: 'reload-mcp',
 +    aliases: ['reload_mcp', 'reload-mcp'],
 +    help: '重载当前会话的 MCP 服务器（会提示缓存失效）',
-+    name: '重载MCP',
++    name: '重载mcp',
      run: (arg, ctx) => {
        // Parse arg: `now` / `always` skip the confirmation gate.
        // `always` additionally persists approvals.mcp_reload_confirm=false.
